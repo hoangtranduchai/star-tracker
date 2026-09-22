@@ -1,0 +1,946 @@
+{
+  "summary": {
+    "camera": {
+      "mode": "hd1024_glare",
+      "width": 1024,
+      "height": 683,
+      "pixel_um": 21.796875,
+      "focal_mm": 50.0,
+      "note": "APS-C class still camera demo, long side ~1024. No sensor/lens brand."
+    },
+    "glare_preset": "sun_strong",
+    "glare": {
+      "kind": "sun",
+      "u": 184.32,
+      "v": 150.26,
+      "sigma_px": 191.24,
+      "peak_dn": 4095.0,
+      "diam_deg": 0.5
+    },
+    "dataset_dir": "data/sim_dataset/hd1024_glare",
+    "n_frames_written": 40,
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "cnn_torch_device": "cuda",
+    "n_requested": 40,
+    "seed": 11,
+    "match_radius_px": 5.0,
+    "wall_s": 6.842394399999648,
+    "generate_s": 3.899398300001849,
+    "infer_s": 2.941973300000427,
+    "classical": {
+      "n_frames": 40,
+      "n_frames_with_matches": 40,
+      "rmse_px_mean": 0.14493420830810727,
+      "rmse_px_median": 0.06593147037317129,
+      "rmse_px_p90": 0.41770849717984954,
+      "matched_stars_total": 2082,
+      "gt_stars_total": 2280,
+      "time_ms_mean": 27.3077574999661,
+      "time_ms_median": 29.08914999989065,
+      "time_s_per_frame_mean": 0.0273077574999661
+    },
+    "cnn": {
+      "n_frames": 40,
+      "n_frames_with_matches": 40,
+      "rmse_px_mean": 0.3951325063532182,
+      "rmse_px_median": 0.39899965314527974,
+      "rmse_px_p90": 0.6444282664287493,
+      "matched_stars_total": 2141,
+      "gt_stars_total": 2280,
+      "time_ms_mean": 45.45831499992801,
+      "time_ms_median": 45.62850000002072,
+      "time_s_per_frame_mean": 0.04545831499992801
+    },
+    "cnn_better_under_glare": false,
+    "verdict_vi": "D\u01b0\u1edbi l\u00f3a m\u1ea1nh (sun_strong), CNN kh\u00f4ng t\u1ed1t h\u01a1n CoG v\u1ec1 RMSE (CoG 0.1449 vs CNN 0.3951 px).",
+    "distance_map_threshold": 2.0,
+    "weights": "third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt",
+    "note": "Small glare stress set only. Does not replace clean-set thr2 numbers.",
+    "institution": {
+      "school": "Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc B\u00e1ch khoa, \u0110\u1ea1i h\u1ecdc \u0110\u00e0 N\u1eb5ng",
+      "faculty": "Khoa C\u00f4ng ngh\u1ec7 th\u00f4ng tin"
+    }
+  },
+  "frames": [
+    {
+      "i": 0,
+      "n_gt": 42,
+      "classical": {
+        "n_pred": 36,
+        "n_gt": 42,
+        "n_matched": 36,
+        "rmse_px": 0.023449747816261184,
+        "mean_err_px": 0.017479225765898602,
+        "time_ms": 13.579200000094716
+      },
+      "cnn": {
+        "n_pred": 42,
+        "n_gt": 42,
+        "n_matched": 42,
+        "rmse_px": 0.5901439023187695,
+        "mean_err_px": 0.23307675468728084,
+        "time_ms": 43.28090000035445,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 1,
+      "n_gt": 90,
+      "classical": {
+        "n_pred": 81,
+        "n_gt": 90,
+        "n_matched": 81,
+        "rmse_px": 0.2231737716792662,
+        "mean_err_px": 0.07405774380159841,
+        "time_ms": 32.25520000069082
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 90,
+        "n_matched": 77,
+        "rmse_px": 0.4006964311802708,
+        "mean_err_px": 0.20444135116772297,
+        "time_ms": 46.16820000046573,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 2,
+      "n_gt": 45,
+      "classical": {
+        "n_pred": 42,
+        "n_gt": 45,
+        "n_matched": 42,
+        "rmse_px": 0.048202897744562115,
+        "mean_err_px": 0.03893865623114803,
+        "time_ms": 28.738899999552814
+      },
+      "cnn": {
+        "n_pred": 52,
+        "n_gt": 45,
+        "n_matched": 45,
+        "rmse_px": 0.3427378718856379,
+        "mean_err_px": 0.18696285813422056,
+        "time_ms": 44.383899999957066,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 3,
+      "n_gt": 52,
+      "classical": {
+        "n_pred": 48,
+        "n_gt": 52,
+        "n_matched": 48,
+        "rmse_px": 0.05887273876710013,
+        "mean_err_px": 0.05119656519601712,
+        "time_ms": 29.815299999427225
+      },
+      "cnn": {
+        "n_pred": 58,
+        "n_gt": 52,
+        "n_matched": 51,
+        "rmse_px": 0.33487178104678106,
+        "mean_err_px": 0.15281084821233296,
+        "time_ms": 44.86760000054346,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 4,
+      "n_gt": 51,
+      "classical": {
+        "n_pred": 45,
+        "n_gt": 51,
+        "n_matched": 45,
+        "rmse_px": 0.0789264333227607,
+        "mean_err_px": 0.06286179193680727,
+        "time_ms": 29.685199999221368
+      },
+      "cnn": {
+        "n_pred": 56,
+        "n_gt": 51,
+        "n_matched": 49,
+        "rmse_px": 0.32576972463453063,
+        "mean_err_px": 0.16501126425083704,
+        "time_ms": 46.92019999947661,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 5,
+      "n_gt": 55,
+      "classical": {
+        "n_pred": 51,
+        "n_gt": 55,
+        "n_matched": 51,
+        "rmse_px": 0.06529845273659035,
+        "mean_err_px": 0.05430471671161578,
+        "time_ms": 29.104599999300262
+      },
+      "cnn": {
+        "n_pred": 62,
+        "n_gt": 55,
+        "n_matched": 55,
+        "rmse_px": 0.14329495611818455,
+        "mean_err_px": 0.11962510799929599,
+        "time_ms": 49.10490000020218,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 6,
+      "n_gt": 59,
+      "classical": {
+        "n_pred": 55,
+        "n_gt": 59,
+        "n_matched": 55,
+        "rmse_px": 0.06066849422193337,
+        "mean_err_px": 0.0518789772836057,
+        "time_ms": 30.77249999932974
+      },
+      "cnn": {
+        "n_pred": 65,
+        "n_gt": 59,
+        "n_matched": 58,
+        "rmse_px": 0.6116090578337777,
+        "mean_err_px": 0.24450213561568152,
+        "time_ms": 45.63920000055077,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 7,
+      "n_gt": 33,
+      "classical": {
+        "n_pred": 31,
+        "n_gt": 33,
+        "n_matched": 31,
+        "rmse_px": 0.02463511042361978,
+        "mean_err_px": 0.02035969292716963,
+        "time_ms": 13.32540000021254
+      },
+      "cnn": {
+        "n_pred": 33,
+        "n_gt": 33,
+        "n_matched": 33,
+        "rmse_px": 0.12732114057248164,
+        "mean_err_px": 0.10388401929927357,
+        "time_ms": 42.78100000010454,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 8,
+      "n_gt": 71,
+      "classical": {
+        "n_pred": 68,
+        "n_gt": 71,
+        "n_matched": 68,
+        "rmse_px": 0.07504985307727753,
+        "mean_err_px": 0.06307159492632568,
+        "time_ms": 30.853899999783607
+      },
+      "cnn": {
+        "n_pred": 77,
+        "n_gt": 71,
+        "n_matched": 70,
+        "rmse_px": 0.1540162516165428,
+        "mean_err_px": 0.12296062772677106,
+        "time_ms": 46.13650000010239,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 9,
+      "n_gt": 32,
+      "classical": {
+        "n_pred": 29,
+        "n_gt": 32,
+        "n_matched": 29,
+        "rmse_px": 0.060810740808565716,
+        "mean_err_px": 0.05118638745197102,
+        "time_ms": 30.769400000281166
+      },
+      "cnn": {
+        "n_pred": 46,
+        "n_gt": 32,
+        "n_matched": 32,
+        "rmse_px": 0.1592885674773648,
+        "mean_err_px": 0.14137462375032483,
+        "time_ms": 42.78989999966143,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 10,
+      "n_gt": 63,
+      "classical": {
+        "n_pred": 57,
+        "n_gt": 63,
+        "n_matched": 57,
+        "rmse_px": 0.06344082340782176,
+        "mean_err_px": 0.05199277652633851,
+        "time_ms": 29.07370000048104
+      },
+      "cnn": {
+        "n_pred": 71,
+        "n_gt": 63,
+        "n_matched": 62,
+        "rmse_px": 0.4194285762987044,
+        "mean_err_px": 0.19486833679200688,
+        "time_ms": 50.469200000407,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 11,
+      "n_gt": 48,
+      "classical": {
+        "n_pred": 43,
+        "n_gt": 48,
+        "n_matched": 43,
+        "rmse_px": 0.055228843381695654,
+        "mean_err_px": 0.04594287719359196,
+        "time_ms": 29.00009999939357
+      },
+      "cnn": {
+        "n_pred": 52,
+        "n_gt": 48,
+        "n_matched": 46,
+        "rmse_px": 0.3645749474951574,
+        "mean_err_px": 0.16520117576471147,
+        "time_ms": 45.22960000031162,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 12,
+      "n_gt": 115,
+      "classical": {
+        "n_pred": 105,
+        "n_gt": 115,
+        "n_matched": 105,
+        "rmse_px": 0.4786315289658834,
+        "mean_err_px": 0.10426164649674656,
+        "time_ms": 33.44770000057906
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 115,
+        "n_matched": 78,
+        "rmse_px": 0.4699860846390548,
+        "mean_err_px": 0.20865248782033147,
+        "time_ms": 48.50040000019362,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 13,
+      "n_gt": 39,
+      "classical": {
+        "n_pred": 36,
+        "n_gt": 39,
+        "n_matched": 36,
+        "rmse_px": 0.06293315539340404,
+        "mean_err_px": 0.051185425841819676,
+        "time_ms": 29.260899999826506
+      },
+      "cnn": {
+        "n_pred": 46,
+        "n_gt": 39,
+        "n_matched": 38,
+        "rmse_px": 0.1500632682962303,
+        "mean_err_px": 0.1286168496346881,
+        "time_ms": 42.35149999931309,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 14,
+      "n_gt": 73,
+      "classical": {
+        "n_pred": 68,
+        "n_gt": 73,
+        "n_matched": 68,
+        "rmse_px": 0.021842686883308347,
+        "mean_err_px": 0.017831695238384793,
+        "time_ms": 15.352700000221375
+      },
+      "cnn": {
+        "n_pred": 73,
+        "n_gt": 73,
+        "n_matched": 73,
+        "rmse_px": 0.26822899452377447,
+        "mean_err_px": 0.15570169983340826,
+        "time_ms": 45.61779999949067,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 15,
+      "n_gt": 66,
+      "classical": {
+        "n_pred": 59,
+        "n_gt": 66,
+        "n_matched": 59,
+        "rmse_px": 0.06427433764552204,
+        "mean_err_px": 0.050223148469728314,
+        "time_ms": 29.992200000378944
+      },
+      "cnn": {
+        "n_pred": 72,
+        "n_gt": 66,
+        "n_matched": 64,
+        "rmse_px": 0.7398428360695165,
+        "mean_err_px": 0.2659371712738054,
+        "time_ms": 46.26529999950435,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 16,
+      "n_gt": 59,
+      "classical": {
+        "n_pred": 55,
+        "n_gt": 59,
+        "n_matched": 55,
+        "rmse_px": 0.06608664664810392,
+        "mean_err_px": 0.05355783276350693,
+        "time_ms": 28.58009999999922
+      },
+      "cnn": {
+        "n_pred": 67,
+        "n_gt": 59,
+        "n_matched": 59,
+        "rmse_px": 0.3973028751102887,
+        "mean_err_px": 0.18049267775563485,
+        "time_ms": 47.34039999948436,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 17,
+      "n_gt": 32,
+      "classical": {
+        "n_pred": 28,
+        "n_gt": 32,
+        "n_matched": 28,
+        "rmse_px": 0.4530067967797394,
+        "mean_err_px": 0.13443040289085098,
+        "time_ms": 26.827400000001944
+      },
+      "cnn": {
+        "n_pred": 41,
+        "n_gt": 32,
+        "n_matched": 31,
+        "rmse_px": 0.4844905309260634,
+        "mean_err_px": 0.20462657402501117,
+        "time_ms": 44.26849999981641,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 18,
+      "n_gt": 40,
+      "classical": {
+        "n_pred": 36,
+        "n_gt": 40,
+        "n_matched": 36,
+        "rmse_px": 0.08607657411835475,
+        "mean_err_px": 0.06179892851420995,
+        "time_ms": 28.022400000736525
+      },
+      "cnn": {
+        "n_pred": 40,
+        "n_gt": 40,
+        "n_matched": 38,
+        "rmse_px": 0.8193453480341011,
+        "mean_err_px": 0.2559391006893092,
+        "time_ms": 43.96889999952691,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 19,
+      "n_gt": 75,
+      "classical": {
+        "n_pred": 71,
+        "n_gt": 75,
+        "n_matched": 71,
+        "rmse_px": 0.3372863707844643,
+        "mean_err_px": 0.09433698419057553,
+        "time_ms": 29.83349999976781
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 75,
+        "n_matched": 73,
+        "rmse_px": 0.4581905953935216,
+        "mean_err_px": 0.17851785455009897,
+        "time_ms": 44.11379999964993,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 20,
+      "n_gt": 58,
+      "classical": {
+        "n_pred": 54,
+        "n_gt": 58,
+        "n_matched": 54,
+        "rmse_px": 0.0652899925065745,
+        "mean_err_px": 0.054133343148729765,
+        "time_ms": 28.967700000066543
+      },
+      "cnn": {
+        "n_pred": 65,
+        "n_gt": 58,
+        "n_matched": 58,
+        "rmse_px": 0.22033436559100913,
+        "mean_err_px": 0.16446865995745608,
+        "time_ms": 46.571599999879254,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 21,
+      "n_gt": 68,
+      "classical": {
+        "n_pred": 58,
+        "n_gt": 68,
+        "n_matched": 58,
+        "rmse_px": 0.5395161089867524,
+        "mean_err_px": 0.09989257885514871,
+        "time_ms": 15.984699999535223
+      },
+      "cnn": {
+        "n_pred": 67,
+        "n_gt": 68,
+        "n_matched": 67,
+        "rmse_px": 0.7690923989243861,
+        "mean_err_px": 0.2586586806834662,
+        "time_ms": 47.43449999932636,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 22,
+      "n_gt": 37,
+      "classical": {
+        "n_pred": 36,
+        "n_gt": 37,
+        "n_matched": 36,
+        "rmse_px": 0.06577629409823868,
+        "mean_err_px": 0.05598312824631398,
+        "time_ms": 28.28970000064146
+      },
+      "cnn": {
+        "n_pred": 41,
+        "n_gt": 37,
+        "n_matched": 37,
+        "rmse_px": 0.23576496304224784,
+        "mean_err_px": 0.1478299492178097,
+        "time_ms": 42.043000000376196,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 23,
+      "n_gt": 37,
+      "classical": {
+        "n_pred": 35,
+        "n_gt": 37,
+        "n_matched": 35,
+        "rmse_px": 0.059613799998094796,
+        "mean_err_px": 0.04818752756336264,
+        "time_ms": 28.330999999525375
+      },
+      "cnn": {
+        "n_pred": 44,
+        "n_gt": 37,
+        "n_matched": 37,
+        "rmse_px": 0.1911578344511876,
+        "mean_err_px": 0.13863867683772582,
+        "time_ms": 44.04179999983171,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 24,
+      "n_gt": 50,
+      "classical": {
+        "n_pred": 47,
+        "n_gt": 50,
+        "n_matched": 47,
+        "rmse_px": 0.41378646389097284,
+        "mean_err_px": 0.11397381138255949,
+        "time_ms": 28.8948999996137
+      },
+      "cnn": {
+        "n_pred": 55,
+        "n_gt": 50,
+        "n_matched": 49,
+        "rmse_px": 0.5653073377937431,
+        "mean_err_px": 0.21454581485795296,
+        "time_ms": 45.97050000029412,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 25,
+      "n_gt": 87,
+      "classical": {
+        "n_pred": 79,
+        "n_gt": 87,
+        "n_matched": 79,
+        "rmse_px": 0.22420197605879175,
+        "mean_err_px": 0.07899801299071207,
+        "time_ms": 30.590100000154052
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 87,
+        "n_matched": 78,
+        "rmse_px": 0.5213307973344034,
+        "mean_err_px": 0.2000958207533768,
+        "time_ms": 47.06420000002254,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 26,
+      "n_gt": 34,
+      "classical": {
+        "n_pred": 32,
+        "n_gt": 34,
+        "n_matched": 32,
+        "rmse_px": 0.36857637526956405,
+        "mean_err_px": 0.11298056205582162,
+        "time_ms": 25.727700000061304
+      },
+      "cnn": {
+        "n_pred": 44,
+        "n_gt": 34,
+        "n_matched": 33,
+        "rmse_px": 0.3948993453876353,
+        "mean_err_px": 0.18645571962268714,
+        "time_ms": 41.95499999968888,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 27,
+      "n_gt": 61,
+      "classical": {
+        "n_pred": 55,
+        "n_gt": 61,
+        "n_matched": 55,
+        "rmse_px": 0.10501629911487166,
+        "mean_err_px": 0.06391882991159709,
+        "time_ms": 30.93760000047041
+      },
+      "cnn": {
+        "n_pred": 66,
+        "n_gt": 61,
+        "n_matched": 58,
+        "rmse_px": 0.5776719143595351,
+        "mean_err_px": 0.23007321941733694,
+        "time_ms": 47.11239999960526,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 28,
+      "n_gt": 56,
+      "classical": {
+        "n_pred": 47,
+        "n_gt": 56,
+        "n_matched": 47,
+        "rmse_px": 0.0321034947773392,
+        "mean_err_px": 0.022961409012898698,
+        "time_ms": 13.976999999613327
+      },
+      "cnn": {
+        "n_pred": 55,
+        "n_gt": 56,
+        "n_matched": 55,
+        "rmse_px": 0.1920011628239314,
+        "mean_err_px": 0.14506698122854453,
+        "time_ms": 43.80490000039572,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 29,
+      "n_gt": 73,
+      "classical": {
+        "n_pred": 63,
+        "n_gt": 73,
+        "n_matched": 63,
+        "rmse_px": 0.5813964006616348,
+        "mean_err_px": 0.19252012087515893,
+        "time_ms": 30.120700000225042
+      },
+      "cnn": {
+        "n_pred": 76,
+        "n_gt": 73,
+        "n_matched": 67,
+        "rmse_px": 0.7760378771831336,
+        "mean_err_px": 0.312073150820172,
+        "time_ms": 48.37169999973412,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 30,
+      "n_gt": 38,
+      "classical": {
+        "n_pred": 37,
+        "n_gt": 38,
+        "n_matched": 37,
+        "rmse_px": 0.0653868170553976,
+        "mean_err_px": 0.05423444919024052,
+        "time_ms": 28.516100000160804
+      },
+      "cnn": {
+        "n_pred": 44,
+        "n_gt": 38,
+        "n_matched": 38,
+        "rmse_px": 0.15479866803019537,
+        "mean_err_px": 0.13812552642431994,
+        "time_ms": 42.90649999984453,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 31,
+      "n_gt": 71,
+      "classical": {
+        "n_pred": 63,
+        "n_gt": 71,
+        "n_matched": 63,
+        "rmse_px": 0.10428854157337968,
+        "mean_err_px": 0.06575644175407318,
+        "time_ms": 33.13419999994949
+      },
+      "cnn": {
+        "n_pred": 73,
+        "n_gt": 71,
+        "n_matched": 68,
+        "rmse_px": 0.48052817803314873,
+        "mean_err_px": 0.22449446842624154,
+        "time_ms": 50.10459999994055,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 32,
+      "n_gt": 29,
+      "classical": {
+        "n_pred": 28,
+        "n_gt": 29,
+        "n_matched": 28,
+        "rmse_px": 0.08085987588084693,
+        "mean_err_px": 0.06978504803213312,
+        "time_ms": 30.274000000645174
+      },
+      "cnn": {
+        "n_pred": 33,
+        "n_gt": 29,
+        "n_matched": 29,
+        "rmse_px": 0.526544090139714,
+        "mean_err_px": 0.2308335520715345,
+        "time_ms": 41.25359999943612,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 33,
+      "n_gt": 96,
+      "classical": {
+        "n_pred": 88,
+        "n_gt": 96,
+        "n_matched": 88,
+        "rmse_px": 0.07076736952822871,
+        "mean_err_px": 0.05476970925698626,
+        "time_ms": 29.55889999975625
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 96,
+        "n_matched": 78,
+        "rmse_px": 0.47401663431556823,
+        "mean_err_px": 0.21736704591578906,
+        "time_ms": 48.291400000380236,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 34,
+      "n_gt": 56,
+      "classical": {
+        "n_pred": 50,
+        "n_gt": 56,
+        "n_matched": 50,
+        "rmse_px": 0.05952018429756957,
+        "mean_err_px": 0.05011264423577064,
+        "time_ms": 28.65959999962797
+      },
+      "cnn": {
+        "n_pred": 59,
+        "n_gt": 56,
+        "n_matched": 55,
+        "rmse_px": 0.42815022168923583,
+        "mean_err_px": 0.18469287414805755,
+        "time_ms": 45.967799999743875,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 35,
+      "n_gt": 31,
+      "classical": {
+        "n_pred": 29,
+        "n_gt": 31,
+        "n_matched": 29,
+        "rmse_px": 0.02774419021344949,
+        "mean_err_px": 0.02122420011339535,
+        "time_ms": 14.081399999668065
+      },
+      "cnn": {
+        "n_pred": 32,
+        "n_gt": 31,
+        "n_matched": 31,
+        "rmse_px": 0.14759134573915378,
+        "mean_err_px": 0.11436925750120608,
+        "time_ms": 43.296400000144786,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 36,
+      "n_gt": 92,
+      "classical": {
+        "n_pred": 89,
+        "n_gt": 92,
+        "n_matched": 89,
+        "rmse_px": 0.06806449464687342,
+        "mean_err_px": 0.05394671762440517,
+        "time_ms": 30.837500000416185
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 92,
+        "n_matched": 78,
+        "rmse_px": 0.633826647579775,
+        "mean_err_px": 0.25494332223604427,
+        "time_ms": 47.82989999966958,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 37,
+      "n_gt": 46,
+      "classical": {
+        "n_pred": 42,
+        "n_gt": 46,
+        "n_matched": 42,
+        "rmse_px": 0.05843014697881264,
+        "mean_err_px": 0.04902321579704706,
+        "time_ms": 29.884499999752734
+      },
+      "cnn": {
+        "n_pred": 52,
+        "n_gt": 46,
+        "n_matched": 46,
+        "rmse_px": 0.14880994003327724,
+        "mean_err_px": 0.1267842753414608,
+        "time_ms": 43.020699999942735,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 38,
+      "n_gt": 28,
+      "classical": {
+        "n_pred": 28,
+        "n_gt": 28,
+        "n_matched": 28,
+        "rmse_px": 0.07295886707030871,
+        "mean_err_px": 0.06165503248177738,
+        "time_ms": 26.230999999825144
+      },
+      "cnn": {
+        "n_pred": 36,
+        "n_gt": 28,
+        "n_matched": 28,
+        "rmse_px": 0.17029323667287286,
+        "mean_err_px": 0.14023980527001684,
+        "time_ms": 40.941299999758485,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 39,
+      "n_gt": 92,
+      "classical": {
+        "n_pred": 78,
+        "n_gt": 92,
+        "n_matched": 78,
+        "rmse_px": 0.3261746351103557,
+        "mean_err_px": 0.09012118019847158,
+        "time_ms": 31.02169999965554
+      },
+      "cnn": {
+        "n_pred": 80,
+        "n_gt": 92,
+        "n_matched": 77,
+        "rmse_px": 0.43593955353382285,
+        "mean_err_px": 0.18186121972682598,
+        "time_ms": 50.153099999988626,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    }
+  ]
+}
