@@ -1,0 +1,43 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# Testing
+.pytest_cache/
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+
+# Large ML Models
+*.pt
+*.pth
+third_party/cnn_star_centroid/saved_models/
+
+# Large Datasets, Catalogs & Images
+data/catalogs/*.tsv
+data/sim_dataset/
+data/tetra3/
+data/uploads/**/*.tif
+data/uploads/**/*.tiff
+data/uploads/**/*.png
+data/uploads/**/*.jpeg
+data/uploads/**/*.jpg
+data/uploads/**/*.tar.gz
+*.tif
+*.tiff
+*.tar.gz
+
+# Note: We intentionally DO NOT ignore .docx, .pptx, .md files 
+# because they are needed for the AI2026 competition portfolio.
+
+# Large binary arrays
+*.npz
