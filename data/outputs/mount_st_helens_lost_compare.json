@@ -1,0 +1,58 @@
+{
+  "LOST_ref": {
+    "ra_deg": 310.446,
+    "dec_deg": 36.0229,
+    "source": "lost-website.netlify.app screenshot"
+  },
+  "optics": {
+    "focal_mm": 4.2,
+    "pixel_um": 4.1,
+    "width": 1024,
+    "height": 1024
+  },
+  "image": "data/uploads/mount_st_helens_1.png",
+  "image_sha256_12_array": "62593b48bc0c",
+  "source_note": "Web UI confirmed run (contrast-ranked 8-bit CNN). Both within ~0.1° of LOST.",
+  "modes": {
+    "cnn": {
+      "success": true,
+      "verdict": "SOLVED_NO_GT",
+      "n_detected": 79,
+      "n_matched": 63,
+      "detector": "cnn_zhao2024",
+      "fallback": false,
+      "ra_deg": 310.49,
+      "dec_deg": 36.01,
+      "sep_deg_from_LOST": 0.0379,
+      "dra_deg": 0.044,
+      "ddec_deg": -0.0129,
+      "pipeline_ms": 5136.1,
+      "timings": {
+        "centroiding_ms": 561.2,
+        "identification_ms": 4529.6,
+        "total_pipeline_ms": 5136.1
+      },
+      "error": null
+    },
+    "classical": {
+      "success": true,
+      "verdict": "SOLVED_NO_GT",
+      "n_detected": 106,
+      "n_matched": 64,
+      "detector": "classical",
+      "fallback": false,
+      "ra_deg": 310.52,
+      "dec_deg": 35.95,
+      "sep_deg_from_LOST": 0.0943,
+      "dra_deg": 0.074,
+      "ddec_deg": -0.0729,
+      "pipeline_ms": 16237.0,
+      "timings": {
+        "centroiding_ms": 97.5,
+        "identification_ms": 16085.2,
+        "total_pipeline_ms": 16237.0
+      },
+      "error": null
+    }
+  }
+}

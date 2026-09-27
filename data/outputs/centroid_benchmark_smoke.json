@@ -1,0 +1,116 @@
+{
+  "summary": {
+    "paper": {
+      "title": "Real-Time Convolutional Neural Network-Based Star Detection and Centroiding Method for CubeSat Star Tracker",
+      "arxiv": "2404.19108",
+      "weights": "third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt",
+      "source": "https://github.com/HongruiZhao/CNNStarDetectCentroid"
+    },
+    "camera": {
+      "mode": "fast",
+      "width": 1500,
+      "height": 1000,
+      "pixel_um": 14.88,
+      "focal_mm": 50.0,
+      "note": "APS-C class still camera demo, 4x4 bin. No sensor/lens brand."
+    },
+    "n_requested": 3,
+    "seed": 7,
+    "match_radius_px": 5.0,
+    "wall_s": 67.31836239999984,
+    "classical": {
+      "n_frames": 3,
+      "n_frames_with_matches": 3,
+      "rmse_px_mean": 0.05564026513821036,
+      "rmse_px_median": 0.05855648219789147,
+      "rmse_px_p90": 0.05926755550145595,
+      "matched_stars_total": 121,
+      "gt_stars_total": 126,
+      "time_ms_mean": 54.460199999842494,
+      "time_ms_median": 60.12349999991784
+    },
+    "cnn": {
+      "n_frames": 3,
+      "n_frames_with_matches": 3,
+      "rmse_px_mean": 0.45753777982991983,
+      "rmse_px_median": 0.49800688056398923,
+      "rmse_px_p90": 0.6084274815564648,
+      "matched_stars_total": 88,
+      "gt_stars_total": 126,
+      "time_ms_mean": 22302.584333333318,
+      "time_ms_median": 12748.82209999987
+    },
+    "institution": {
+      "school": "Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc B\u00e1ch khoa, \u0110\u1ea1i h\u1ecdc \u0110\u00e0 N\u1eb5ng",
+      "faculty": "Khoa C\u00f4ng ngh\u1ec7 th\u00f4ng tin"
+    }
+  },
+  "frames": [
+    {
+      "i": 0,
+      "n_gt": 49,
+      "classical": {
+        "n_pred": 47,
+        "n_gt": 49,
+        "n_matched": 47,
+        "rmse_px": 0.04891898938939255,
+        "mean_err_px": 0.04033602750107071,
+        "time_ms": 38.79229999984091
+      },
+      "cnn": {
+        "n_pred": 35,
+        "n_gt": 49,
+        "n_matched": 35,
+        "rmse_px": 0.6360326318045837,
+        "mean_err_px": 0.2919381641189692,
+        "time_ms": 41570.970100000064,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 1,
+      "n_gt": 35,
+      "classical": {
+        "n_pred": 33,
+        "n_gt": 35,
+        "n_matched": 33,
+        "rmse_px": 0.05855648219789147,
+        "mean_err_px": 0.0480779881560439,
+        "time_ms": 60.12349999991784
+      },
+      "cnn": {
+        "n_pred": 22,
+        "n_gt": 35,
+        "n_matched": 21,
+        "rmse_px": 0.49800688056398923,
+        "mean_err_px": 0.28850007424799695,
+        "time_ms": 12748.82209999987,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 2,
+      "n_gt": 42,
+      "classical": {
+        "n_pred": 41,
+        "n_gt": 42,
+        "n_matched": 41,
+        "rmse_px": 0.059445323827347074,
+        "mean_err_px": 0.050436073184442466,
+        "time_ms": 64.46479999976873
+      },
+      "cnn": {
+        "n_pred": 32,
+        "n_gt": 42,
+        "n_matched": 32,
+        "rmse_px": 0.2385738271211866,
+        "mean_err_px": 0.189985894222583,
+        "time_ms": 12587.960800000019,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    }
+  ]
+}

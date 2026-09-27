@@ -1,0 +1,44 @@
+{
+  "image": "data/uploads/mount_st_helens_1.png",
+  "source_note": "Ảnh thật công bố kèm LOST (UW), không phải ảnh của nhóm chụp.",
+  "camera": {
+    "width": 1024,
+    "height": 1024,
+    "focal_mm": 4.2,
+    "pixel_um": 4.1,
+    "fov_deg": [
+      53.112639452885155,
+      53.112639452885155,
+      70.50819809358072
+    ]
+  },
+  "distance_map_threshold": 2.0,
+  "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "classical": {
+    "n_total": 111,
+    "n_on_terrain": 25,
+    "n_on_sky": 86,
+    "time_ms": 47.8105999991385
+  },
+  "cnn": {
+    "n_total": 79,
+    "n_on_terrain": 1,
+    "n_on_sky": 78,
+    "time_ms": 216.05169999929785,
+    "error": null
+  },
+  "terrain_mask": {
+    "n_px": 520241,
+    "frac": 0.4961404800415039,
+    "method": "per-column sky→dark ridge drop; fill below envelope (heuristic silhouette)",
+    "mask_png": "data/outputs/mount_st_helens_terrain_mask.png"
+  },
+  "overlay_png": "data/outputs/mount_st_helens_cog_vs_cnn.png",
+  "claim": "CoG đánh sao giả trên núi/cây; CNN thì không (hoặc ít hơn rõ).",
+  "claim_held": true,
+  "verdict_vi": "Claim giữ một phần: CoG 25 điểm trên núi/cây vs CNN 1 (CoG trời 86, CNN trời 78).",
+  "institution": {
+    "school": "Trường Đại học Bách khoa, Đại học Đà Nẵng",
+    "faculty": "Khoa Công nghệ thông tin"
+  }
+}

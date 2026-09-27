@@ -1,0 +1,6231 @@
+{
+  "format": "iau_csn_v2",
+  "source": "IAU-Catalog of Star Names (always up to date).xlsx",
+  "n_names": 640,
+  "by_hr": {
+    "8969": {
+      "name": "Puwuh Atarung",
+      "designation": "HR 8969",
+      "hr": 8969,
+      "hip": 116771
+    },
+    "367": {
+      "name": "Buranun",
+      "designation": "HR 367",
+      "hr": 367,
+      "hip": 5824
+    },
+    "463": {
+      "name": "Idigna",
+      "designation": "HR 463",
+      "hr": 463,
+      "hip": 7535
+    },
+    "80": {
+      "name": "Simmakh",
+      "designation": "HR 80",
+      "hr": 80,
+      "hip": 1645
+    },
+    "7203": {
+      "name": "Zibbatu",
+      "designation": "HR 7203",
+      "hr": 7203,
+      "hip": 9353
+    },
+    "362": {
+      "name": "Paushna",
+      "designation": "HR 362",
+      "hr": 362,
+      "hip": 5743
+    },
+    "9072": {
+      "name": "Pili",
+      "designation": "HR 9072",
+      "hr": 9072,
+      "hip": 118268
+    },
+    "8852": {
+      "name": "Yunyu",
+      "designation": "HR 8852",
+      "hr": 8852,
+      "hip": 114971
+    },
+    "224": {
+      "name": "Waiping",
+      "designation": "HR 224",
+      "hr": 224,
+      "hip": 3786
+    },
+    "5127": {
+      "name": "Jordanus",
+      "designation": "HR 5127",
+      "hr": 5127,
+      "hip": 66458
+    },
+    "8576": {
+      "name": "Tiangang",
+      "designation": "HR 8576",
+      "hr": 8576,
+      "hip": 111188
+    },
+    "8305": {
+      "name": "Baijiu",
+      "designation": "HR 8305",
+      "hr": 8305,
+      "hip": 107380
+    },
+    "8597": {
+      "name": "Fenmu",
+      "designation": "HR 8597",
+      "hr": 8597,
+      "hip": 111497
+    },
+    "7120": {
+      "name": "Pabilsang",
+      "designation": "HR 7120",
+      "hr": 7120,
+      "hip": 92845
+    },
+    "6832": {
+      "name": "Heryibwia",
+      "designation": "HR 6832",
+      "hr": 6832,
+      "hip": 89642
+    },
+    "7340": {
+      "name": "Kenemu",
+      "designation": "HR 7340",
+      "hr": 7340,
+      "hip": 95168
+    },
+    "7039": {
+      "name": "Nandou",
+      "designation": "HR 7039",
+      "hr": 7039,
+      "hip": 92041
+    },
+    "7150": {
+      "name": "Jian",
+      "designation": "HR 7150",
+      "hr": 7150,
+      "hip": 93085
+    },
+    "6960": {
+      "name": "Alwasl",
+      "designation": "HR 6960",
+      "hr": 6960,
+      "hip": 91014
+    },
+    "7217": {
+      "name": "Alqiladah",
+      "designation": "HR 7217",
+      "hr": 7217,
+      "hip": 93683
+    },
+    "7650": {
+      "name": "Gouguo",
+      "designation": "HR 7650",
+      "hr": 7650,
+      "hip": 98688
+    },
+    "6700": {
+      "name": "Tianyue",
+      "designation": "HR 6700",
+      "hr": 6700,
+      "hip": 88116
+    },
+    "6742": {
+      "name": "Dhanuśarāgra",
+      "designation": "HR 6742",
+      "hr": 6742,
+      "hip": 88567
+    },
+    "6862": {
+      "name": "Magur",
+      "designation": "HR 6862",
+      "hr": 6862,
+      "hip": 90037
+    },
+    "7259": {
+      "name": "Alqubba",
+      "designation": "HR 7259",
+      "hr": 7259,
+      "hip": 94160
+    },
+    "7242": {
+      "name": "Qedty",
+      "designation": "HR 7242",
+      "hr": 7242,
+      "hip": 94005
+    },
+    "6951": {
+      "name": "Bie",
+      "designation": "HR 6951",
+      "hr": 6951,
+      "hip": 90982
+    },
+    "8538": {
+      "name": "Alsamaka",
+      "designation": "HR 8538",
+      "hr": 8538,
+      "hip": 110538
+    },
+    "8454": {
+      "name": "Neichu",
+      "designation": "HR 8454",
+      "hr": 8454,
+      "hip": 109410
+    },
+    "8430": {
+      "name": "Jiu",
+      "designation": "HR 8430",
+      "hr": 8430,
+      "hip": 109176
+    },
+    "8665": {
+      "name": "Tugongli",
+      "designation": "HR 8665",
+      "hr": 8665,
+      "hip": 112447
+    },
+    "8667": {
+      "name": "Ligong",
+      "designation": "HR 8667",
+      "hr": 8667,
+      "hip": 112440
+    },
+    "8717": {
+      "name": "Leidian",
+      "designation": "HR 8717",
+      "hr": 8717,
+      "hip": 113186
+    },
+    "8115": {
+      "name": "Tianjinnan",
+      "designation": "HR 8115",
+      "hr": 8115,
+      "hip": 104732
+    },
+    "8130": {
+      "name": "Enduri Senggu",
+      "designation": "HR 8130",
+      "hr": 8130,
+      "hip": 104887
+    },
+    "7615": {
+      "name": "Almighzal",
+      "designation": "HR 7615",
+      "hr": 7615,
+      "hip": 98110
+    },
+    "7947": {
+      "name": "Dhanishta",
+      "designation": "HR 7947",
+      "hr": 7947,
+      "hip": 102531
+    },
+    "8098": {
+      "name": "Protome",
+      "designation": "HR 8098",
+      "hr": 8098,
+      "hip": 104538
+    },
+    "8123": {
+      "name": "Tepennekhet",
+      "designation": "HR 8123",
+      "hr": 8123,
+      "hip": 104858
+    },
+    "7747": {
+      "name": "Sukhurmashu",
+      "designation": "HR 7747",
+      "hr": 7747,
+      "hip": 100027
+    },
+    "8135": {
+      "name": "Aerostaticus",
+      "designation": "HR 8135",
+      "hr": 8135,
+      "hip": 105140
+    },
+    "5933": {
+      "name": "Muning",
+      "designation": "HR 5933",
+      "hr": 5933,
+      "hip": 78072
+    },
+    "6588": {
+      "name": "Tianbang",
+      "designation": "HR 6588",
+      "hr": 6588,
+      "hip": 86414
+    },
+    "6973": {
+      "name": "Tianbian",
+      "designation": "HR 6973",
+      "hr": 6973,
+      "hip": 91117
+    },
+    "7635": {
+      "name": "Telum",
+      "designation": "HR 7635",
+      "hr": 7635,
+      "hip": 98337
+    },
+    "7488": {
+      "name": "Shakh",
+      "designation": "HR 7488",
+      "hr": 7488,
+      "hip": 96837
+    },
+    "7536": {
+      "name": "Zuoqi",
+      "designation": "HR 7536",
+      "hr": 7536,
+      "hip": 97365
+    },
+    "7377": {
+      "name": "Guqi",
+      "designation": "HR 7377",
+      "hr": 7377,
+      "hip": 95501
+    },
+    "7176": {
+      "name": "Arin-majlep",
+      "designation": "HR 7176",
+      "hr": 7176,
+      "hip": 93244
+    },
+    "7570": {
+      "name": "Pagru",
+      "designation": "HR 7570",
+      "hr": 7570,
+      "hip": 97804
+    },
+    "7474": {
+      "name": "Hru",
+      "designation": "HR 7474",
+      "hr": 7474,
+      "hip": 96665
+    },
+    "7051": {
+      "name": "Pongaponga",
+      "designation": "HR 7051",
+      "hr": 7051,
+      "hip": 91919
+    },
+    "7157": {
+      "name": "Niandao",
+      "designation": "HR 7157",
+      "hr": 7157,
+      "hip": 92862
+    },
+    "7056": {
+      "name": "Kautoki",
+      "designation": "HR 7056",
+      "hr": 7056,
+      "hip": 91971
+    },
+    "7057": {
+      "name": "Urquchillay",
+      "designation": "HR 7057",
+      "hr": 7057,
+      "hip": 91973
+    },
+    "7139": {
+      "name": "Jiantai",
+      "designation": "HR 7139",
+      "hr": 7139,
+      "hip": 92791
+    },
+    "7314": {
+      "name": "Ninnisig",
+      "designation": "HR 7314",
+      "hr": 7314,
+      "hip": 94713
+    },
+    "6115": {
+      "name": "Yaqana",
+      "designation": "HR 6115",
+      "hr": 6115,
+      "hip": 80582
+    },
+    "1239": {
+      "name": "Bibing",
+      "designation": "HR 1239",
+      "hr": 1239,
+      "hip": 18724
+    },
+    "1547": {
+      "name": "Lembu",
+      "designation": "HR 1547",
+      "hr": 1547,
+      "hip": 22565
+    },
+    "1407": {
+      "name": "Shakata",
+      "designation": "HR 1407",
+      "hr": 1407,
+      "hip": 20877
+    },
+    "6418": {
+      "name": "Nüchuang",
+      "designation": "HR 6418",
+      "hr": 6418,
+      "hip": 84380
+    },
+    "6212": {
+      "name": "Tianji",
+      "designation": "HR 6212",
+      "hr": 6212,
+      "hip": 81693
+    },
+    "6092": {
+      "name": "Asuusiha",
+      "designation": "HR 6092",
+      "hr": 6092,
+      "hip": 79992
+    },
+    "6324": {
+      "name": "Khepdenreret",
+      "designation": "HR 6324",
+      "hr": 6324,
+      "hip": 83207
+    },
+    "5971": {
+      "name": "Aurwandilsta",
+      "designation": "HR 5971",
+      "hr": 5971,
+      "hip": 78493
+    },
+    "5849": {
+      "name": "Baltesha",
+      "designation": "HR 5849",
+      "hr": 5849,
+      "hip": 76952
+    },
+    "5889": {
+      "name": "Matrichakra",
+      "designation": "HR 5889",
+      "hr": 5889,
+      "hip": 77512
+    },
+    "5778": {
+      "name": "Guansuo",
+      "designation": "HR 5778",
+      "hr": 5778,
+      "hip": 76127
+    },
+    "5855": {
+      "name": "Stephanos",
+      "designation": "HR 5855",
+      "hr": 5855,
+      "hip": 77048
+    },
+    "5505": {
+      "name": "Pulcherrima",
+      "designation": "HR 5505",
+      "hr": 5505,
+      "hip": 72105
+    },
+    "5511": {
+      "name": "Maenalus",
+      "designation": "HR 5511",
+      "hr": 5511,
+      "hip": 72220
+    },
+    "5490": {
+      "name": "Alrumh",
+      "designation": "HR 5490",
+      "hr": 5490,
+      "hip": 71995
+    },
+    "5447": {
+      "name": "Genghe",
+      "designation": "HR 5447",
+      "hr": 5447,
+      "hip": 71284
+    },
+    "5429": {
+      "name": "Kalasungsang",
+      "designation": "HR 5429",
+      "hr": 5429,
+      "hip": 71053
+    },
+    "5681": {
+      "name": "Qigong",
+      "designation": "HR 5681",
+      "hr": 5681,
+      "hip": 74666
+    },
+    "5185": {
+      "name": "Tepiamenit",
+      "designation": "HR 5185",
+      "hr": 5185,
+      "hip": 67275
+    },
+    "5714": {
+      "name": "Pherkad Minor",
+      "designation": "HR 5714",
+      "hr": 5714,
+      "hip": 74793
+    },
+    "1654": {
+      "name": "Ping",
+      "designation": "HR 1654",
+      "hr": 1654,
+      "hip": 23685
+    },
+    "1702": {
+      "name": "Bade",
+      "designation": "HR 1702",
+      "hr": 1702,
+      "hip": 24305
+    },
+    "1998": {
+      "name": "Darlugal",
+      "designation": "HR 1998",
+      "hr": 1998,
+      "hip": 27288
+    },
+    "8075": {
+      "name": "Udang",
+      "designation": "HR 8075",
+      "hr": 8075,
+      "hip": 104139
+    },
+    "1497": {
+      "name": "Gaja",
+      "designation": "HR 1497",
+      "hr": 1497,
+      "hip": 21881
+    },
+    "5020": {
+      "name": "Naga",
+      "designation": "HR 5020",
+      "hr": 5020,
+      "hip": 64962
+    },
+    "3475": {
+      "name": "Yuyu",
+      "designation": "HR 3475",
+      "hr": 3475,
+      "hip": 43103
+    },
+    "4823": {
+      "name": "Lumbung",
+      "designation": "HR 4823",
+      "hr": 4823,
+      "hip": 61966
+    },
+    "2527": {
+      "name": "Tonglingxing",
+      "designation": "HR 2527",
+      "hr": 2527,
+      "hip": 33694
+    },
+    "2209": {
+      "name": "Shangwei",
+      "designation": "HR 2209",
+      "hr": 2209,
+      "hip": 29997
+    },
+    "932": {
+      "name": "Shangcheng",
+      "designation": "HR 932",
+      "hr": 932,
+      "hip": 14862
+    },
+    "1148": {
+      "name": "Shaowei",
+      "designation": "HR 1148",
+      "hr": 1148,
+      "hip": 17959
+    },
+    "2363": {
+      "name": "Kamelos",
+      "designation": "HR 2363",
+      "hr": 2363,
+      "hip": 31940
+    },
+    "1155": {
+      "name": "Custos",
+      "designation": "HR 1155",
+      "hr": 1155,
+      "hip": 17884
+    },
+    "707": {
+      "name": "Huagai",
+      "designation": "HR 707",
+      "hr": 707,
+      "hip": 11569
+    },
+    "580": {
+      "name": "Gang",
+      "designation": "HR 580",
+      "hr": 580,
+      "hip": 9598
+    },
+    "592": {
+      "name": "Rangifer",
+      "designation": "HR 592",
+      "hr": 592,
+      "hip": 9763
+    },
+    "285": {
+      "name": "Tarandus",
+      "designation": "HR 285",
+      "hr": 285,
+      "hip": 5372
+    },
+    "1122": {
+      "name": "Sarvvis",
+      "designation": "HR 1122",
+      "hr": 1122,
+      "hip": 17358
+    },
+    "1220": {
+      "name": "Áldu",
+      "designation": "HR 1220",
+      "hr": 1220,
+      "hip": 18532
+    },
+    "130": {
+      "name": "Cexing",
+      "designation": "HR 130",
+      "hr": 130,
+      "hip": 2599
+    },
+    "264": {
+      "name": "Tiansi",
+      "designation": "HR 264",
+      "hr": 264,
+      "hip": 4427
+    },
+    "2077": {
+      "name": "Bagu",
+      "designation": "HR 2077",
+      "hr": 2077,
+      "hip": 28358
+    },
+    "664": {
+      "name": "Apdu",
+      "designation": "HR 664",
+      "hr": 664,
+      "hip": 10670
+    },
+    "622": {
+      "name": "Alaybasan",
+      "designation": "HR 622",
+      "hr": 622,
+      "hip": 10064
+    },
+    "6298": {
+      "name": "Shengong",
+      "designation": "HR 6298",
+      "hr": 6298,
+      "hip": 83100
+    },
+    "5095": {
+      "name": "Apamvatsa",
+      "designation": "HR 5095",
+      "hr": 5095,
+      "hip": 66006
+    },
+    "5958": {
+      "name": "Blaze Star",
+      "designation": "HR 5958",
+      "hr": 5958,
+      "hip": 78322
+    },
+    "8698": {
+      "name": "Shatabhisha",
+      "designation": "HR 8698",
+      "hr": 8698,
+      "hip": 112961
+    },
+    "335": {
+      "name": "Junnanmen",
+      "designation": "HR 335",
+      "hr": 335,
+      "hip": 5434
+    },
+    "496": {
+      "name": "Dajiangjunbei",
+      "designation": "HR 496",
+      "hr": 496,
+      "hip": 8068
+    },
+    "9098": {
+      "name": "Hydor",
+      "designation": "HR 9098",
+      "hr": 9098,
+      "hip": 301
+    },
+    "642": {
+      "name": "Triminus",
+      "designation": "HR 642",
+      "hr": 642,
+      "hip": 10280
+    },
+    "6730": {
+      "name": "Bodu",
+      "designation": "HR 6730",
+      "hr": 6730,
+      "hip": 88267
+    },
+    "660": {
+      "name": "Deltoton",
+      "designation": "HR 660",
+      "hr": 660,
+      "hip": 10644
+    },
+    "6787": {
+      "name": "Ramus",
+      "designation": "HR 6787",
+      "hr": 6787,
+      "hip": 88886
+    },
+    "6895": {
+      "name": "Tusizuo",
+      "designation": "HR 6895",
+      "hr": 6895,
+      "hip": 90139
+    },
+    "5470": {
+      "name": "Paradys",
+      "designation": "HR 5470",
+      "hr": 5470,
+      "hip": 72370
+    },
+    "8830": {
+      "name": "Honores",
+      "designation": "HR 8830",
+      "hr": 8830,
+      "hip": 114570
+    },
+    "8762": {
+      "name": "Alfarasalkamil",
+      "designation": "HR 8762",
+      "hr": 8762,
+      "hip": 113726
+    },
+    "8976": {
+      "name": "Kaffalmusalsala",
+      "designation": "HR 8976",
+      "hr": 8976,
+      "hip": 116805
+    },
+    "8965": {
+      "name": "Rasalnaqa",
+      "designation": "HR 8965",
+      "hr": 8965,
+      "hip": 116631
+    },
+    "8961": {
+      "name": "Udkadua",
+      "designation": "HR 8961",
+      "hr": 8961,
+      "hip": 116584
+    },
+    "271": {
+      "name": "Kui",
+      "designation": "HR 271",
+      "hr": 271,
+      "hip": 4463
+    },
+    "5190": {
+      "name": "Heng",
+      "designation": "HR 5190",
+      "hr": 5190,
+      "hip": 67464
+    },
+    "215": {
+      "name": "Shimu",
+      "designation": "HR 215",
+      "hr": 215,
+      "hip": 3693
+    },
+    "5028": {
+      "name": "Kulou",
+      "designation": "HR 5028",
+      "hr": 5028,
+      "hip": 65109
+    },
+    "2261": {
+      "name": "Hoerikwaggo",
+      "designation": "HR 2261",
+      "hr": 2261,
+      "hip": 29271
+    },
+    "8812": {
+      "name": "Safina",
+      "designation": "HR 8812",
+      "hr": 8812,
+      "hip": 114341
+    },
+    "5463": {
+      "name": "Xami",
+      "designation": "HR 5463",
+      "hr": 5463,
+      "hip": 71908
+    },
+    "5867": {
+      "name": "Zhou",
+      "designation": "HR 5867",
+      "hr": 5867,
+      "hip": 77233
+    },
+    "5526": {
+      "name": "Solitaire",
+      "designation": "HR 5526",
+      "hr": 5526,
+      "hip": 72571
+    },
+    "8316": {
+      "name": "Garnet Star",
+      "designation": "HR 8316",
+      "hr": 8316,
+      "hip": 107259
+    },
+    "8502": {
+      "name": "Lang-Exster",
+      "designation": "HR 8502",
+      "hr": 8502,
+      "hip": 110130
+    },
+    "1336": {
+      "name": "Rhombus",
+      "designation": "HR 1336",
+      "hr": 1336,
+      "hip": 19780
+    },
+    "8726": {
+      "name": "Tengshe",
+      "designation": "HR 8726",
+      "hr": 8726,
+      "hip": 113288
+    },
+    "5469": {
+      "name": "Uridim",
+      "designation": "HR 5469",
+      "hr": 5469,
+      "hip": 71860
+    },
+    "8585": {
+      "name": "Stellio",
+      "designation": "HR 8585",
+      "hr": 8585,
+      "hip": 111169
+    },
+    "2451": {
+      "name": "Pipit",
+      "designation": "HR 2451",
+      "hr": 2451,
+      "hip": 31685
+    },
+    "6629": {
+      "name": "Bake-eo",
+      "designation": "HR 6629",
+      "hr": 6629,
+      "hip": 87108
+    },
+    "7669": {
+      "name": "Tianfu",
+      "designation": "HR 7669",
+      "hr": 7669,
+      "hip": 98823
+    },
+    "1136": {
+      "name": "Rana",
+      "designation": "HR 1136",
+      "hr": 1136,
+      "hip": 17378
+    },
+    "2930": {
+      "name": "Jishui",
+      "designation": "HR 2930",
+      "hr": 2930,
+      "hip": 37265
+    },
+    "5879": {
+      "name": "Gudja",
+      "designation": "HR 5879",
+      "hr": 5879,
+      "hip": 77450
+    },
+    "6402": {
+      "name": "Guniibuu",
+      "designation": "* 36 Oph",
+      "hr": 6402,
+      "hip": 84405
+    },
+    "4656": {
+      "name": "Imai",
+      "designation": "HR 4656",
+      "hr": 4656,
+      "hip": 59747
+    },
+    "4846": {
+      "name": "La Superba",
+      "designation": "HR 4846",
+      "hr": 4846,
+      "hip": 62223
+    },
+    "6165": {
+      "name": "Paikauhale",
+      "designation": "HR 6165",
+      "hr": 6165,
+      "hip": 81266
+    },
+    "5460": {
+      "name": "Toliman",
+      "designation": "HR 5460",
+      "hr": 5460,
+      "hip": 71681
+    },
+    "437": {
+      "name": "Alpherg",
+      "designation": "HR 437",
+      "hr": 437,
+      "hip": 7097
+    },
+    "6618": {
+      "name": "Alruba",
+      "designation": "HR 6618",
+      "hr": 6618,
+      "hip": 86782
+    },
+    "3482": {
+      "name": "Ashlesha",
+      "designation": "HR 3482",
+      "hr": 3482,
+      "hip": 43109
+    },
+    "3045": {
+      "name": "Azmidi",
+      "designation": "HR 3045",
+      "hr": 3045,
+      "hip": 38170
+    },
+    "8264": {
+      "name": "Bunda",
+      "designation": "HR 8264",
+      "hr": 8264,
+      "hip": 106786
+    },
+    "5409": {
+      "name": "Elgafar",
+      "designation": "HR 5409",
+      "hr": 5409,
+      "hip": 70755
+    },
+    "2177": {
+      "name": "Elkurud",
+      "designation": "HR 2177",
+      "hr": 2177,
+      "hip": 29034
+    },
+    "7528": {
+      "name": "Fawaris",
+      "designation": "HR 7528",
+      "hr": 7528,
+      "hip": 97165
+    },
+    "3923": {
+      "name": "Felis",
+      "designation": "HR 3923",
+      "hr": 3923,
+      "hip": 48615
+    },
+    "8773": {
+      "name": "Fumalsamakah",
+      "designation": "HR 8773",
+      "hr": 8773,
+      "hip": 113889
+    },
+    "5107": {
+      "name": "Heze",
+      "designation": "HR 5107",
+      "hr": 5107,
+      "hip": 66249
+    },
+    "4786": {
+      "name": "Kraz",
+      "designation": "HR 4786",
+      "hr": 4786,
+      "hip": 61359
+    },
+    "3627": {
+      "name": "Nahn",
+      "designation": "HR 3627",
+      "hr": 3627,
+      "hip": 44946
+    },
+    "7235": {
+      "name": "Okab",
+      "designation": "HR 7235",
+      "hr": 7235,
+      "hip": 93747
+    },
+    "3268": {
+      "name": "Piautos",
+      "designation": "HR 3268",
+      "hr": 3268,
+      "hip": 40881
+    },
+    "3249": {
+      "name": "Tarf",
+      "designation": "HR 3249",
+      "hr": 3249,
+      "hip": 40526
+    },
+    "3845": {
+      "name": "Ukdah",
+      "designation": "HR 3845",
+      "hr": 3845,
+      "hip": 47431
+    },
+    "4700": {
+      "name": "Ginan",
+      "designation": "HR 4700",
+      "hr": 4700,
+      "hip": 60260
+    },
+    "6241": {
+      "name": "Larawag",
+      "designation": "HR 6241",
+      "hr": 6241,
+      "hip": 82396
+    },
+    "338": {
+      "name": "Wurren",
+      "designation": "HR 338",
+      "hr": 338,
+      "hip": 5348
+    },
+    "219": {
+      "name": "Achird",
+      "designation": "HR 219",
+      "hr": 219,
+      "hip": 3821
+    },
+    "7116": {
+      "name": "Ainalrami",
+      "designation": "HR 7116",
+      "hr": 7116,
+      "hip": 92761
+    },
+    "7298": {
+      "name": "Aladfar",
+      "designation": "HR 7298",
+      "hr": 7298,
+      "hip": 94481
+    },
+    "7264": {
+      "name": "Albaldah",
+      "designation": "HR 7264",
+      "hr": 7264,
+      "hip": 94141
+    },
+    "8353": {
+      "name": "Aldhanab",
+      "designation": "HR 8353",
+      "hr": 8353,
+      "hip": 108085
+    },
+    "6396": {
+      "name": "Aldhibah",
+      "designation": "HR 6396",
+      "hr": 6396,
+      "hip": 83895
+    },
+    "7852": {
+      "name": "Aldulfin",
+      "designation": "HR 7852",
+      "hr": 7852,
+      "hip": 101421
+    },
+    "3594": {
+      "name": "Alkaphrah",
+      "designation": "HR 3594",
+      "hr": 3594,
+      "hip": 44471
+    },
+    "8905": {
+      "name": "Alkarab",
+      "designation": "HR 8905",
+      "hr": 8905,
+      "hip": 115623
+    },
+    "3485": {
+      "name": "Alsephina",
+      "designation": "HR 3485",
+      "hr": 3485,
+      "hip": 42913
+    },
+    "6132": {
+      "name": "Athebyne",
+      "designation": "HR 6132",
+      "hr": 6132,
+      "hip": 80331
+    },
+    "5603": {
+      "name": "Brachium",
+      "designation": "HR 5603",
+      "hr": 5603,
+      "hip": 73714
+    },
+    "265": {
+      "name": "Castula",
+      "designation": "HR 265",
+      "hr": 265,
+      "hip": 4422
+    },
+    "1412": {
+      "name": "Chamukuy",
+      "designation": "HR 1412",
+      "hr": 1412,
+      "hip": 20894
+    },
+    "963": {
+      "name": "Dalim",
+      "designation": "HR 963",
+      "hr": 963,
+      "hip": 14879
+    },
+    "6636": {
+      "name": "Dziban",
+      "designation": "HR 6636",
+      "hr": 6636,
+      "hip": 86614
+    },
+    "1899": {
+      "name": "Hatysa",
+      "designation": "HR 1899",
+      "hr": 1899,
+      "hip": 26241
+    },
+    "5928": {
+      "name": "Iklil",
+      "designation": "HR 5928",
+      "hr": 5928,
+      "hip": 78104
+    },
+    "5359": {
+      "name": "Khambalia",
+      "designation": "HR 5359",
+      "hr": 5359,
+      "hip": 69974
+    },
+    "824": {
+      "name": "Lilii Borea",
+      "designation": "HR 824",
+      "hr": 824,
+      "hip": 13061
+    },
+    "3734": {
+      "name": "Markeb",
+      "designation": "HR 3734",
+      "hr": 3734,
+      "hip": 45941
+    },
+    "3429": {
+      "name": "Meleph",
+      "designation": "HR 3429",
+      "hr": 3429,
+      "hip": 42556
+    },
+    "7254": {
+      "name": "Meridiana",
+      "designation": "HR 7254",
+      "hr": 7254,
+      "hip": 94114
+    },
+    "3418": {
+      "name": "Minchir",
+      "designation": "HR 3418",
+      "hr": 3418,
+      "hip": 42402
+    },
+    "834": {
+      "name": "Miram",
+      "designation": "HR 834",
+      "hr": 834,
+      "hip": 13268
+    },
+    "941": {
+      "name": "Misam",
+      "designation": "HR 941",
+      "hr": 941,
+      "hip": 14668
+    },
+    "464": {
+      "name": "Nembus",
+      "designation": "HR 464",
+      "hr": 464,
+      "hip": 7607
+    },
+    "2646": {
+      "name": "Nganurganity",
+      "designation": "HR 2646",
+      "hr": 2646,
+      "hip": 33856
+    },
+    "6252": {
+      "name": "Pipirima",
+      "designation": "HR 6252",
+      "hr": 6252,
+      "hip": 82545
+    },
+    "7228": {
+      "name": "Polaris Australis",
+      "designation": "HR 7228",
+      "hr": 7228,
+      "hip": 104382
+    },
+    "6812": {
+      "name": "Polis",
+      "designation": "HR 6812",
+      "hr": 6812,
+      "hip": 89341
+    },
+    "1346": {
+      "name": "Prima Hyadum",
+      "designation": "HR 1346",
+      "hr": 1346,
+      "hip": 20205
+    },
+    "8880": {
+      "name": "Salm",
+      "designation": "HR 8880",
+      "hr": 8880,
+      "hip": 115250
+    },
+    "1373": {
+      "name": "Secunda Hyadum",
+      "designation": "HR 1373",
+      "hr": 1373,
+      "hip": 20455
+    },
+    "542": {
+      "name": "Segin",
+      "designation": "HR 0542",
+      "hr": 542,
+      "hip": 8886
+    },
+    "1543": {
+      "name": "Tabit",
+      "designation": "HR 1543",
+      "hr": 1543,
+      "hip": 22449
+    },
+    "7597": {
+      "name": "Terebellum",
+      "designation": "HR 7597",
+      "hr": 7597,
+      "hip": 98066
+    },
+    "8636": {
+      "name": "Tiaki",
+      "designation": "HR 8636",
+      "hr": 8636,
+      "hip": 112122
+    },
+    "510": {
+      "name": "Torcular",
+      "designation": "HR 510",
+      "hr": 510,
+      "hip": 8198
+    },
+    "6247": {
+      "name": "Xamidimura",
+      "designation": "HR 6247",
+      "hr": 6247,
+      "hip": 82514
+    },
+    "5787": {
+      "name": "Zubenelhakrabi",
+      "designation": "HR 5787",
+      "hr": 5787,
+      "hip": 76333
+    },
+    "7462": {
+      "name": "Alsafi",
+      "designation": "HR 7462",
+      "hr": 7462,
+      "hip": 96100
+    },
+    "3275": {
+      "name": "Alsciaukat",
+      "designation": "HR 3275",
+      "hr": 3275,
+      "hip": 41075
+    },
+    "7773": {
+      "name": "Alshat",
+      "designation": "HR 7773",
+      "hr": 7773,
+      "hip": 100310
+    },
+    "2484": {
+      "name": "Alzirr",
+      "designation": "HR 2484",
+      "hr": 2484,
+      "hip": 32362
+    },
+    "850": {
+      "name": "Angetenar",
+      "designation": "HR 850",
+      "hr": 850,
+      "hip": 13288
+    },
+    "7405": {
+      "name": "Anser",
+      "designation": "HR 7405",
+      "hr": 7405,
+      "hip": 95771
+    },
+    "1393": {
+      "name": "Beemim",
+      "designation": "HR 1393",
+      "hr": 1393,
+      "hip": 20535
+    },
+    "838": {
+      "name": "Bharani",
+      "designation": "HR 838",
+      "hr": 838,
+      "hip": 13209
+    },
+    "5944": {
+      "name": "Fang",
+      "designation": "HR 5944",
+      "hr": 5944,
+      "hip": 78265
+    },
+    "153": {
+      "name": "Fulu",
+      "designation": "HR 153",
+      "hr": 153,
+      "hip": 2920
+    },
+    "6630": {
+      "name": "Fuyue",
+      "designation": "HR 6630",
+      "hr": 6630,
+      "hip": 87261
+    },
+    "1641": {
+      "name": "Haedus",
+      "designation": "HR 1641",
+      "hr": 1641,
+      "hip": 23767
+    },
+    "1577": {
+      "name": "Hassaleh",
+      "designation": "HR 1577",
+      "hr": 1577,
+      "hip": 23015
+    },
+    "6027": {
+      "name": "Jabbah",
+      "designation": "HR 6027",
+      "hr": 6027,
+      "hip": 79374
+    },
+    "5315": {
+      "name": "Kang",
+      "designation": "HR 5315",
+      "hr": 5315,
+      "hip": 69427
+    },
+    "2095": {
+      "name": "Mahasim",
+      "designation": "HR 2095",
+      "hr": 2095,
+      "hip": 28380
+    },
+    "8781": {
+      "name": "Markab",
+      "designation": "HR 8781",
+      "hr": 8781,
+      "hip": 113963
+    },
+    "4910": {
+      "name": "Minelauva",
+      "designation": "HR 4910",
+      "hr": 4910,
+      "hip": 63090
+    },
+    "4247": {
+      "name": "Praecipua",
+      "designation": "HR 4247",
+      "hr": 4247,
+      "hip": 53229
+    },
+    "361": {
+      "name": "Revati",
+      "designation": "HR 361",
+      "hr": 361,
+      "hip": 5737
+    },
+    "1612": {
+      "name": "Saclateni",
+      "designation": "HR 1612",
+      "hr": 1612,
+      "hip": 23453
+    },
+    "1481": {
+      "name": "Sceptrum",
+      "designation": "HR 1481",
+      "hr": 1481,
+      "hip": 21594
+    },
+    "4518": {
+      "name": "Taiyangshou",
+      "designation": "HR 4518",
+      "hr": 4518,
+      "hip": 57399
+    },
+    "4916": {
+      "name": "Taiyi",
+      "designation": "HR 4916",
+      "hr": 4916,
+      "hip": 63076
+    },
+    "1910": {
+      "name": "Tianguan",
+      "designation": "HR 1910",
+      "hr": 1910,
+      "hip": 26451
+    },
+    "4863": {
+      "name": "Tianyi",
+      "designation": "HR 4863",
+      "hr": 4863,
+      "hip": 62423
+    },
+    "5351": {
+      "name": "Xuange",
+      "designation": "HR 5351",
+      "hr": 5351,
+      "hip": 69732
+    },
+    "3903": {
+      "name": "Zhang",
+      "designation": "HR 3903",
+      "hr": 3903,
+      "hip": 48356
+    },
+    "1605": {
+      "name": "Almaaz",
+      "designation": "HR 1605",
+      "hr": 1605,
+      "hip": 23416
+    },
+    "6084": {
+      "name": "Alniyat",
+      "designation": "HR 6084",
+      "hr": 6084,
+      "hip": 80112
+    },
+    "6370": {
+      "name": "Alrakis",
+      "designation": "* mu. Dra",
+      "hr": 6370,
+      "hip": 83608
+    },
+    "3773": {
+      "name": "Alterf",
+      "designation": "HR 3773",
+      "hr": 3773,
+      "hip": 46750
+    },
+    "6117": {
+      "name": "Cujam",
+      "designation": "HR 6117",
+      "hr": 6117,
+      "hip": 80463
+    },
+    "8322": {
+      "name": "Deneb Algedi",
+      "designation": "HR 8322",
+      "hr": 8322,
+      "hip": 107556
+    },
+    "4968": {
+      "name": "Diadem",
+      "designation": "* alf Com",
+      "hr": 4968,
+      "hip": 64241
+    },
+    "4434": {
+      "name": "Giausar",
+      "designation": "HR 4434",
+      "hr": 4434,
+      "hip": 56211
+    },
+    "804": {
+      "name": "Kaffaljidhma",
+      "designation": "HR 804",
+      "hr": 804,
+      "hip": 12706
+    },
+    "6008": {
+      "name": "Marsic",
+      "designation": "* kap Her",
+      "hr": 6008,
+      "hip": 79043
+    },
+    "2286": {
+      "name": "Tejat",
+      "designation": "HR 2286",
+      "hr": 2286,
+      "hip": 30343
+    },
+    "1464": {
+      "name": "Theemin",
+      "designation": "HR 1464",
+      "hr": 1464,
+      "hip": 21393
+    },
+    "3461": {
+      "name": "Asellus Australis",
+      "designation": "HR 3461",
+      "hr": 3461,
+      "hip": 42911
+    },
+    "3449": {
+      "name": "Asellus Borealis",
+      "designation": "HR 3449",
+      "hr": 3449,
+      "hip": 42806
+    },
+    "4662": {
+      "name": "Gienah",
+      "designation": "HR 4662",
+      "hr": 4662,
+      "hip": 59803
+    },
+    "5459": {
+      "name": "Rigil Kentaurus",
+      "designation": "HR 5459",
+      "hr": 5459,
+      "hip": 71683
+    },
+    "6056": {
+      "name": "Yed Prior",
+      "designation": "HR 6056",
+      "hr": 6056,
+      "hip": 79593
+    },
+    "7343": {
+      "name": "Arkab Posterior",
+      "designation": "HR 7343",
+      "hr": 7343,
+      "hip": 95294
+    },
+    "7337": {
+      "name": "Arkab Prior",
+      "designation": "HR 7337",
+      "hr": 7337,
+      "hip": 95241
+    },
+    "6075": {
+      "name": "Yed Posterior",
+      "designation": "HR 6075",
+      "hr": 6075,
+      "hip": 79882
+    },
+    "7950": {
+      "name": "Albali",
+      "designation": "HR 7950",
+      "hr": 7950,
+      "hip": 102618
+    },
+    "4623": {
+      "name": "Alchiba",
+      "designation": "HR 4623",
+      "hr": 4623,
+      "hip": 59199
+    },
+    "4287": {
+      "name": "Alkes",
+      "designation": "HR 4287",
+      "hr": 4287,
+      "hip": 53740
+    },
+    "8499": {
+      "name": "Ancha",
+      "designation": "HR 8499",
+      "hr": 8499,
+      "hip": 110003
+    },
+    "7194": {
+      "name": "Ascella",
+      "designation": "HR 7194",
+      "hr": 7194,
+      "hip": 93506
+    },
+    "1131": {
+      "name": "Atik",
+      "designation": "HR 1131",
+      "hr": 1131,
+      "hip": 17448
+    },
+    "8301": {
+      "name": "Azelfafage",
+      "designation": "HR 8301",
+      "hr": 8301,
+      "hip": 107136
+    },
+    "874": {
+      "name": "Azha",
+      "designation": "HR 874",
+      "hr": 874,
+      "hip": 13701
+    },
+    "539": {
+      "name": "Baten Kaitos",
+      "designation": "HR 539",
+      "hr": 539,
+      "hip": 8645
+    },
+    "1298": {
+      "name": "Beid",
+      "designation": "HR 1298",
+      "hr": 1298,
+      "hip": 19587
+    },
+    "951": {
+      "name": "Botein",
+      "designation": "HR 951",
+      "hr": 951,
+      "hip": 14838
+    },
+    "6688": {
+      "name": "Grumium",
+      "designation": "HR 6688",
+      "hr": 6688,
+      "hip": 87585
+    },
+    "1325": {
+      "name": "Keid",
+      "designation": "HR 1325",
+      "hr": 1325,
+      "hip": 19849
+    },
+    "8417": {
+      "name": "Kurhah",
+      "designation": "HR 8417",
+      "hr": 8417,
+      "hip": 108917
+    },
+    "6526": {
+      "name": "Maasym",
+      "designation": "HR 6526",
+      "hr": 6526,
+      "hip": 85693
+    },
+    "6149": {
+      "name": "Marfik",
+      "designation": "HR 6149",
+      "hr": 6149,
+      "hip": 80883
+    },
+    "2650": {
+      "name": "Mekbuda",
+      "designation": "HR 2650",
+      "hr": 2650,
+      "hip": 34088
+    },
+    "1228": {
+      "name": "Menkib",
+      "designation": "HR 1228",
+      "hr": 1228,
+      "hip": 18614
+    },
+    "5533": {
+      "name": "Merga",
+      "designation": "HR 5533",
+      "hr": 5533,
+      "hip": 72487
+    },
+    "5235": {
+      "name": "Muphrid",
+      "designation": "HR 5235",
+      "hr": 5235,
+      "hip": 67927
+    },
+    "5747": {
+      "name": "Nusakan",
+      "designation": "HR 5747",
+      "hr": 5747,
+      "hip": 75695
+    },
+    "3905": {
+      "name": "Rasalas",
+      "designation": "HR 3905",
+      "hr": 3905,
+      "hip": 48455
+    },
+    "7882": {
+      "name": "Rotanev",
+      "designation": "HR 7882",
+      "hr": 7882,
+      "hip": 101769
+    },
+    "6410": {
+      "name": "Sarin",
+      "designation": "HR 6410",
+      "hr": 6410,
+      "hip": 84379
+    },
+    "7479": {
+      "name": "Sham",
+      "designation": "HR 7479",
+      "hr": 7479,
+      "hip": 96757
+    },
+    "8610": {
+      "name": "Situla",
+      "designation": "HR 8610",
+      "hr": 8610,
+      "hip": 111710
+    },
+    "7906": {
+      "name": "Sualocin",
+      "designation": "HR 7906",
+      "hr": 7906,
+      "hip": 101958
+    },
+    "3852": {
+      "name": "Subra",
+      "designation": "HR 3852",
+      "hr": 3852,
+      "hip": 47508
+    },
+    "5338": {
+      "name": "Syrma",
+      "designation": "HR 5338",
+      "hr": 5338,
+      "hip": 69701
+    },
+    "3208": {
+      "name": "Tegmine",
+      "designation": "HR 3208",
+      "hr": 3208,
+      "hip": 40167
+    },
+    "3185": {
+      "name": "Tureis",
+      "designation": "HR 3185",
+      "hr": 3185,
+      "hip": 39757
+    },
+    "4689": {
+      "name": "Zaniah",
+      "designation": "HR 4689",
+      "hr": 4689,
+      "hip": 60129
+    },
+    "984": {
+      "name": "Zibal",
+      "designation": "HR 984",
+      "hr": 984,
+      "hip": 15197
+    },
+    "5984": {
+      "name": "Acrab",
+      "designation": "* bet Sco",
+      "hr": 5984,
+      "hip": 78820
+    },
+    "2618": {
+      "name": "Adhara",
+      "designation": "HR 2618",
+      "hr": 2618,
+      "hip": 33579
+    },
+    "390": {
+      "name": "Adhil",
+      "designation": "HR 390",
+      "hr": 390,
+      "hip": 6411
+    },
+    "8238": {
+      "name": "Alfirk",
+      "designation": "HR 8238",
+      "hr": 8238,
+      "hip": 106032
+    },
+    "7754": {
+      "name": "Algedi",
+      "designation": "HR 7754",
+      "hr": 7754,
+      "hip": 100064
+    },
+    "5733": {
+      "name": "Alkalurops",
+      "designation": "HR 5733",
+      "hr": 5733,
+      "hip": 75411
+    },
+    "6746": {
+      "name": "Alnasl",
+      "designation": "HR 6746",
+      "hr": 6746,
+      "hip": 88635
+    },
+    "596": {
+      "name": "Alrescha",
+      "designation": "* alf Psc",
+      "hr": 596,
+      "hip": 9487
+    },
+    "7602": {
+      "name": "Alshain",
+      "designation": "HR 7602",
+      "hr": 7602,
+      "hip": 98036
+    },
+    "7310": {
+      "name": "Altais",
+      "designation": "HR 7310",
+      "hr": 7310,
+      "hip": 94376
+    },
+    "7141": {
+      "name": "Alya",
+      "designation": "* tet Ser",
+      "hr": 7141,
+      "hip": 92946
+    },
+    "1151": {
+      "name": "Asterope",
+      "designation": "HR 1151",
+      "hr": 1151,
+      "hip": 17579
+    },
+    "1178": {
+      "name": "Atlas",
+      "designation": "HR 1178",
+      "hr": 1178,
+      "hip": 17847
+    },
+    "8450": {
+      "name": "Biham",
+      "designation": "HR 8450",
+      "hr": 8450,
+      "hip": 109427
+    },
+    "6603": {
+      "name": "Cebalrai",
+      "designation": "HR 6603",
+      "hr": 6603,
+      "hip": 86742
+    },
+    "1140": {
+      "name": "Celaeno",
+      "designation": "HR 1140",
+      "hr": 1140,
+      "hip": 17489
+    },
+    "7776": {
+      "name": "Dabih",
+      "designation": "HR 7776",
+      "hr": 7776,
+      "hip": 100345
+    },
+    "188": {
+      "name": "Diphda",
+      "designation": "HR 188",
+      "hr": 188,
+      "hip": 3419
+    },
+    "5953": {
+      "name": "Dschubba",
+      "designation": "HR 5953",
+      "hr": 5953,
+      "hip": 78401
+    },
+    "1142": {
+      "name": "Electra",
+      "designation": "HR 1142",
+      "hr": 1142,
+      "hip": 17499
+    },
+    "6705": {
+      "name": "Eltanin",
+      "designation": "HR 6705",
+      "hr": 6705,
+      "hip": 87833
+    },
+    "5267": {
+      "name": "Hadar",
+      "designation": "HR 5267",
+      "hr": 5267,
+      "hip": 68702
+    },
+    "8634": {
+      "name": "Homam",
+      "designation": "HR 8634",
+      "hr": 8634,
+      "hip": 112029
+    },
+    "5506": {
+      "name": "Izar",
+      "designation": "HR 5506",
+      "hr": 5506,
+      "hip": 72105
+    },
+    "8131": {
+      "name": "Kitalpha",
+      "designation": "HR 8131",
+      "hr": 8131,
+      "hip": 104987
+    },
+    "6148": {
+      "name": "Kornephoros",
+      "designation": "HR 6148",
+      "hr": 6148,
+      "hip": 80816
+    },
+    "6508": {
+      "name": "Lesath",
+      "designation": "HR 6508",
+      "hr": 6508,
+      "hip": 85696
+    },
+    "8650": {
+      "name": "Matar",
+      "designation": "HR 8650",
+      "hr": 8650,
+      "hip": 112158
+    },
+    "5288": {
+      "name": "Menkent",
+      "designation": "HR 5288",
+      "hr": 5288,
+      "hip": 68933
+    },
+    "546": {
+      "name": "Mesarthim",
+      "designation": "* gam Ari",
+      "hr": 546,
+      "hip": null
+    },
+    "544": {
+      "name": "Mothallah",
+      "designation": "HR 544",
+      "hr": 544,
+      "hip": 8796
+    },
+    "2657": {
+      "name": "Muliphein",
+      "designation": "HR 2657",
+      "hr": 2657,
+      "hip": 34045
+    },
+    "3165": {
+      "name": "Naos",
+      "designation": "HR 3165",
+      "hr": 3165,
+      "hip": 39429
+    },
+    "8278": {
+      "name": "Nashira",
+      "designation": "HR 8278",
+      "hr": 8278,
+      "hip": 106985
+    },
+    "5602": {
+      "name": "Nekkar",
+      "designation": "HR 5602",
+      "hr": 5602,
+      "hip": 73555
+    },
+    "7121": {
+      "name": "Nunki",
+      "designation": "HR 7121",
+      "hr": 7121,
+      "hip": 92855
+    },
+    "5735": {
+      "name": "Pherkad",
+      "designation": "HR 5735",
+      "hr": 5735,
+      "hip": 75097
+    },
+    "6536": {
+      "name": "Rastaban",
+      "designation": "HR 6536",
+      "hr": 6536,
+      "hip": 85670
+    },
+    "403": {
+      "name": "Ruchbah",
+      "designation": "HR 403",
+      "hr": 403,
+      "hip": 6686
+    },
+    "6378": {
+      "name": "Sabik",
+      "designation": "HR 6378",
+      "hr": 6378,
+      "hip": 84012
+    },
+    "8518": {
+      "name": "Sadachbia",
+      "designation": "HR 8518",
+      "hr": 8518,
+      "hip": 110395
+    },
+    "8684": {
+      "name": "Sadalbari",
+      "designation": "HR 8684",
+      "hr": 8684,
+      "hip": 112748
+    },
+    "8414": {
+      "name": "Sadalmelik",
+      "designation": "HR 8414",
+      "hr": 8414,
+      "hip": 109074
+    },
+    "8232": {
+      "name": "Sadalsuud",
+      "designation": "HR 8232",
+      "hr": 8232,
+      "hip": 106278
+    },
+    "7796": {
+      "name": "Sadr",
+      "designation": "HR 7796",
+      "hr": 7796,
+      "hip": 100453
+    },
+    "6553": {
+      "name": "Sargas",
+      "designation": "HR 6553",
+      "hr": 6553,
+      "hip": 86228
+    },
+    "168": {
+      "name": "Schedar",
+      "designation": "HR 168",
+      "hr": 168,
+      "hip": 3179
+    },
+    "5435": {
+      "name": "Seginus",
+      "designation": "HR 5435",
+      "hr": 5435,
+      "hip": 71075
+    },
+    "7106": {
+      "name": "Sheliak",
+      "designation": "HR 7106",
+      "hr": 7106,
+      "hip": 92420
+    },
+    "8709": {
+      "name": "Skat",
+      "designation": "HR 8709",
+      "hr": 8709,
+      "hip": 113136
+    },
+    "3634": {
+      "name": "Suhail",
+      "designation": "HR 3634",
+      "hr": 3634,
+      "hip": 44816
+    },
+    "7178": {
+      "name": "Sulafat",
+      "designation": "HR 7178",
+      "hr": 7178,
+      "hip": 93194
+    },
+    "7525": {
+      "name": "Tarazed",
+      "designation": "HR 7525",
+      "hr": 7525,
+      "hip": 97278
+    },
+    "1145": {
+      "name": "Taygeta",
+      "designation": "HR 1145",
+      "hr": 1145,
+      "hip": 17531
+    },
+    "5854": {
+      "name": "Unukalhai",
+      "designation": "HR 5854",
+      "hr": 5854,
+      "hip": 77070
+    },
+    "2777": {
+      "name": "Wasat",
+      "designation": "HR 2777",
+      "hr": 2777,
+      "hip": 35550
+    },
+    "6789": {
+      "name": "Yildun",
+      "designation": "HR 6789",
+      "hr": 6789,
+      "hip": 85822
+    },
+    "4540": {
+      "name": "Zavijava",
+      "designation": "HR 4540",
+      "hr": 4540,
+      "hip": 57757
+    },
+    "5531": {
+      "name": "Zubenelgenubi",
+      "designation": "HR 5531",
+      "hr": 5531,
+      "hip": 72622
+    },
+    "5685": {
+      "name": "Zubeneschamali",
+      "designation": "HR 5685",
+      "hr": 5685,
+      "hip": 74785
+    },
+    "897": {
+      "name": "Acamar",
+      "designation": "* tet Eri",
+      "hr": 897,
+      "hip": 13847
+    },
+    "4730": {
+      "name": "Acrux",
+      "designation": "* alf Cru",
+      "hr": 4730,
+      "hip": 60718
+    },
+    "3572": {
+      "name": "Acubens",
+      "designation": "HR 3572",
+      "hr": 3572,
+      "hip": 44066
+    },
+    "4031": {
+      "name": "Adhafera",
+      "designation": "HR 4031",
+      "hr": 4031,
+      "hip": 50335
+    },
+    "7417": {
+      "name": "Albireo",
+      "designation": "HR 7417",
+      "hr": 7417,
+      "hip": 95947
+    },
+    "8162": {
+      "name": "Alderamin",
+      "designation": "HR 8162",
+      "hr": 8162,
+      "hip": 105199
+    },
+    "4057": {
+      "name": "Algieba",
+      "designation": "* gam Leo",
+      "hr": 4057,
+      "hip": 50583
+    },
+    "4757": {
+      "name": "Algorab",
+      "designation": "HR 4757",
+      "hr": 4757,
+      "hip": 60965
+    },
+    "2421": {
+      "name": "Alhena",
+      "designation": "HR 2421",
+      "hr": 2421,
+      "hip": 31681
+    },
+    "603": {
+      "name": "Almach",
+      "designation": "HR 603",
+      "hr": 603,
+      "hip": 9640
+    },
+    "8425": {
+      "name": "Alnair",
+      "designation": "HR 8425",
+      "hr": 8425,
+      "hip": 109268
+    },
+    "1903": {
+      "name": "Alnilam",
+      "designation": "HR 1903",
+      "hr": 1903,
+      "hip": 26311
+    },
+    "1948": {
+      "name": "Alnitak",
+      "designation": "* zet Ori",
+      "hr": 1948,
+      "hip": 26727
+    },
+    "3748": {
+      "name": "Alphard",
+      "designation": "HR 3748",
+      "hr": 3748,
+      "hip": 46390
+    },
+    "5793": {
+      "name": "Alphecca",
+      "designation": "HR 5793",
+      "hr": 5793,
+      "hip": 76267
+    },
+    "2827": {
+      "name": "Aludra",
+      "designation": "HR 2827",
+      "hr": 2827,
+      "hip": 35904
+    },
+    "4375": {
+      "name": "Alula Australis",
+      "designation": "* ksi UMa",
+      "hr": 4375,
+      "hip": 55203
+    },
+    "4377": {
+      "name": "Alula Borealis",
+      "designation": "HR 4377",
+      "hr": 4377,
+      "hip": 55219
+    },
+    "99": {
+      "name": "Ankaa",
+      "designation": "HR 99",
+      "hr": 99,
+      "hip": 2081
+    },
+    "1865": {
+      "name": "Arneb",
+      "designation": "HR 1865",
+      "hr": 1865,
+      "hip": 25985
+    },
+    "3699": {
+      "name": "Aspidiske",
+      "designation": "HR 3699",
+      "hr": 3699,
+      "hip": 45556
+    },
+    "6217": {
+      "name": "Atria",
+      "designation": "HR 6217",
+      "hr": 6217,
+      "hip": 82273
+    },
+    "3307": {
+      "name": "Avior",
+      "designation": "HR 3307",
+      "hr": 3307,
+      "hip": 41037
+    },
+    "4785": {
+      "name": "Chara",
+      "designation": "HR 4785",
+      "hr": 4785,
+      "hip": 61317
+    },
+    "4359": {
+      "name": "Chertan",
+      "designation": "HR 4359",
+      "hr": 4359,
+      "hip": 54879
+    },
+    "3522": {
+      "name": "Copernicus",
+      "designation": "HR 3522",
+      "hr": 3522,
+      "hip": 43587
+    },
+    "4915": {
+      "name": "Cor Caroli",
+      "designation": "HR 4915",
+      "hr": 4915,
+      "hip": 63125
+    },
+    "1666": {
+      "name": "Cursa",
+      "designation": "HR 1666",
+      "hr": 1666,
+      "hip": 23875
+    },
+    "1791": {
+      "name": "Elnath",
+      "designation": "HR 1791",
+      "hr": 1791,
+      "hip": 25428
+    },
+    "8308": {
+      "name": "Enif",
+      "designation": "HR 8308",
+      "hr": 8308,
+      "hip": 107315
+    },
+    "2282": {
+      "name": "Furud",
+      "designation": "HR 2282",
+      "hr": 2282,
+      "hip": 30122
+    },
+    "4763": {
+      "name": "Gacrux",
+      "designation": "HR 4763",
+      "hr": 4763,
+      "hip": 61084
+    },
+    "2845": {
+      "name": "Gomeisa",
+      "designation": "HR 2845",
+      "hr": 2845,
+      "hip": 36188
+    },
+    "617": {
+      "name": "Hamal",
+      "designation": "HR 617",
+      "hr": 617,
+      "hip": 9884
+    },
+    "6879": {
+      "name": "Kaus Australis",
+      "designation": "HR 6879",
+      "hr": 6879,
+      "hip": 90185
+    },
+    "6913": {
+      "name": "Kaus Borealis",
+      "designation": "HR 6913",
+      "hr": 6913,
+      "hip": 90496
+    },
+    "6859": {
+      "name": "Kaus Media",
+      "designation": "HR 6859",
+      "hr": 6859,
+      "hip": 89931
+    },
+    "5563": {
+      "name": "Kochab",
+      "designation": "HR 5563",
+      "hr": 5563,
+      "hip": 72607
+    },
+    "1149": {
+      "name": "Maia",
+      "designation": "HR 1149",
+      "hr": 1149,
+      "hip": 17573
+    },
+    "2473": {
+      "name": "Mebsuta",
+      "designation": "HR 2473",
+      "hr": 2473,
+      "hip": 32246
+    },
+    "1879": {
+      "name": "Meissa",
+      "designation": "HR 1879",
+      "hr": 1879,
+      "hip": 26207
+    },
+    "2088": {
+      "name": "Menkalinan",
+      "designation": "HR 2088",
+      "hr": 2088,
+      "hip": 28360
+    },
+    "1156": {
+      "name": "Merope",
+      "designation": "HR 1156",
+      "hr": 1156,
+      "hip": 17608
+    },
+    "3685": {
+      "name": "Miaplacidus",
+      "designation": "HR 3685",
+      "hr": 3685,
+      "hip": 45238
+    },
+    "4853": {
+      "name": "Mimosa",
+      "designation": "HR 4853",
+      "hr": 4853,
+      "hip": 62434
+    },
+    "1852": {
+      "name": "Mintaka",
+      "designation": "HR 1852",
+      "hr": 1852,
+      "hip": 25930
+    },
+    "1017": {
+      "name": "Mirfak",
+      "designation": "HR 1017",
+      "hr": 1017,
+      "hip": 15863
+    },
+    "2294": {
+      "name": "Mirzam",
+      "designation": "HR 2294",
+      "hr": 2294,
+      "hip": 30324
+    },
+    "3323": {
+      "name": "Muscida",
+      "designation": "HR 3323",
+      "hr": 3323,
+      "hip": 41704
+    },
+    "1829": {
+      "name": "Nihal",
+      "designation": "HR 1829",
+      "hr": 1829,
+      "hip": 25606
+    },
+    "7790": {
+      "name": "Peacock",
+      "designation": "HR 7790",
+      "hr": 7790,
+      "hip": 100751
+    },
+    "1956": {
+      "name": "Phact",
+      "designation": "HR 1956",
+      "hr": 1956,
+      "hip": 26634
+    },
+    "4554": {
+      "name": "Phecda",
+      "designation": "HR 4554",
+      "hr": 4554,
+      "hip": 58001
+    },
+    "4825": {
+      "name": "Porrima",
+      "designation": "HR 4825",
+      "hr": 4825,
+      "hip": 61941
+    },
+    "2216": {
+      "name": "Propus",
+      "designation": "HR 2216",
+      "hr": 2216,
+      "hip": 29655
+    },
+    "6556": {
+      "name": "Rasalhague",
+      "designation": "HR 6556",
+      "hr": 6556,
+      "hip": 86032
+    },
+    "7348": {
+      "name": "Rukbat",
+      "designation": "HR 7348",
+      "hr": 7348,
+      "hip": 95347
+    },
+    "2004": {
+      "name": "Saiph",
+      "designation": "HR 2004",
+      "hr": 2004,
+      "hip": 27366
+    },
+    "6527": {
+      "name": "Shaula",
+      "designation": "HR 6527",
+      "hr": 6527,
+      "hip": 85927
+    },
+    "553": {
+      "name": "Sheratan",
+      "designation": "HR 553",
+      "hr": 553,
+      "hip": 8903
+    },
+    "3569": {
+      "name": "Talitha",
+      "designation": "HR 3569",
+      "hr": 3569,
+      "hip": 44127
+    },
+    "4069": {
+      "name": "Tania Australis",
+      "designation": "HR 4069",
+      "hr": 4069,
+      "hip": 50801
+    },
+    "4033": {
+      "name": "Tania Borealis",
+      "designation": "HR 4033",
+      "hr": 4033,
+      "hip": 50372
+    },
+    "4609": {
+      "name": "Tonatiuh",
+      "designation": "HR 4609",
+      "hr": 4609,
+      "hip": 58952
+    },
+    "4932": {
+      "name": "Vindemiatrix",
+      "designation": "HR 4932",
+      "hr": 4932,
+      "hip": 63608
+    },
+    "2040": {
+      "name": "Wazn",
+      "designation": "HR 2040",
+      "hr": 2040,
+      "hip": 27628
+    },
+    "2693": {
+      "name": "Wezen",
+      "designation": "HR 2693",
+      "hr": 2693,
+      "hip": 34444
+    },
+    "1231": {
+      "name": "Zaurak",
+      "designation": "HR 1231",
+      "hr": 1231,
+      "hip": 18543
+    },
+    "4357": {
+      "name": "Zosma",
+      "designation": "HR 4357",
+      "hr": 4357,
+      "hip": 54872
+    },
+    "472": {
+      "name": "Achernar",
+      "designation": "HR 472",
+      "hr": 472,
+      "hip": 7588
+    },
+    "5062": {
+      "name": "Alcor",
+      "designation": "HR 5062",
+      "hr": 5062,
+      "hip": 65477
+    },
+    "1165": {
+      "name": "Alcyone",
+      "designation": "HR 1165",
+      "hr": 1165,
+      "hip": 17702
+    },
+    "1457": {
+      "name": "Aldebaran",
+      "designation": "HR 1457",
+      "hr": 1457,
+      "hip": 21421
+    },
+    "39": {
+      "name": "Algenib",
+      "designation": "HR 39",
+      "hr": 39,
+      "hip": 1067
+    },
+    "936": {
+      "name": "Algol",
+      "designation": "HR 936",
+      "hr": 936,
+      "hip": 14576
+    },
+    "4905": {
+      "name": "Alioth",
+      "designation": "HR 4905",
+      "hr": 4905,
+      "hip": 62956
+    },
+    "7949": {
+      "name": "Aljanah",
+      "designation": "HR 7949",
+      "hr": 7949,
+      "hip": 102488
+    },
+    "5191": {
+      "name": "Alkaid",
+      "designation": "HR 5191",
+      "hr": 5191,
+      "hip": 67301
+    },
+    "15": {
+      "name": "Alpheratz",
+      "designation": "HR 15",
+      "hr": 15,
+      "hip": 677
+    },
+    "7557": {
+      "name": "Altair",
+      "designation": "HR 7557",
+      "hr": 7557,
+      "hip": 97649
+    },
+    "6134": {
+      "name": "Antares",
+      "designation": "HR 6134",
+      "hr": 6134,
+      "hip": 80763
+    },
+    "5340": {
+      "name": "Arcturus",
+      "designation": "HR 5340",
+      "hr": 5340,
+      "hip": 69673
+    },
+    "1790": {
+      "name": "Bellatrix",
+      "designation": "HR 1790",
+      "hr": 1790,
+      "hip": 25336
+    },
+    "2061": {
+      "name": "Betelgeuse",
+      "designation": "HR 2061",
+      "hr": 2061,
+      "hip": 27989
+    },
+    "2326": {
+      "name": "Canopus",
+      "designation": "HR 2326",
+      "hr": 2326,
+      "hip": 30438
+    },
+    "1708": {
+      "name": "Capella",
+      "designation": "HR 1708",
+      "hr": 1708,
+      "hip": 24608
+    },
+    "21": {
+      "name": "Caph",
+      "designation": "HR 21",
+      "hr": 21,
+      "hip": 746
+    },
+    "2891": {
+      "name": "Castor",
+      "designation": "HR 2891",
+      "hr": 2891,
+      "hip": 36850
+    },
+    "7924": {
+      "name": "Deneb",
+      "designation": "HR 7924",
+      "hr": 7924,
+      "hip": 102098
+    },
+    "4534": {
+      "name": "Denebola",
+      "designation": "HR 4534",
+      "hr": 4534,
+      "hip": 57632
+    },
+    "4301": {
+      "name": "Dubhe",
+      "designation": "HR 4301",
+      "hr": 4301,
+      "hip": 54061
+    },
+    "4660": {
+      "name": "Megrez",
+      "designation": "HR 4660",
+      "hr": 4660,
+      "hip": 59774
+    },
+    "911": {
+      "name": "Menkar",
+      "designation": "HR 911",
+      "hr": 911,
+      "hip": 14135
+    },
+    "4295": {
+      "name": "Merak",
+      "designation": "HR 4295",
+      "hr": 4295,
+      "hip": 53910
+    },
+    "681": {
+      "name": "Mira",
+      "designation": "HR 681",
+      "hr": 681,
+      "hip": 10826
+    },
+    "337": {
+      "name": "Mirach",
+      "designation": "HR 337",
+      "hr": 337,
+      "hip": 5447
+    },
+    "5054": {
+      "name": "Mizar",
+      "designation": "HR 5054",
+      "hr": 5054,
+      "hip": 65378
+    },
+    "1180": {
+      "name": "Pleione",
+      "designation": "HR 1180",
+      "hr": 1180,
+      "hip": 17851
+    },
+    "424": {
+      "name": "Polaris",
+      "designation": "HR 424",
+      "hr": 424,
+      "hip": 11767
+    },
+    "2943": {
+      "name": "Procyon",
+      "designation": "HR 2943",
+      "hr": 2943,
+      "hip": 37279
+    },
+    "6406": {
+      "name": "Rasalgethi",
+      "designation": "* alf Her",
+      "hr": 6406,
+      "hip": 84345
+    },
+    "3982": {
+      "name": "Regulus",
+      "designation": "HR 3982",
+      "hr": 3982,
+      "hip": 49669
+    },
+    "1713": {
+      "name": "Rigel",
+      "designation": "HR 1713",
+      "hr": 1713,
+      "hip": 24436
+    },
+    "8775": {
+      "name": "Scheat",
+      "designation": "HR 8775",
+      "hr": 8775,
+      "hip": 113881
+    },
+    "2491": {
+      "name": "Sirius",
+      "designation": "HR 2491",
+      "hr": 2491,
+      "hip": 32349
+    },
+    "5056": {
+      "name": "Spica",
+      "designation": "HR 5056",
+      "hr": 5056,
+      "hip": 65474
+    },
+    "5291": {
+      "name": "Thuban",
+      "designation": "HR 5291",
+      "hr": 5291,
+      "hip": 68756
+    },
+    "7001": {
+      "name": "Vega",
+      "designation": "HR 7001",
+      "hr": 7001,
+      "hip": 91262
+    },
+    "1409": {
+      "name": "Ain",
+      "designation": "HR 1409",
+      "hr": 1409,
+      "hip": 20889
+    },
+    "6585": {
+      "name": "Cervantes",
+      "designation": "HR 6585",
+      "hr": 6585,
+      "hip": 86796
+    },
+    "4277": {
+      "name": "Chalawan",
+      "designation": "HR 4277",
+      "hr": 4277,
+      "hip": 53721
+    },
+    "5744": {
+      "name": "Edasich",
+      "designation": "HR 5744",
+      "hr": 5744,
+      "hip": 75458
+    },
+    "8974": {
+      "name": "Errai",
+      "designation": "HR 8974",
+      "hr": 8974,
+      "hip": 116727
+    },
+    "6945": {
+      "name": "Fafnir",
+      "designation": "HR 6945",
+      "hr": 6945,
+      "hip": 90344
+    },
+    "8728": {
+      "name": "Fomalhaut",
+      "designation": "HR 8728",
+      "hr": 8728,
+      "hip": 113368
+    },
+    "8729": {
+      "name": "Helvetios",
+      "designation": "HR 8729",
+      "hr": 8729,
+      "hip": 113357
+    },
+    "3743": {
+      "name": "Intercrus",
+      "designation": "HR 3743",
+      "hr": 3743,
+      "hip": 46471
+    },
+    "7595": {
+      "name": "Libertas",
+      "designation": "HR 7595",
+      "hr": 7595,
+      "hip": 97938
+    },
+    "8030": {
+      "name": "Musica",
+      "designation": "HR 8030",
+      "hr": 8030,
+      "hip": 103527
+    },
+    "2990": {
+      "name": "Pollux",
+      "designation": "HR 2990",
+      "hr": 2990,
+      "hip": 37826
+    },
+    "1084": {
+      "name": "Ran",
+      "designation": "HR 1084",
+      "hr": 1084,
+      "hip": 16537
+    },
+    "458": {
+      "name": "Titawin",
+      "designation": "HR 458",
+      "hr": 458,
+      "hip": 7513
+    },
+    "8930": {
+      "name": "Veritate",
+      "designation": "HR 8930",
+      "hr": 8930,
+      "hip": 116076
+    }
+  },
+  "by_hip": {
+    "116771": {
+      "name": "Puwuh Atarung",
+      "designation": "HR 8969",
+      "hr": 8969,
+      "hip": 116771
+    },
+    "5824": {
+      "name": "Buranun",
+      "designation": "HR 367",
+      "hr": 367,
+      "hip": 5824
+    },
+    "7535": {
+      "name": "Idigna",
+      "designation": "HR 463",
+      "hr": 463,
+      "hip": 7535
+    },
+    "1645": {
+      "name": "Simmakh",
+      "designation": "HR 80",
+      "hr": 80,
+      "hip": 1645
+    },
+    "9353": {
+      "name": "Zibbatu",
+      "designation": "HR 7203",
+      "hr": 7203,
+      "hip": 9353
+    },
+    "5743": {
+      "name": "Paushna",
+      "designation": "HR 362",
+      "hr": 362,
+      "hip": 5743
+    },
+    "118268": {
+      "name": "Pili",
+      "designation": "HR 9072",
+      "hr": 9072,
+      "hip": 118268
+    },
+    "114971": {
+      "name": "Yunyu",
+      "designation": "HR 8852",
+      "hr": 8852,
+      "hip": 114971
+    },
+    "3786": {
+      "name": "Waiping",
+      "designation": "HR 224",
+      "hr": 224,
+      "hip": 3786
+    },
+    "66458": {
+      "name": "Jordanus",
+      "designation": "HR 5127",
+      "hr": 5127,
+      "hip": 66458
+    },
+    "111188": {
+      "name": "Tiangang",
+      "designation": "HR 8576",
+      "hr": 8576,
+      "hip": 111188
+    },
+    "107380": {
+      "name": "Baijiu",
+      "designation": "HR 8305",
+      "hr": 8305,
+      "hip": 107380
+    },
+    "111497": {
+      "name": "Fenmu",
+      "designation": "HR 8597",
+      "hr": 8597,
+      "hip": 111497
+    },
+    "92845": {
+      "name": "Pabilsang",
+      "designation": "HR 7120",
+      "hr": 7120,
+      "hip": 92845
+    },
+    "89642": {
+      "name": "Heryibwia",
+      "designation": "HR 6832",
+      "hr": 6832,
+      "hip": 89642
+    },
+    "95168": {
+      "name": "Kenemu",
+      "designation": "HR 7340",
+      "hr": 7340,
+      "hip": 95168
+    },
+    "92041": {
+      "name": "Nandou",
+      "designation": "HR 7039",
+      "hr": 7039,
+      "hip": 92041
+    },
+    "93085": {
+      "name": "Jian",
+      "designation": "HR 7150",
+      "hr": 7150,
+      "hip": 93085
+    },
+    "91014": {
+      "name": "Alwasl",
+      "designation": "HR 6960",
+      "hr": 6960,
+      "hip": 91014
+    },
+    "93683": {
+      "name": "Alqiladah",
+      "designation": "HR 7217",
+      "hr": 7217,
+      "hip": 93683
+    },
+    "98688": {
+      "name": "Gouguo",
+      "designation": "HR 7650",
+      "hr": 7650,
+      "hip": 98688
+    },
+    "88116": {
+      "name": "Tianyue",
+      "designation": "HR 6700",
+      "hr": 6700,
+      "hip": 88116
+    },
+    "88567": {
+      "name": "Dhanuśarāgra",
+      "designation": "HR 6742",
+      "hr": 6742,
+      "hip": 88567
+    },
+    "90037": {
+      "name": "Magur",
+      "designation": "HR 6862",
+      "hr": 6862,
+      "hip": 90037
+    },
+    "94160": {
+      "name": "Alqubba",
+      "designation": "HR 7259",
+      "hr": 7259,
+      "hip": 94160
+    },
+    "94005": {
+      "name": "Qedty",
+      "designation": "HR 7242",
+      "hr": 7242,
+      "hip": 94005
+    },
+    "90982": {
+      "name": "Bie",
+      "designation": "HR 6951",
+      "hr": 6951,
+      "hip": 90982
+    },
+    "110538": {
+      "name": "Alsamaka",
+      "designation": "HR 8538",
+      "hr": 8538,
+      "hip": 110538
+    },
+    "109410": {
+      "name": "Neichu",
+      "designation": "HR 8454",
+      "hr": 8454,
+      "hip": 109410
+    },
+    "109176": {
+      "name": "Jiu",
+      "designation": "HR 8430",
+      "hr": 8430,
+      "hip": 109176
+    },
+    "112447": {
+      "name": "Tugongli",
+      "designation": "HR 8665",
+      "hr": 8665,
+      "hip": 112447
+    },
+    "112440": {
+      "name": "Ligong",
+      "designation": "HR 8667",
+      "hr": 8667,
+      "hip": 112440
+    },
+    "113186": {
+      "name": "Leidian",
+      "designation": "HR 8717",
+      "hr": 8717,
+      "hip": 113186
+    },
+    "104732": {
+      "name": "Tianjinnan",
+      "designation": "HR 8115",
+      "hr": 8115,
+      "hip": 104732
+    },
+    "104887": {
+      "name": "Enduri Senggu",
+      "designation": "HR 8130",
+      "hr": 8130,
+      "hip": 104887
+    },
+    "98110": {
+      "name": "Almighzal",
+      "designation": "HR 7615",
+      "hr": 7615,
+      "hip": 98110
+    },
+    "102531": {
+      "name": "Dhanishta",
+      "designation": "HR 7947",
+      "hr": 7947,
+      "hip": 102531
+    },
+    "104538": {
+      "name": "Protome",
+      "designation": "HR 8098",
+      "hr": 8098,
+      "hip": 104538
+    },
+    "104858": {
+      "name": "Tepennekhet",
+      "designation": "HR 8123",
+      "hr": 8123,
+      "hip": 104858
+    },
+    "100027": {
+      "name": "Sukhurmashu",
+      "designation": "HR 7747",
+      "hr": 7747,
+      "hip": 100027
+    },
+    "105140": {
+      "name": "Aerostaticus",
+      "designation": "HR 8135",
+      "hr": 8135,
+      "hip": 105140
+    },
+    "78072": {
+      "name": "Muning",
+      "designation": "HR 5933",
+      "hr": 5933,
+      "hip": 78072
+    },
+    "84556": {
+      "name": "Uñallamacha",
+      "designation": "HD 155985",
+      "hr": null,
+      "hip": 84556
+    },
+    "86414": {
+      "name": "Tianbang",
+      "designation": "HR 6588",
+      "hr": 6588,
+      "hip": 86414
+    },
+    "91117": {
+      "name": "Tianbian",
+      "designation": "HR 6973",
+      "hr": 6973,
+      "hip": 91117
+    },
+    "98337": {
+      "name": "Telum",
+      "designation": "HR 7635",
+      "hr": 7635,
+      "hip": 98337
+    },
+    "96837": {
+      "name": "Shakh",
+      "designation": "HR 7488",
+      "hr": 7488,
+      "hip": 96837
+    },
+    "97365": {
+      "name": "Zuoqi",
+      "designation": "HR 7536",
+      "hr": 7536,
+      "hip": 97365
+    },
+    "95501": {
+      "name": "Guqi",
+      "designation": "HR 7377",
+      "hr": 7377,
+      "hip": 95501
+    },
+    "93244": {
+      "name": "Arin-majlep",
+      "designation": "HR 7176",
+      "hr": 7176,
+      "hip": 93244
+    },
+    "97804": {
+      "name": "Pagru",
+      "designation": "HR 7570",
+      "hr": 7570,
+      "hip": 97804
+    },
+    "96665": {
+      "name": "Hru",
+      "designation": "HR 7474",
+      "hr": 7474,
+      "hip": 96665
+    },
+    "91919": {
+      "name": "Pongaponga",
+      "designation": "HR 7051",
+      "hr": 7051,
+      "hip": 91919
+    },
+    "92862": {
+      "name": "Niandao",
+      "designation": "HR 7157",
+      "hr": 7157,
+      "hip": 92862
+    },
+    "91971": {
+      "name": "Kautoki",
+      "designation": "HR 7056",
+      "hr": 7056,
+      "hip": 91971
+    },
+    "91973": {
+      "name": "Urquchillay",
+      "designation": "HR 7057",
+      "hr": 7057,
+      "hip": 91973
+    },
+    "92791": {
+      "name": "Jiantai",
+      "designation": "HR 7139",
+      "hr": 7139,
+      "hip": 92791
+    },
+    "94713": {
+      "name": "Ninnisig",
+      "designation": "HR 7314",
+      "hr": 7314,
+      "hip": 94713
+    },
+    "80582": {
+      "name": "Yaqana",
+      "designation": "HR 6115",
+      "hr": 6115,
+      "hip": 80582
+    },
+    "36948": {
+      "name": "Moth",
+      "designation": "HD 61005",
+      "hr": null,
+      "hip": 36948
+    },
+    "18724": {
+      "name": "Bibing",
+      "designation": "HR 1239",
+      "hr": 1239,
+      "hip": 18724
+    },
+    "22565": {
+      "name": "Lembu",
+      "designation": "HR 1547",
+      "hr": 1547,
+      "hip": 22565
+    },
+    "20877": {
+      "name": "Shakata",
+      "designation": "HR 1407",
+      "hr": 1407,
+      "hip": 20877
+    },
+    "84380": {
+      "name": "Nüchuang",
+      "designation": "HR 6418",
+      "hr": 6418,
+      "hip": 84380
+    },
+    "81693": {
+      "name": "Tianji",
+      "designation": "HR 6212",
+      "hr": 6212,
+      "hip": 81693
+    },
+    "79992": {
+      "name": "Asuusiha",
+      "designation": "HR 6092",
+      "hr": 6092,
+      "hip": 79992
+    },
+    "83207": {
+      "name": "Khepdenreret",
+      "designation": "HR 6324",
+      "hr": 6324,
+      "hip": 83207
+    },
+    "78493": {
+      "name": "Aurwandilsta",
+      "designation": "HR 5971",
+      "hr": 5971,
+      "hip": 78493
+    },
+    "76952": {
+      "name": "Baltesha",
+      "designation": "HR 5849",
+      "hr": 5849,
+      "hip": 76952
+    },
+    "77512": {
+      "name": "Matrichakra",
+      "designation": "HR 5889",
+      "hr": 5889,
+      "hip": 77512
+    },
+    "76127": {
+      "name": "Guansuo",
+      "designation": "HR 5778",
+      "hr": 5778,
+      "hip": 76127
+    },
+    "77048": {
+      "name": "Stephanos",
+      "designation": "HR 5855",
+      "hr": 5855,
+      "hip": 77048
+    },
+    "102626": {
+      "name": "Speedy Mic",
+      "designation": "HD 197890",
+      "hr": null,
+      "hip": 102626
+    },
+    "30089": {
+      "name": "Red Rectangle",
+      "designation": "HD 44179",
+      "hr": null,
+      "hip": 30089
+    },
+    "72105": {
+      "name": "Izar",
+      "designation": "HR 5506",
+      "hr": 5506,
+      "hip": 72105
+    },
+    "72220": {
+      "name": "Maenalus",
+      "designation": "HR 5511",
+      "hr": 5511,
+      "hip": 72220
+    },
+    "71995": {
+      "name": "Alrumh",
+      "designation": "HR 5490",
+      "hr": 5490,
+      "hip": 71995
+    },
+    "71284": {
+      "name": "Genghe",
+      "designation": "HR 5447",
+      "hr": 5447,
+      "hip": 71284
+    },
+    "71053": {
+      "name": "Kalasungsang",
+      "designation": "HR 5429",
+      "hr": 5429,
+      "hip": 71053
+    },
+    "74666": {
+      "name": "Qigong",
+      "designation": "HR 5681",
+      "hr": 5681,
+      "hip": 74666
+    },
+    "67275": {
+      "name": "Tepiamenit",
+      "designation": "HR 5185",
+      "hr": 5185,
+      "hip": 67275
+    },
+    "74793": {
+      "name": "Pherkad Minor",
+      "designation": "HR 5714",
+      "hr": 5714,
+      "hip": 74793
+    },
+    "23685": {
+      "name": "Ping",
+      "designation": "HR 1654",
+      "hr": 1654,
+      "hip": 23685
+    },
+    "24305": {
+      "name": "Bade",
+      "designation": "HR 1702",
+      "hr": 1702,
+      "hip": 24305
+    },
+    "27288": {
+      "name": "Darlugal",
+      "designation": "HR 1998",
+      "hr": 1998,
+      "hip": 27288
+    },
+    "104139": {
+      "name": "Udang",
+      "designation": "HR 8075",
+      "hr": 8075,
+      "hip": 104139
+    },
+    "21881": {
+      "name": "Gaja",
+      "designation": "HR 1497",
+      "hr": 1497,
+      "hip": 21881
+    },
+    "64962": {
+      "name": "Naga",
+      "designation": "HR 5020",
+      "hr": 5020,
+      "hip": 64962
+    },
+    "43103": {
+      "name": "Yuyu",
+      "designation": "HR 3475",
+      "hr": 3475,
+      "hip": 43103
+    },
+    "61966": {
+      "name": "Lumbung",
+      "designation": "HR 4823",
+      "hr": 4823,
+      "hip": 61966
+    },
+    "33694": {
+      "name": "Tonglingxing",
+      "designation": "HR 2527",
+      "hr": 2527,
+      "hip": 33694
+    },
+    "29997": {
+      "name": "Shangwei",
+      "designation": "HR 2209",
+      "hr": 2209,
+      "hip": 29997
+    },
+    "14862": {
+      "name": "Shangcheng",
+      "designation": "HR 932",
+      "hr": 932,
+      "hip": 14862
+    },
+    "17959": {
+      "name": "Shaowei",
+      "designation": "HR 1148",
+      "hr": 1148,
+      "hip": 17959
+    },
+    "31940": {
+      "name": "Kamelos",
+      "designation": "HR 2363",
+      "hr": 2363,
+      "hip": 31940
+    },
+    "17884": {
+      "name": "Custos",
+      "designation": "HR 1155",
+      "hr": 1155,
+      "hip": 17884
+    },
+    "11569": {
+      "name": "Huagai",
+      "designation": "HR 707",
+      "hr": 707,
+      "hip": 11569
+    },
+    "9598": {
+      "name": "Gang",
+      "designation": "HR 580",
+      "hr": 580,
+      "hip": 9598
+    },
+    "9763": {
+      "name": "Rangifer",
+      "designation": "HR 592",
+      "hr": 592,
+      "hip": 9763
+    },
+    "5372": {
+      "name": "Tarandus",
+      "designation": "HR 285",
+      "hr": 285,
+      "hip": 5372
+    },
+    "17358": {
+      "name": "Sarvvis",
+      "designation": "HR 1122",
+      "hr": 1122,
+      "hip": 17358
+    },
+    "18532": {
+      "name": "Áldu",
+      "designation": "HR 1220",
+      "hr": 1220,
+      "hip": 18532
+    },
+    "2599": {
+      "name": "Cexing",
+      "designation": "HR 130",
+      "hr": 130,
+      "hip": 2599
+    },
+    "4427": {
+      "name": "Tiansi",
+      "designation": "HR 264",
+      "hr": 264,
+      "hip": 4427
+    },
+    "28358": {
+      "name": "Bagu",
+      "designation": "HR 2077",
+      "hr": 2077,
+      "hip": 28358
+    },
+    "10670": {
+      "name": "Apdu",
+      "designation": "HR 664",
+      "hr": 664,
+      "hip": 10670
+    },
+    "10064": {
+      "name": "Alaybasan",
+      "designation": "HR 622",
+      "hr": 622,
+      "hip": 10064
+    },
+    "83100": {
+      "name": "Shengong",
+      "designation": "HR 6298",
+      "hr": 6298,
+      "hip": 83100
+    },
+    "66006": {
+      "name": "Apamvatsa",
+      "designation": "HR 5095",
+      "hr": 5095,
+      "hip": 66006
+    },
+    "78322": {
+      "name": "Blaze Star",
+      "designation": "HR 5958",
+      "hr": 5958,
+      "hip": 78322
+    },
+    "112961": {
+      "name": "Shatabhisha",
+      "designation": "HR 8698",
+      "hr": 8698,
+      "hip": 112961
+    },
+    "5434": {
+      "name": "Junnanmen",
+      "designation": "HR 335",
+      "hr": 335,
+      "hip": 5434
+    },
+    "8068": {
+      "name": "Dajiangjunbei",
+      "designation": "HR 496",
+      "hr": 496,
+      "hip": 8068
+    },
+    "301": {
+      "name": "Hydor",
+      "designation": "HR 9098",
+      "hr": 9098,
+      "hip": 301
+    },
+    "10280": {
+      "name": "Triminus",
+      "designation": "HR 642",
+      "hr": 642,
+      "hip": 10280
+    },
+    "88267": {
+      "name": "Bodu",
+      "designation": "HR 6730",
+      "hr": 6730,
+      "hip": 88267
+    },
+    "10644": {
+      "name": "Deltoton",
+      "designation": "HR 660",
+      "hr": 660,
+      "hip": 10644
+    },
+    "88886": {
+      "name": "Ramus",
+      "designation": "HR 6787",
+      "hr": 6787,
+      "hip": 88886
+    },
+    "90139": {
+      "name": "Tusizuo",
+      "designation": "HR 6895",
+      "hr": 6895,
+      "hip": 90139
+    },
+    "72370": {
+      "name": "Paradys",
+      "designation": "HR 5470",
+      "hr": 5470,
+      "hip": 72370
+    },
+    "114570": {
+      "name": "Honores",
+      "designation": "HR 8830",
+      "hr": 8830,
+      "hip": 114570
+    },
+    "113726": {
+      "name": "Alfarasalkamil",
+      "designation": "HR 8762",
+      "hr": 8762,
+      "hip": 113726
+    },
+    "116805": {
+      "name": "Kaffalmusalsala",
+      "designation": "HR 8976",
+      "hr": 8976,
+      "hip": 116805
+    },
+    "116631": {
+      "name": "Rasalnaqa",
+      "designation": "HR 8965",
+      "hr": 8965,
+      "hip": 116631
+    },
+    "116584": {
+      "name": "Udkadua",
+      "designation": "HR 8961",
+      "hr": 8961,
+      "hip": 116584
+    },
+    "4463": {
+      "name": "Kui",
+      "designation": "HR 271",
+      "hr": 271,
+      "hip": 4463
+    },
+    "67464": {
+      "name": "Heng",
+      "designation": "HR 5190",
+      "hr": 5190,
+      "hip": 67464
+    },
+    "3693": {
+      "name": "Shimu",
+      "designation": "HR 215",
+      "hr": 215,
+      "hip": 3693
+    },
+    "65109": {
+      "name": "Kulou",
+      "designation": "HR 5028",
+      "hr": 5028,
+      "hip": 65109
+    },
+    "73695": {
+      "name": "Quadrans",
+      "designation": "GJ 575",
+      "hr": null,
+      "hip": 73695
+    },
+    "29271": {
+      "name": "Hoerikwaggo",
+      "designation": "HR 2261",
+      "hr": 2261,
+      "hip": 29271
+    },
+    "114341": {
+      "name": "Safina",
+      "designation": "HR 8812",
+      "hr": 8812,
+      "hip": 114341
+    },
+    "71908": {
+      "name": "Xami",
+      "designation": "HR 5463",
+      "hr": 5463,
+      "hip": 71908
+    },
+    "77233": {
+      "name": "Zhou",
+      "designation": "HR 5867",
+      "hr": 5867,
+      "hip": 77233
+    },
+    "72571": {
+      "name": "Solitaire",
+      "designation": "HR 5526",
+      "hr": 5526,
+      "hip": 72571
+    },
+    "107259": {
+      "name": "Garnet Star",
+      "designation": "HR 8316",
+      "hr": 8316,
+      "hip": 107259
+    },
+    "110130": {
+      "name": "Lang-Exster",
+      "designation": "HR 8502",
+      "hr": 8502,
+      "hip": 110130
+    },
+    "19780": {
+      "name": "Rhombus",
+      "designation": "HR 1336",
+      "hr": 1336,
+      "hip": 19780
+    },
+    "113288": {
+      "name": "Tengshe",
+      "designation": "HR 8726",
+      "hr": 8726,
+      "hip": 113288
+    },
+    "71860": {
+      "name": "Uridim",
+      "designation": "HR 5469",
+      "hr": 5469,
+      "hip": 71860
+    },
+    "111169": {
+      "name": "Stellio",
+      "designation": "HR 8585",
+      "hr": 8585,
+      "hip": 111169
+    },
+    "31685": {
+      "name": "Pipit",
+      "designation": "HR 2451",
+      "hr": 2451,
+      "hip": 31685
+    },
+    "87108": {
+      "name": "Bake-eo",
+      "designation": "HR 6629",
+      "hr": 6629,
+      "hip": 87108
+    },
+    "68002": {
+      "name": "Leepwal",
+      "designation": "HD 121263",
+      "hr": null,
+      "hip": 68002
+    },
+    "51624": {
+      "name": "Shaomin",
+      "designation": "HD 91316",
+      "hr": null,
+      "hip": 51624
+    },
+    "49637": {
+      "name": "Yunü",
+      "designation": "HD 87837",
+      "hr": null,
+      "hip": 49637
+    },
+    "99473": {
+      "name": "Antinous",
+      "designation": "HD 191692",
+      "hr": null,
+      "hip": 99473
+    },
+    "61394": {
+      "name": "Phyllon Kissinou",
+      "designation": "23 Com",
+      "hr": null,
+      "hip": 61394
+    },
+    "98823": {
+      "name": "Tianfu",
+      "designation": "HR 7669",
+      "hr": 7669,
+      "hip": 98823
+    },
+    "53524": {
+      "name": "Aiolos",
+      "designation": "HD 95086",
+      "hr": null,
+      "hip": 53524
+    },
+    "47780": {
+      "name": "Añañuca",
+      "designation": "GJ 367",
+      "hr": null,
+      "hip": 47780
+    },
+    "115211": {
+      "name": "Danfeng",
+      "designation": "L 168-9",
+      "hr": null,
+      "hip": 115211
+    },
+    "62452": {
+      "name": "Gar",
+      "designation": "GJ 486",
+      "hr": null,
+      "hip": 62452
+    },
+    "65426": {
+      "name": "Matza",
+      "designation": "HIP 65426",
+      "hr": null,
+      "hip": 65426
+    },
+    "57087": {
+      "name": "Noquisi",
+      "designation": "GJ 436",
+      "hr": null,
+      "hip": 57087
+    },
+    "117883": {
+      "name": "Uúba",
+      "designation": "LTT 9779",
+      "hr": null,
+      "hip": 117883
+    },
+    "17378": {
+      "name": "Rana",
+      "designation": "HR 1136",
+      "hr": 1136,
+      "hip": 17378
+    },
+    "90004": {
+      "name": "Alasia",
+      "designation": "HD 168746",
+      "hr": null,
+      "hip": 90004
+    },
+    "29550": {
+      "name": "Amadioha",
+      "designation": "HD 43197",
+      "hr": null,
+      "hip": 29550
+    },
+    "57820": {
+      "name": "Aniara",
+      "designation": "HD 102956",
+      "hr": null,
+      "hip": 57820
+    },
+    "72845": {
+      "name": "Arcalís",
+      "designation": "HD 131496",
+      "hr": null,
+      "hip": 72845
+    },
+    "118319": {
+      "name": "Axólotl",
+      "designation": "HD 224693",
+      "hr": null,
+      "hip": 118319
+    },
+    "13993": {
+      "name": "Ayeyarwady",
+      "designation": "HD 18742",
+      "hr": null,
+      "hip": 13993
+    },
+    "73136": {
+      "name": "Baekdu",
+      "designation": "HD 133086",
+      "hr": null,
+      "hip": 73136
+    },
+    "95124": {
+      "name": "Belel",
+      "designation": "HD 181342",
+      "hr": null,
+      "hip": 95124
+    },
+    "6643": {
+      "name": "Bélénos",
+      "designation": "HD 8574",
+      "hr": null,
+      "hip": 6643
+    },
+    "48711": {
+      "name": "Bibhā",
+      "designation": "HD 86081",
+      "hr": null,
+      "hip": 48711
+    },
+    "107251": {
+      "name": "Bosona",
+      "designation": "HD 206610",
+      "hr": null,
+      "hip": 107251
+    },
+    "26380": {
+      "name": "Bubup",
+      "designation": "HD 38283",
+      "hr": null,
+      "hip": 26380
+    },
+    "12191": {
+      "name": "Buna",
+      "designation": "HD 16175",
+      "hr": null,
+      "hip": 12191
+    },
+    "37284": {
+      "name": "Ceibo",
+      "designation": "HD 63454",
+      "hr": null,
+      "hip": 37284
+    },
+    "99894": {
+      "name": "Chechia",
+      "designation": "HD 192699",
+      "hr": null,
+      "hip": 99894
+    },
+    "1547": {
+      "name": "Citadelle",
+      "designation": "HD 1502",
+      "hr": null,
+      "hip": 1547
+    },
+    "33719": {
+      "name": "Citalá",
+      "designation": "HD 52265",
+      "hr": null,
+      "hip": 33719
+    },
+    "3479": {
+      "name": "Cocibolca",
+      "designation": "HD 4208",
+      "hr": null,
+      "hip": 3479
+    },
+    "54158": {
+      "name": "Dingolay",
+      "designation": "HD 96063",
+      "hr": null,
+      "hip": 54158
+    },
+    "66047": {
+      "name": "Dofida",
+      "designation": "HD 117618",
+      "hr": null,
+      "hip": 66047
+    },
+    "114322": {
+      "name": "Ebla",
+      "designation": "HD 218566",
+      "hr": null,
+      "hip": 114322
+    },
+    "5529": {
+      "name": "Emiw",
+      "designation": "HD 7199",
+      "hr": null,
+      "hip": 5529
+    },
+    "2247": {
+      "name": "Felixvarela",
+      "designation": "BD-17 63",
+      "hr": null,
+      "hip": 2247
+    },
+    "57370": {
+      "name": "Flegetonte",
+      "designation": "HD 102195",
+      "hr": null,
+      "hip": 57370
+    },
+    "56508": {
+      "name": "Formosa",
+      "designation": "HD 100655",
+      "hr": null,
+      "hip": 56508
+    },
+    "61177": {
+      "name": "Funi",
+      "designation": "HD 109246",
+      "hr": null,
+      "hip": 61177
+    },
+    "42446": {
+      "name": "Gakyid",
+      "designation": "HD 73534",
+      "hr": null,
+      "hip": 42446
+    },
+    "94645": {
+      "name": "Gumala",
+      "designation": "HD 179949",
+      "hr": null,
+      "hip": 94645
+    },
+    "21109": {
+      "name": "Hoggar",
+      "designation": "HD 28678",
+      "hr": null,
+      "hip": 21109
+    },
+    "55174": {
+      "name": "Hunahpú",
+      "designation": "HD 98219",
+      "hr": null,
+      "hip": 55174
+    },
+    "80076": {
+      "name": "Hunor",
+      "designation": "HAT-P-2",
+      "hr": null,
+      "hip": 80076
+    },
+    "47087": {
+      "name": "Illyrian",
+      "designation": "HD 82886",
+      "hr": null,
+      "hip": 47087
+    },
+    "84787": {
+      "name": "Inquill",
+      "designation": "HD 156411",
+      "hr": null,
+      "hip": 84787
+    },
+    "15578": {
+      "name": "Intan",
+      "designation": "HD 20868",
+      "hr": null,
+      "hip": 15578
+    },
+    "108375": {
+      "name": "Itonda",
+      "designation": "HD 208487",
+      "hr": null,
+      "hip": 108375
+    },
+    "37265": {
+      "name": "Jishui",
+      "designation": "HR 2930",
+      "hr": 2930,
+      "hip": 37265
+    },
+    "47202": {
+      "name": "Kalausi",
+      "designation": "HD 83443",
+      "hr": null,
+      "hip": 47202
+    },
+    "79219": {
+      "name": "Kamuy",
+      "designation": "HD 145457",
+      "hr": null,
+      "hip": 79219
+    },
+    "76351": {
+      "name": "Karaka",
+      "designation": "HD 137388",
+      "hr": null,
+      "hip": 76351
+    },
+    "92895": {
+      "name": "Kaveh",
+      "designation": "HD 175541",
+      "hr": null,
+      "hip": 92895
+    },
+    "12961": {
+      "name": "Koeia",
+      "designation": "HIP 12961",
+      "hr": null,
+      "hip": 12961
+    },
+    "66192": {
+      "name": "Liesma",
+      "designation": "HD 118203",
+      "hr": null,
+      "hip": 66192
+    },
+    "110813": {
+      "name": "Lionrock",
+      "designation": "HD 212771",
+      "hr": null,
+      "hip": 110813
+    },
+    "30860": {
+      "name": "Lucilinburhuc",
+      "designation": "HD 45350",
+      "hr": null,
+      "hip": 30860
+    },
+    "30905": {
+      "name": "Lusitânia",
+      "designation": "HD 45652",
+      "hr": null,
+      "hip": 30905
+    },
+    "52521": {
+      "name": "Macondo",
+      "designation": "HD 93083",
+      "hr": null,
+      "hip": 52521
+    },
+    "24003": {
+      "name": "Mago",
+      "designation": "HD 32518",
+      "hr": null,
+      "hip": 24003
+    },
+    "82651": {
+      "name": "Mahsati",
+      "designation": "HD 152581",
+      "hr": null,
+      "hip": 82651
+    },
+    "72339": {
+      "name": "Mönch",
+      "designation": "HD 130322",
+      "hr": null,
+      "hip": 72339
+    },
+    "22491": {
+      "name": "Mouhoun",
+      "designation": "HD 30856",
+      "hr": null,
+      "hip": 22491
+    },
+    "40687": {
+      "name": "Násti",
+      "designation": "HD 68988",
+      "hr": null,
+      "hip": 40687
+    },
+    "48235": {
+      "name": "Natasha",
+      "designation": "HD 85390",
+      "hr": null,
+      "hip": 48235
+    },
+    "5054": {
+      "name": "Nenque",
+      "designation": "HD 6434",
+      "hr": null,
+      "hip": 5054
+    },
+    "32916": {
+      "name": "Nervia",
+      "designation": "HD 49674",
+      "hr": null,
+      "hip": 32916
+    },
+    "74961": {
+      "name": "Nikawiy",
+      "designation": "HD 136418",
+      "hr": null,
+      "hip": 74961
+    },
+    "31895": {
+      "name": "Nosaxa",
+      "designation": "HD 48265",
+      "hr": null,
+      "hip": 31895
+    },
+    "13192": {
+      "name": "Nushagak",
+      "designation": "HD 17156",
+      "hr": null,
+      "hip": 13192
+    },
+    "99711": {
+      "name": "Phoenicia",
+      "designation": "HD 192263",
+      "hr": null,
+      "hip": 99711
+    },
+    "88414": {
+      "name": "Pincoya",
+      "designation": "HD 164604",
+      "hr": null,
+      "hip": 88414
+    },
+    "116084": {
+      "name": "Poerava",
+      "designation": "HD 221287",
+      "hr": null,
+      "hip": 116084
+    },
+    "83547": {
+      "name": "Rapeto",
+      "designation": "HD 153950",
+      "hr": null,
+      "hip": 83547
+    },
+    "81022": {
+      "name": "Rosalíadecastro",
+      "designation": "HD 149143",
+      "hr": null,
+      "hip": 81022
+    },
+    "56572": {
+      "name": "Sagarmatha",
+      "designation": "HD 100777",
+      "hr": null,
+      "hip": 56572
+    },
+    "106824": {
+      "name": "Sāmaya",
+      "designation": "HD 205739",
+      "hr": null,
+      "hip": 106824
+    },
+    "55664": {
+      "name": "Shama",
+      "designation": "HD 99109",
+      "hr": null,
+      "hip": 55664
+    },
+    "79431": {
+      "name": "Sharjah",
+      "designation": "HIP 79431",
+      "hr": null,
+      "hip": 79431
+    },
+    "95262": {
+      "name": "Sika",
+      "designation": "HD 181720",
+      "hr": null,
+      "hip": 95262
+    },
+    "104780": {
+      "name": "Solaris",
+      "designation": "BD+14 4559",
+      "hr": null,
+      "hip": 104780
+    },
+    "43674": {
+      "name": "Stribor",
+      "designation": "HD 75898",
+      "hr": null,
+      "hip": 43674
+    },
+    "38041": {
+      "name": "Tapecue",
+      "designation": "HD 63765",
+      "hr": null,
+      "hip": 38041
+    },
+    "80687": {
+      "name": "Timir",
+      "designation": "HD 148427",
+      "hr": null,
+      "hip": 80687
+    },
+    "60644": {
+      "name": "Tupã",
+      "designation": "HD 108147",
+      "hr": null,
+      "hip": 60644
+    },
+    "17096": {
+      "name": "Tupi",
+      "designation": "HD 23079",
+      "hr": null,
+      "hip": 17096
+    },
+    "57291": {
+      "name": "Uklun",
+      "designation": "HD 102117",
+      "hr": null,
+      "hip": 57291
+    },
+    "96078": {
+      "name": "Uruk",
+      "designation": "HD 231701",
+      "hr": null,
+      "hip": 96078
+    },
+    "91852": {
+      "name": "Xihe",
+      "designation": "HD 173416",
+      "hr": null,
+      "hip": 91852
+    },
+    "77450": {
+      "name": "Gudja",
+      "designation": "HR 5879",
+      "hr": 5879,
+      "hip": 77450
+    },
+    "84405": {
+      "name": "Guniibuu",
+      "designation": "* 36 Oph",
+      "hr": 6402,
+      "hip": 84405
+    },
+    "59747": {
+      "name": "Imai",
+      "designation": "HR 4656",
+      "hr": 4656,
+      "hip": 59747
+    },
+    "62223": {
+      "name": "La Superba",
+      "designation": "HR 4846",
+      "hr": 4846,
+      "hip": 62223
+    },
+    "81266": {
+      "name": "Paikauhale",
+      "designation": "HR 6165",
+      "hr": 6165,
+      "hip": 81266
+    },
+    "71681": {
+      "name": "Toliman",
+      "designation": "HR 5460",
+      "hr": 5460,
+      "hip": 71681
+    },
+    "7097": {
+      "name": "Alpherg",
+      "designation": "HR 437",
+      "hr": 437,
+      "hip": 7097
+    },
+    "86782": {
+      "name": "Alruba",
+      "designation": "HR 6618",
+      "hr": 6618,
+      "hip": 86782
+    },
+    "43109": {
+      "name": "Ashlesha",
+      "designation": "HR 3482",
+      "hr": 3482,
+      "hip": 43109
+    },
+    "38170": {
+      "name": "Azmidi",
+      "designation": "HR 3045",
+      "hr": 3045,
+      "hip": 38170
+    },
+    "106786": {
+      "name": "Bunda",
+      "designation": "HR 8264",
+      "hr": 8264,
+      "hip": 106786
+    },
+    "70755": {
+      "name": "Elgafar",
+      "designation": "HR 5409",
+      "hr": 5409,
+      "hip": 70755
+    },
+    "29034": {
+      "name": "Elkurud",
+      "designation": "HR 2177",
+      "hr": 2177,
+      "hip": 29034
+    },
+    "97165": {
+      "name": "Fawaris",
+      "designation": "HR 7528",
+      "hr": 7528,
+      "hip": 97165
+    },
+    "48615": {
+      "name": "Felis",
+      "designation": "HR 3923",
+      "hr": 3923,
+      "hip": 48615
+    },
+    "113889": {
+      "name": "Fumalsamakah",
+      "designation": "HR 8773",
+      "hr": 8773,
+      "hip": 113889
+    },
+    "66249": {
+      "name": "Heze",
+      "designation": "HR 5107",
+      "hr": 5107,
+      "hip": 66249
+    },
+    "61359": {
+      "name": "Kraz",
+      "designation": "HR 4786",
+      "hr": 4786,
+      "hip": 61359
+    },
+    "44946": {
+      "name": "Nahn",
+      "designation": "HR 3627",
+      "hr": 3627,
+      "hip": 44946
+    },
+    "93747": {
+      "name": "Okab",
+      "designation": "HR 7235",
+      "hr": 7235,
+      "hip": 93747
+    },
+    "40881": {
+      "name": "Piautos",
+      "designation": "HR 3268",
+      "hr": 3268,
+      "hip": 40881
+    },
+    "40526": {
+      "name": "Tarf",
+      "designation": "HR 3249",
+      "hr": 3249,
+      "hip": 40526
+    },
+    "47431": {
+      "name": "Ukdah",
+      "designation": "HR 3845",
+      "hr": 3845,
+      "hip": 47431
+    },
+    "60260": {
+      "name": "Ginan",
+      "designation": "HR 4700",
+      "hr": 4700,
+      "hip": 60260
+    },
+    "82396": {
+      "name": "Larawag",
+      "designation": "HR 6241",
+      "hr": 6241,
+      "hip": 82396
+    },
+    "5348": {
+      "name": "Wurren",
+      "designation": "HR 338",
+      "hr": 338,
+      "hip": 5348
+    },
+    "3821": {
+      "name": "Achird",
+      "designation": "HR 219",
+      "hr": 219,
+      "hip": 3821
+    },
+    "92761": {
+      "name": "Ainalrami",
+      "designation": "HR 7116",
+      "hr": 7116,
+      "hip": 92761
+    },
+    "94481": {
+      "name": "Aladfar",
+      "designation": "HR 7298",
+      "hr": 7298,
+      "hip": 94481
+    },
+    "94141": {
+      "name": "Albaldah",
+      "designation": "HR 7264",
+      "hr": 7264,
+      "hip": 94141
+    },
+    "108085": {
+      "name": "Aldhanab",
+      "designation": "HR 8353",
+      "hr": 8353,
+      "hip": 108085
+    },
+    "83895": {
+      "name": "Aldhibah",
+      "designation": "HR 6396",
+      "hr": 6396,
+      "hip": 83895
+    },
+    "101421": {
+      "name": "Aldulfin",
+      "designation": "HR 7852",
+      "hr": 7852,
+      "hip": 101421
+    },
+    "44471": {
+      "name": "Alkaphrah",
+      "designation": "HR 3594",
+      "hr": 3594,
+      "hip": 44471
+    },
+    "115623": {
+      "name": "Alkarab",
+      "designation": "HR 8905",
+      "hr": 8905,
+      "hip": 115623
+    },
+    "42913": {
+      "name": "Alsephina",
+      "designation": "HR 3485",
+      "hr": 3485,
+      "hip": 42913
+    },
+    "80331": {
+      "name": "Athebyne",
+      "designation": "HR 6132",
+      "hr": 6132,
+      "hip": 80331
+    },
+    "73714": {
+      "name": "Brachium",
+      "designation": "HR 5603",
+      "hr": 5603,
+      "hip": 73714
+    },
+    "4422": {
+      "name": "Castula",
+      "designation": "HR 265",
+      "hr": 265,
+      "hip": 4422
+    },
+    "20894": {
+      "name": "Chamukuy",
+      "designation": "HR 1412",
+      "hr": 1412,
+      "hip": 20894
+    },
+    "14879": {
+      "name": "Dalim",
+      "designation": "HR 963",
+      "hr": 963,
+      "hip": 14879
+    },
+    "86614": {
+      "name": "Dziban",
+      "designation": "HR 6636",
+      "hr": 6636,
+      "hip": 86614
+    },
+    "26241": {
+      "name": "Hatysa",
+      "designation": "HR 1899",
+      "hr": 1899,
+      "hip": 26241
+    },
+    "78104": {
+      "name": "Iklil",
+      "designation": "HR 5928",
+      "hr": 5928,
+      "hip": 78104
+    },
+    "69974": {
+      "name": "Khambalia",
+      "designation": "HR 5359",
+      "hr": 5359,
+      "hip": 69974
+    },
+    "13061": {
+      "name": "Lilii Borea",
+      "designation": "HR 824",
+      "hr": 824,
+      "hip": 13061
+    },
+    "45941": {
+      "name": "Markeb",
+      "designation": "HR 3734",
+      "hr": 3734,
+      "hip": 45941
+    },
+    "42556": {
+      "name": "Meleph",
+      "designation": "HR 3429",
+      "hr": 3429,
+      "hip": 42556
+    },
+    "94114": {
+      "name": "Meridiana",
+      "designation": "HR 7254",
+      "hr": 7254,
+      "hip": 94114
+    },
+    "42402": {
+      "name": "Minchir",
+      "designation": "HR 3418",
+      "hr": 3418,
+      "hip": 42402
+    },
+    "13268": {
+      "name": "Miram",
+      "designation": "HR 834",
+      "hr": 834,
+      "hip": 13268
+    },
+    "14668": {
+      "name": "Misam",
+      "designation": "HR 941",
+      "hr": 941,
+      "hip": 14668
+    },
+    "7607": {
+      "name": "Nembus",
+      "designation": "HR 464",
+      "hr": 464,
+      "hip": 7607
+    },
+    "33856": {
+      "name": "Nganurganity",
+      "designation": "HR 2646",
+      "hr": 2646,
+      "hip": 33856
+    },
+    "82545": {
+      "name": "Pipirima",
+      "designation": "HR 6252",
+      "hr": 6252,
+      "hip": 82545
+    },
+    "104382": {
+      "name": "Polaris Australis",
+      "designation": "HR 7228",
+      "hr": 7228,
+      "hip": 104382
+    },
+    "89341": {
+      "name": "Polis",
+      "designation": "HR 6812",
+      "hr": 6812,
+      "hip": 89341
+    },
+    "20205": {
+      "name": "Prima Hyadum",
+      "designation": "HR 1346",
+      "hr": 1346,
+      "hip": 20205
+    },
+    "115250": {
+      "name": "Salm",
+      "designation": "HR 8880",
+      "hr": 8880,
+      "hip": 115250
+    },
+    "20455": {
+      "name": "Secunda Hyadum",
+      "designation": "HR 1373",
+      "hr": 1373,
+      "hip": 20455
+    },
+    "8886": {
+      "name": "Segin",
+      "designation": "HR 0542",
+      "hr": 542,
+      "hip": 8886
+    },
+    "22449": {
+      "name": "Tabit",
+      "designation": "HR 1543",
+      "hr": 1543,
+      "hip": 22449
+    },
+    "98066": {
+      "name": "Terebellum",
+      "designation": "HR 7597",
+      "hr": 7597,
+      "hip": 98066
+    },
+    "112122": {
+      "name": "Tiaki",
+      "designation": "HR 8636",
+      "hr": 8636,
+      "hip": 112122
+    },
+    "8198": {
+      "name": "Torcular",
+      "designation": "HR 510",
+      "hr": 510,
+      "hip": 8198
+    },
+    "82514": {
+      "name": "Xamidimura",
+      "designation": "HR 6247",
+      "hr": 6247,
+      "hip": 82514
+    },
+    "76333": {
+      "name": "Zubenelhakrabi",
+      "designation": "HR 5787",
+      "hr": 5787,
+      "hip": 76333
+    },
+    "96100": {
+      "name": "Alsafi",
+      "designation": "HR 7462",
+      "hr": 7462,
+      "hip": 96100
+    },
+    "41075": {
+      "name": "Alsciaukat",
+      "designation": "HR 3275",
+      "hr": 3275,
+      "hip": 41075
+    },
+    "100310": {
+      "name": "Alshat",
+      "designation": "HR 7773",
+      "hr": 7773,
+      "hip": 100310
+    },
+    "32362": {
+      "name": "Alzirr",
+      "designation": "HR 2484",
+      "hr": 2484,
+      "hip": 32362
+    },
+    "13288": {
+      "name": "Angetenar",
+      "designation": "HR 850",
+      "hr": 850,
+      "hip": 13288
+    },
+    "95771": {
+      "name": "Anser",
+      "designation": "HR 7405",
+      "hr": 7405,
+      "hip": 95771
+    },
+    "20535": {
+      "name": "Beemim",
+      "designation": "HR 1393",
+      "hr": 1393,
+      "hip": 20535
+    },
+    "13209": {
+      "name": "Bharani",
+      "designation": "HR 838",
+      "hr": 838,
+      "hip": 13209
+    },
+    "78265": {
+      "name": "Fang",
+      "designation": "HR 5944",
+      "hr": 5944,
+      "hip": 78265
+    },
+    "2920": {
+      "name": "Fulu",
+      "designation": "HR 153",
+      "hr": 153,
+      "hip": 2920
+    },
+    "87261": {
+      "name": "Fuyue",
+      "designation": "HR 6630",
+      "hr": 6630,
+      "hip": 87261
+    },
+    "23767": {
+      "name": "Haedus",
+      "designation": "HR 1641",
+      "hr": 1641,
+      "hip": 23767
+    },
+    "23015": {
+      "name": "Hassaleh",
+      "designation": "HR 1577",
+      "hr": 1577,
+      "hip": 23015
+    },
+    "79374": {
+      "name": "Jabbah",
+      "designation": "HR 6027",
+      "hr": 6027,
+      "hip": 79374
+    },
+    "69427": {
+      "name": "Kang",
+      "designation": "HR 5315",
+      "hr": 5315,
+      "hip": 69427
+    },
+    "28380": {
+      "name": "Mahasim",
+      "designation": "HR 2095",
+      "hr": 2095,
+      "hip": 28380
+    },
+    "113963": {
+      "name": "Markab",
+      "designation": "HR 8781",
+      "hr": 8781,
+      "hip": 113963
+    },
+    "63090": {
+      "name": "Minelauva",
+      "designation": "HR 4910",
+      "hr": 4910,
+      "hip": 63090
+    },
+    "53229": {
+      "name": "Praecipua",
+      "designation": "HR 4247",
+      "hr": 4247,
+      "hip": 53229
+    },
+    "5737": {
+      "name": "Revati",
+      "designation": "HR 361",
+      "hr": 361,
+      "hip": 5737
+    },
+    "23453": {
+      "name": "Saclateni",
+      "designation": "HR 1612",
+      "hr": 1612,
+      "hip": 23453
+    },
+    "21594": {
+      "name": "Sceptrum",
+      "designation": "HR 1481",
+      "hr": 1481,
+      "hip": 21594
+    },
+    "57399": {
+      "name": "Taiyangshou",
+      "designation": "HR 4518",
+      "hr": 4518,
+      "hip": 57399
+    },
+    "63076": {
+      "name": "Taiyi",
+      "designation": "HR 4916",
+      "hr": 4916,
+      "hip": 63076
+    },
+    "26451": {
+      "name": "Tianguan",
+      "designation": "HR 1910",
+      "hr": 1910,
+      "hip": 26451
+    },
+    "62423": {
+      "name": "Tianyi",
+      "designation": "HR 4863",
+      "hr": 4863,
+      "hip": 62423
+    },
+    "69732": {
+      "name": "Xuange",
+      "designation": "HR 5351",
+      "hr": 5351,
+      "hip": 69732
+    },
+    "48356": {
+      "name": "Zhang",
+      "designation": "HR 3903",
+      "hr": 3903,
+      "hip": 48356
+    },
+    "23416": {
+      "name": "Almaaz",
+      "designation": "HR 1605",
+      "hr": 1605,
+      "hip": 23416
+    },
+    "80112": {
+      "name": "Alniyat",
+      "designation": "HR 6084",
+      "hr": 6084,
+      "hip": 80112
+    },
+    "83608": {
+      "name": "Alrakis",
+      "designation": "* mu. Dra",
+      "hr": 6370,
+      "hip": 83608
+    },
+    "46750": {
+      "name": "Alterf",
+      "designation": "HR 3773",
+      "hr": 3773,
+      "hip": 46750
+    },
+    "87937": {
+      "name": "Barnard's Star",
+      "designation": "GJ 699",
+      "hr": null,
+      "hip": 87937
+    },
+    "80463": {
+      "name": "Cujam",
+      "designation": "HR 6117",
+      "hr": 6117,
+      "hip": 80463
+    },
+    "107556": {
+      "name": "Deneb Algedi",
+      "designation": "HR 8322",
+      "hr": 8322,
+      "hip": 107556
+    },
+    "64241": {
+      "name": "Diadem",
+      "designation": "* alf Com",
+      "hr": 4968,
+      "hip": 64241
+    },
+    "56211": {
+      "name": "Giausar",
+      "designation": "HR 4434",
+      "hr": 4434,
+      "hip": 56211
+    },
+    "12706": {
+      "name": "Kaffaljidhma",
+      "designation": "HR 804",
+      "hr": 804,
+      "hip": 12706
+    },
+    "79043": {
+      "name": "Marsic",
+      "designation": "* kap Her",
+      "hr": 6008,
+      "hip": 79043
+    },
+    "30343": {
+      "name": "Tejat",
+      "designation": "HR 2286",
+      "hr": 2286,
+      "hip": 30343
+    },
+    "21393": {
+      "name": "Theemin",
+      "designation": "HR 1464",
+      "hr": 1464,
+      "hip": 21393
+    },
+    "42911": {
+      "name": "Asellus Australis",
+      "designation": "HR 3461",
+      "hr": 3461,
+      "hip": 42911
+    },
+    "42806": {
+      "name": "Asellus Borealis",
+      "designation": "HR 3449",
+      "hr": 3449,
+      "hip": 42806
+    },
+    "59803": {
+      "name": "Gienah",
+      "designation": "HR 4662",
+      "hr": 4662,
+      "hip": 59803
+    },
+    "71683": {
+      "name": "Rigil Kentaurus",
+      "designation": "HR 5459",
+      "hr": 5459,
+      "hip": 71683
+    },
+    "79593": {
+      "name": "Yed Prior",
+      "designation": "HR 6056",
+      "hr": 6056,
+      "hip": 79593
+    },
+    "95294": {
+      "name": "Arkab Posterior",
+      "designation": "HR 7343",
+      "hr": 7343,
+      "hip": 95294
+    },
+    "95241": {
+      "name": "Arkab Prior",
+      "designation": "HR 7337",
+      "hr": 7337,
+      "hip": 95241
+    },
+    "79882": {
+      "name": "Yed Posterior",
+      "designation": "HR 6075",
+      "hr": 6075,
+      "hip": 79882
+    },
+    "102618": {
+      "name": "Albali",
+      "designation": "HR 7950",
+      "hr": 7950,
+      "hip": 102618
+    },
+    "59199": {
+      "name": "Alchiba",
+      "designation": "HR 4623",
+      "hr": 4623,
+      "hip": 59199
+    },
+    "53740": {
+      "name": "Alkes",
+      "designation": "HR 4287",
+      "hr": 4287,
+      "hip": 53740
+    },
+    "110003": {
+      "name": "Ancha",
+      "designation": "HR 8499",
+      "hr": 8499,
+      "hip": 110003
+    },
+    "93506": {
+      "name": "Ascella",
+      "designation": "HR 7194",
+      "hr": 7194,
+      "hip": 93506
+    },
+    "17448": {
+      "name": "Atik",
+      "designation": "HR 1131",
+      "hr": 1131,
+      "hip": 17448
+    },
+    "107136": {
+      "name": "Azelfafage",
+      "designation": "HR 8301",
+      "hr": 8301,
+      "hip": 107136
+    },
+    "13701": {
+      "name": "Azha",
+      "designation": "HR 874",
+      "hr": 874,
+      "hip": 13701
+    },
+    "8645": {
+      "name": "Baten Kaitos",
+      "designation": "HR 539",
+      "hr": 539,
+      "hip": 8645
+    },
+    "19587": {
+      "name": "Beid",
+      "designation": "HR 1298",
+      "hr": 1298,
+      "hip": 19587
+    },
+    "14838": {
+      "name": "Botein",
+      "designation": "HR 951",
+      "hr": 951,
+      "hip": 14838
+    },
+    "87585": {
+      "name": "Grumium",
+      "designation": "HR 6688",
+      "hr": 6688,
+      "hip": 87585
+    },
+    "19849": {
+      "name": "Keid",
+      "designation": "HR 1325",
+      "hr": 1325,
+      "hip": 19849
+    },
+    "108917": {
+      "name": "Kurhah",
+      "designation": "HR 8417",
+      "hr": 8417,
+      "hip": 108917
+    },
+    "85693": {
+      "name": "Maasym",
+      "designation": "HR 6526",
+      "hr": 6526,
+      "hip": 85693
+    },
+    "80883": {
+      "name": "Marfik",
+      "designation": "HR 6149",
+      "hr": 6149,
+      "hip": 80883
+    },
+    "34088": {
+      "name": "Mekbuda",
+      "designation": "HR 2650",
+      "hr": 2650,
+      "hip": 34088
+    },
+    "18614": {
+      "name": "Menkib",
+      "designation": "HR 1228",
+      "hr": 1228,
+      "hip": 18614
+    },
+    "72487": {
+      "name": "Merga",
+      "designation": "HR 5533",
+      "hr": 5533,
+      "hip": 72487
+    },
+    "67927": {
+      "name": "Muphrid",
+      "designation": "HR 5235",
+      "hr": 5235,
+      "hip": 67927
+    },
+    "75695": {
+      "name": "Nusakan",
+      "designation": "HR 5747",
+      "hr": 5747,
+      "hip": 75695
+    },
+    "48455": {
+      "name": "Rasalas",
+      "designation": "HR 3905",
+      "hr": 3905,
+      "hip": 48455
+    },
+    "101769": {
+      "name": "Rotanev",
+      "designation": "HR 7882",
+      "hr": 7882,
+      "hip": 101769
+    },
+    "84379": {
+      "name": "Sarin",
+      "designation": "HR 6410",
+      "hr": 6410,
+      "hip": 84379
+    },
+    "96757": {
+      "name": "Sham",
+      "designation": "HR 7479",
+      "hr": 7479,
+      "hip": 96757
+    },
+    "111710": {
+      "name": "Situla",
+      "designation": "HR 8610",
+      "hr": 8610,
+      "hip": 111710
+    },
+    "101958": {
+      "name": "Sualocin",
+      "designation": "HR 7906",
+      "hr": 7906,
+      "hip": 101958
+    },
+    "47508": {
+      "name": "Subra",
+      "designation": "HR 3852",
+      "hr": 3852,
+      "hip": 47508
+    },
+    "69701": {
+      "name": "Syrma",
+      "designation": "HR 5338",
+      "hr": 5338,
+      "hip": 69701
+    },
+    "40167": {
+      "name": "Tegmine",
+      "designation": "HR 3208",
+      "hr": 3208,
+      "hip": 40167
+    },
+    "39757": {
+      "name": "Tureis",
+      "designation": "HR 3185",
+      "hr": 3185,
+      "hip": 39757
+    },
+    "60129": {
+      "name": "Zaniah",
+      "designation": "HR 4689",
+      "hr": 4689,
+      "hip": 60129
+    },
+    "15197": {
+      "name": "Zibal",
+      "designation": "HR 984",
+      "hr": 984,
+      "hip": 15197
+    },
+    "78820": {
+      "name": "Acrab",
+      "designation": "* bet Sco",
+      "hr": 5984,
+      "hip": 78820
+    },
+    "33579": {
+      "name": "Adhara",
+      "designation": "HR 2618",
+      "hr": 2618,
+      "hip": 33579
+    },
+    "6411": {
+      "name": "Adhil",
+      "designation": "HR 390",
+      "hr": 390,
+      "hip": 6411
+    },
+    "106032": {
+      "name": "Alfirk",
+      "designation": "HR 8238",
+      "hr": 8238,
+      "hip": 106032
+    },
+    "100064": {
+      "name": "Algedi",
+      "designation": "HR 7754",
+      "hr": 7754,
+      "hip": 100064
+    },
+    "75411": {
+      "name": "Alkalurops",
+      "designation": "HR 5733",
+      "hr": 5733,
+      "hip": 75411
+    },
+    "88635": {
+      "name": "Alnasl",
+      "designation": "HR 6746",
+      "hr": 6746,
+      "hip": 88635
+    },
+    "9487": {
+      "name": "Alrescha",
+      "designation": "* alf Psc",
+      "hr": 596,
+      "hip": 9487
+    },
+    "98036": {
+      "name": "Alshain",
+      "designation": "HR 7602",
+      "hr": 7602,
+      "hip": 98036
+    },
+    "94376": {
+      "name": "Altais",
+      "designation": "HR 7310",
+      "hr": 7310,
+      "hip": 94376
+    },
+    "92946": {
+      "name": "Alya",
+      "designation": "* tet Ser",
+      "hr": 7141,
+      "hip": 92946
+    },
+    "17579": {
+      "name": "Asterope",
+      "designation": "HR 1151",
+      "hr": 1151,
+      "hip": 17579
+    },
+    "17847": {
+      "name": "Atlas",
+      "designation": "HR 1178",
+      "hr": 1178,
+      "hip": 17847
+    },
+    "109427": {
+      "name": "Biham",
+      "designation": "HR 8450",
+      "hr": 8450,
+      "hip": 109427
+    },
+    "86742": {
+      "name": "Cebalrai",
+      "designation": "HR 6603",
+      "hr": 6603,
+      "hip": 86742
+    },
+    "17489": {
+      "name": "Celaeno",
+      "designation": "HR 1140",
+      "hr": 1140,
+      "hip": 17489
+    },
+    "100345": {
+      "name": "Dabih",
+      "designation": "HR 7776",
+      "hr": 7776,
+      "hip": 100345
+    },
+    "3419": {
+      "name": "Diphda",
+      "designation": "HR 188",
+      "hr": 188,
+      "hip": 3419
+    },
+    "78401": {
+      "name": "Dschubba",
+      "designation": "HR 5953",
+      "hr": 5953,
+      "hip": 78401
+    },
+    "17499": {
+      "name": "Electra",
+      "designation": "HR 1142",
+      "hr": 1142,
+      "hip": 17499
+    },
+    "87833": {
+      "name": "Eltanin",
+      "designation": "HR 6705",
+      "hr": 6705,
+      "hip": 87833
+    },
+    "68702": {
+      "name": "Hadar",
+      "designation": "HR 5267",
+      "hr": 5267,
+      "hip": 68702
+    },
+    "112029": {
+      "name": "Homam",
+      "designation": "HR 8634",
+      "hr": 8634,
+      "hip": 112029
+    },
+    "104987": {
+      "name": "Kitalpha",
+      "designation": "HR 8131",
+      "hr": 8131,
+      "hip": 104987
+    },
+    "80816": {
+      "name": "Kornephoros",
+      "designation": "HR 6148",
+      "hr": 6148,
+      "hip": 80816
+    },
+    "85696": {
+      "name": "Lesath",
+      "designation": "HR 6508",
+      "hr": 6508,
+      "hip": 85696
+    },
+    "112158": {
+      "name": "Matar",
+      "designation": "HR 8650",
+      "hr": 8650,
+      "hip": 112158
+    },
+    "68933": {
+      "name": "Menkent",
+      "designation": "HR 5288",
+      "hr": 5288,
+      "hip": 68933
+    },
+    "8796": {
+      "name": "Mothallah",
+      "designation": "HR 544",
+      "hr": 544,
+      "hip": 8796
+    },
+    "34045": {
+      "name": "Muliphein",
+      "designation": "HR 2657",
+      "hr": 2657,
+      "hip": 34045
+    },
+    "39429": {
+      "name": "Naos",
+      "designation": "HR 3165",
+      "hr": 3165,
+      "hip": 39429
+    },
+    "106985": {
+      "name": "Nashira",
+      "designation": "HR 8278",
+      "hr": 8278,
+      "hip": 106985
+    },
+    "73555": {
+      "name": "Nekkar",
+      "designation": "HR 5602",
+      "hr": 5602,
+      "hip": 73555
+    },
+    "92855": {
+      "name": "Nunki",
+      "designation": "HR 7121",
+      "hr": 7121,
+      "hip": 92855
+    },
+    "75097": {
+      "name": "Pherkad",
+      "designation": "HR 5735",
+      "hr": 5735,
+      "hip": 75097
+    },
+    "70890": {
+      "name": "Proxima Centauri",
+      "designation": "GJ 551",
+      "hr": null,
+      "hip": 70890
+    },
+    "85670": {
+      "name": "Rastaban",
+      "designation": "HR 6536",
+      "hr": 6536,
+      "hip": 85670
+    },
+    "6686": {
+      "name": "Ruchbah",
+      "designation": "HR 403",
+      "hr": 403,
+      "hip": 6686
+    },
+    "84012": {
+      "name": "Sabik",
+      "designation": "HR 6378",
+      "hr": 6378,
+      "hip": 84012
+    },
+    "110395": {
+      "name": "Sadachbia",
+      "designation": "HR 8518",
+      "hr": 8518,
+      "hip": 110395
+    },
+    "112748": {
+      "name": "Sadalbari",
+      "designation": "HR 8684",
+      "hr": 8684,
+      "hip": 112748
+    },
+    "109074": {
+      "name": "Sadalmelik",
+      "designation": "HR 8414",
+      "hr": 8414,
+      "hip": 109074
+    },
+    "106278": {
+      "name": "Sadalsuud",
+      "designation": "HR 8232",
+      "hr": 8232,
+      "hip": 106278
+    },
+    "100453": {
+      "name": "Sadr",
+      "designation": "HR 7796",
+      "hr": 7796,
+      "hip": 100453
+    },
+    "86228": {
+      "name": "Sargas",
+      "designation": "HR 6553",
+      "hr": 6553,
+      "hip": 86228
+    },
+    "3179": {
+      "name": "Schedar",
+      "designation": "HR 168",
+      "hr": 168,
+      "hip": 3179
+    },
+    "71075": {
+      "name": "Seginus",
+      "designation": "HR 5435",
+      "hr": 5435,
+      "hip": 71075
+    },
+    "92420": {
+      "name": "Sheliak",
+      "designation": "HR 7106",
+      "hr": 7106,
+      "hip": 92420
+    },
+    "113136": {
+      "name": "Skat",
+      "designation": "HR 8709",
+      "hr": 8709,
+      "hip": 113136
+    },
+    "44816": {
+      "name": "Suhail",
+      "designation": "HR 3634",
+      "hr": 3634,
+      "hip": 44816
+    },
+    "93194": {
+      "name": "Sulafat",
+      "designation": "HR 7178",
+      "hr": 7178,
+      "hip": 93194
+    },
+    "97278": {
+      "name": "Tarazed",
+      "designation": "HR 7525",
+      "hr": 7525,
+      "hip": 97278
+    },
+    "17531": {
+      "name": "Taygeta",
+      "designation": "HR 1145",
+      "hr": 1145,
+      "hip": 17531
+    },
+    "77070": {
+      "name": "Unukalhai",
+      "designation": "HR 5854",
+      "hr": 5854,
+      "hip": 77070
+    },
+    "35550": {
+      "name": "Wasat",
+      "designation": "HR 2777",
+      "hr": 2777,
+      "hip": 35550
+    },
+    "85822": {
+      "name": "Yildun",
+      "designation": "HR 6789",
+      "hr": 6789,
+      "hip": 85822
+    },
+    "57757": {
+      "name": "Zavijava",
+      "designation": "HR 4540",
+      "hr": 4540,
+      "hip": 57757
+    },
+    "72622": {
+      "name": "Zubenelgenubi",
+      "designation": "HR 5531",
+      "hr": 5531,
+      "hip": 72622
+    },
+    "74785": {
+      "name": "Zubeneschamali",
+      "designation": "HR 5685",
+      "hr": 5685,
+      "hip": 74785
+    },
+    "13847": {
+      "name": "Acamar",
+      "designation": "* tet Eri",
+      "hr": 897,
+      "hip": 13847
+    },
+    "60718": {
+      "name": "Acrux",
+      "designation": "* alf Cru",
+      "hr": 4730,
+      "hip": 60718
+    },
+    "44066": {
+      "name": "Acubens",
+      "designation": "HR 3572",
+      "hr": 3572,
+      "hip": 44066
+    },
+    "50335": {
+      "name": "Adhafera",
+      "designation": "HR 4031",
+      "hr": 4031,
+      "hip": 50335
+    },
+    "95947": {
+      "name": "Albireo",
+      "designation": "HR 7417",
+      "hr": 7417,
+      "hip": 95947
+    },
+    "105199": {
+      "name": "Alderamin",
+      "designation": "HR 8162",
+      "hr": 8162,
+      "hip": 105199
+    },
+    "50583": {
+      "name": "Algieba",
+      "designation": "* gam Leo",
+      "hr": 4057,
+      "hip": 50583
+    },
+    "60965": {
+      "name": "Algorab",
+      "designation": "HR 4757",
+      "hr": 4757,
+      "hip": 60965
+    },
+    "31681": {
+      "name": "Alhena",
+      "designation": "HR 2421",
+      "hr": 2421,
+      "hip": 31681
+    },
+    "9640": {
+      "name": "Almach",
+      "designation": "HR 603",
+      "hr": 603,
+      "hip": 9640
+    },
+    "109268": {
+      "name": "Alnair",
+      "designation": "HR 8425",
+      "hr": 8425,
+      "hip": 109268
+    },
+    "26311": {
+      "name": "Alnilam",
+      "designation": "HR 1903",
+      "hr": 1903,
+      "hip": 26311
+    },
+    "26727": {
+      "name": "Alnitak",
+      "designation": "* zet Ori",
+      "hr": 1948,
+      "hip": 26727
+    },
+    "46390": {
+      "name": "Alphard",
+      "designation": "HR 3748",
+      "hr": 3748,
+      "hip": 46390
+    },
+    "76267": {
+      "name": "Alphecca",
+      "designation": "HR 5793",
+      "hr": 5793,
+      "hip": 76267
+    },
+    "35904": {
+      "name": "Aludra",
+      "designation": "HR 2827",
+      "hr": 2827,
+      "hip": 35904
+    },
+    "55203": {
+      "name": "Alula Australis",
+      "designation": "* ksi UMa",
+      "hr": 4375,
+      "hip": 55203
+    },
+    "55219": {
+      "name": "Alula Borealis",
+      "designation": "HR 4377",
+      "hr": 4377,
+      "hip": 55219
+    },
+    "2081": {
+      "name": "Ankaa",
+      "designation": "HR 99",
+      "hr": 99,
+      "hip": 2081
+    },
+    "25985": {
+      "name": "Arneb",
+      "designation": "HR 1865",
+      "hr": 1865,
+      "hip": 25985
+    },
+    "45556": {
+      "name": "Aspidiske",
+      "designation": "HR 3699",
+      "hr": 3699,
+      "hip": 45556
+    },
+    "82273": {
+      "name": "Atria",
+      "designation": "HR 6217",
+      "hr": 6217,
+      "hip": 82273
+    },
+    "41037": {
+      "name": "Avior",
+      "designation": "HR 3307",
+      "hr": 3307,
+      "hip": 41037
+    },
+    "61317": {
+      "name": "Chara",
+      "designation": "HR 4785",
+      "hr": 4785,
+      "hip": 61317
+    },
+    "54879": {
+      "name": "Chertan",
+      "designation": "HR 4359",
+      "hr": 4359,
+      "hip": 54879
+    },
+    "43587": {
+      "name": "Copernicus",
+      "designation": "HR 3522",
+      "hr": 3522,
+      "hip": 43587
+    },
+    "63125": {
+      "name": "Cor Caroli",
+      "designation": "HR 4915",
+      "hr": 4915,
+      "hip": 63125
+    },
+    "23875": {
+      "name": "Cursa",
+      "designation": "HR 1666",
+      "hr": 1666,
+      "hip": 23875
+    },
+    "25428": {
+      "name": "Elnath",
+      "designation": "HR 1791",
+      "hr": 1791,
+      "hip": 25428
+    },
+    "107315": {
+      "name": "Enif",
+      "designation": "HR 8308",
+      "hr": 8308,
+      "hip": 107315
+    },
+    "30122": {
+      "name": "Furud",
+      "designation": "HR 2282",
+      "hr": 2282,
+      "hip": 30122
+    },
+    "61084": {
+      "name": "Gacrux",
+      "designation": "HR 4763",
+      "hr": 4763,
+      "hip": 61084
+    },
+    "36188": {
+      "name": "Gomeisa",
+      "designation": "HR 2845",
+      "hr": 2845,
+      "hip": 36188
+    },
+    "9884": {
+      "name": "Hamal",
+      "designation": "HR 617",
+      "hr": 617,
+      "hip": 9884
+    },
+    "90185": {
+      "name": "Kaus Australis",
+      "designation": "HR 6879",
+      "hr": 6879,
+      "hip": 90185
+    },
+    "90496": {
+      "name": "Kaus Borealis",
+      "designation": "HR 6913",
+      "hr": 6913,
+      "hip": 90496
+    },
+    "89931": {
+      "name": "Kaus Media",
+      "designation": "HR 6859",
+      "hr": 6859,
+      "hip": 89931
+    },
+    "72607": {
+      "name": "Kochab",
+      "designation": "HR 5563",
+      "hr": 5563,
+      "hip": 72607
+    },
+    "17573": {
+      "name": "Maia",
+      "designation": "HR 1149",
+      "hr": 1149,
+      "hip": 17573
+    },
+    "32246": {
+      "name": "Mebsuta",
+      "designation": "HR 2473",
+      "hr": 2473,
+      "hip": 32246
+    },
+    "26207": {
+      "name": "Meissa",
+      "designation": "HR 1879",
+      "hr": 1879,
+      "hip": 26207
+    },
+    "28360": {
+      "name": "Menkalinan",
+      "designation": "HR 2088",
+      "hr": 2088,
+      "hip": 28360
+    },
+    "17608": {
+      "name": "Merope",
+      "designation": "HR 1156",
+      "hr": 1156,
+      "hip": 17608
+    },
+    "45238": {
+      "name": "Miaplacidus",
+      "designation": "HR 3685",
+      "hr": 3685,
+      "hip": 45238
+    },
+    "62434": {
+      "name": "Mimosa",
+      "designation": "HR 4853",
+      "hr": 4853,
+      "hip": 62434
+    },
+    "25930": {
+      "name": "Mintaka",
+      "designation": "HR 1852",
+      "hr": 1852,
+      "hip": 25930
+    },
+    "15863": {
+      "name": "Mirfak",
+      "designation": "HR 1017",
+      "hr": 1017,
+      "hip": 15863
+    },
+    "30324": {
+      "name": "Mirzam",
+      "designation": "HR 2294",
+      "hr": 2294,
+      "hip": 30324
+    },
+    "41704": {
+      "name": "Muscida",
+      "designation": "HR 3323",
+      "hr": 3323,
+      "hip": 41704
+    },
+    "25606": {
+      "name": "Nihal",
+      "designation": "HR 1829",
+      "hr": 1829,
+      "hip": 25606
+    },
+    "100751": {
+      "name": "Peacock",
+      "designation": "HR 7790",
+      "hr": 7790,
+      "hip": 100751
+    },
+    "26634": {
+      "name": "Phact",
+      "designation": "HR 1956",
+      "hr": 1956,
+      "hip": 26634
+    },
+    "58001": {
+      "name": "Phecda",
+      "designation": "HR 4554",
+      "hr": 4554,
+      "hip": 58001
+    },
+    "61941": {
+      "name": "Porrima",
+      "designation": "HR 4825",
+      "hr": 4825,
+      "hip": 61941
+    },
+    "29655": {
+      "name": "Propus",
+      "designation": "HR 2216",
+      "hr": 2216,
+      "hip": 29655
+    },
+    "86032": {
+      "name": "Rasalhague",
+      "designation": "HR 6556",
+      "hr": 6556,
+      "hip": 86032
+    },
+    "95347": {
+      "name": "Rukbat",
+      "designation": "HR 7348",
+      "hr": 7348,
+      "hip": 95347
+    },
+    "27366": {
+      "name": "Saiph",
+      "designation": "HR 2004",
+      "hr": 2004,
+      "hip": 27366
+    },
+    "85927": {
+      "name": "Shaula",
+      "designation": "HR 6527",
+      "hr": 6527,
+      "hip": 85927
+    },
+    "8903": {
+      "name": "Sheratan",
+      "designation": "HR 553",
+      "hr": 553,
+      "hip": 8903
+    },
+    "44127": {
+      "name": "Talitha",
+      "designation": "HR 3569",
+      "hr": 3569,
+      "hip": 44127
+    },
+    "50801": {
+      "name": "Tania Australis",
+      "designation": "HR 4069",
+      "hr": 4069,
+      "hip": 50801
+    },
+    "50372": {
+      "name": "Tania Borealis",
+      "designation": "HR 4033",
+      "hr": 4033,
+      "hip": 50372
+    },
+    "58952": {
+      "name": "Tonatiuh",
+      "designation": "HR 4609",
+      "hr": 4609,
+      "hip": 58952
+    },
+    "63608": {
+      "name": "Vindemiatrix",
+      "designation": "HR 4932",
+      "hr": 4932,
+      "hip": 63608
+    },
+    "27628": {
+      "name": "Wazn",
+      "designation": "HR 2040",
+      "hr": 2040,
+      "hip": 27628
+    },
+    "34444": {
+      "name": "Wezen",
+      "designation": "HR 2693",
+      "hr": 2693,
+      "hip": 34444
+    },
+    "18543": {
+      "name": "Zaurak",
+      "designation": "HR 1231",
+      "hr": 1231,
+      "hip": 18543
+    },
+    "54872": {
+      "name": "Zosma",
+      "designation": "HR 4357",
+      "hr": 4357,
+      "hip": 54872
+    },
+    "7588": {
+      "name": "Achernar",
+      "designation": "HR 472",
+      "hr": 472,
+      "hip": 7588
+    },
+    "65477": {
+      "name": "Alcor",
+      "designation": "HR 5062",
+      "hr": 5062,
+      "hip": 65477
+    },
+    "17702": {
+      "name": "Alcyone",
+      "designation": "HR 1165",
+      "hr": 1165,
+      "hip": 17702
+    },
+    "21421": {
+      "name": "Aldebaran",
+      "designation": "HR 1457",
+      "hr": 1457,
+      "hip": 21421
+    },
+    "1067": {
+      "name": "Algenib",
+      "designation": "HR 39",
+      "hr": 39,
+      "hip": 1067
+    },
+    "14576": {
+      "name": "Algol",
+      "designation": "HR 936",
+      "hr": 936,
+      "hip": 14576
+    },
+    "62956": {
+      "name": "Alioth",
+      "designation": "HR 4905",
+      "hr": 4905,
+      "hip": 62956
+    },
+    "102488": {
+      "name": "Aljanah",
+      "designation": "HR 7949",
+      "hr": 7949,
+      "hip": 102488
+    },
+    "67301": {
+      "name": "Alkaid",
+      "designation": "HR 5191",
+      "hr": 5191,
+      "hip": 67301
+    },
+    "677": {
+      "name": "Alpheratz",
+      "designation": "HR 15",
+      "hr": 15,
+      "hip": 677
+    },
+    "97649": {
+      "name": "Altair",
+      "designation": "HR 7557",
+      "hr": 7557,
+      "hip": 97649
+    },
+    "80763": {
+      "name": "Antares",
+      "designation": "HR 6134",
+      "hr": 6134,
+      "hip": 80763
+    },
+    "69673": {
+      "name": "Arcturus",
+      "designation": "HR 5340",
+      "hr": 5340,
+      "hip": 69673
+    },
+    "25336": {
+      "name": "Bellatrix",
+      "designation": "HR 1790",
+      "hr": 1790,
+      "hip": 25336
+    },
+    "27989": {
+      "name": "Betelgeuse",
+      "designation": "HR 2061",
+      "hr": 2061,
+      "hip": 27989
+    },
+    "30438": {
+      "name": "Canopus",
+      "designation": "HR 2326",
+      "hr": 2326,
+      "hip": 30438
+    },
+    "24608": {
+      "name": "Capella",
+      "designation": "HR 1708",
+      "hr": 1708,
+      "hip": 24608
+    },
+    "746": {
+      "name": "Caph",
+      "designation": "HR 21",
+      "hr": 21,
+      "hip": 746
+    },
+    "36850": {
+      "name": "Castor",
+      "designation": "HR 2891",
+      "hr": 2891,
+      "hip": 36850
+    },
+    "102098": {
+      "name": "Deneb",
+      "designation": "HR 7924",
+      "hr": 7924,
+      "hip": 102098
+    },
+    "57632": {
+      "name": "Denebola",
+      "designation": "HR 4534",
+      "hr": 4534,
+      "hip": 57632
+    },
+    "54061": {
+      "name": "Dubhe",
+      "designation": "HR 4301",
+      "hr": 4301,
+      "hip": 54061
+    },
+    "59774": {
+      "name": "Megrez",
+      "designation": "HR 4660",
+      "hr": 4660,
+      "hip": 59774
+    },
+    "14135": {
+      "name": "Menkar",
+      "designation": "HR 911",
+      "hr": 911,
+      "hip": 14135
+    },
+    "53910": {
+      "name": "Merak",
+      "designation": "HR 4295",
+      "hr": 4295,
+      "hip": 53910
+    },
+    "10826": {
+      "name": "Mira",
+      "designation": "HR 681",
+      "hr": 681,
+      "hip": 10826
+    },
+    "5447": {
+      "name": "Mirach",
+      "designation": "HR 337",
+      "hr": 337,
+      "hip": 5447
+    },
+    "65378": {
+      "name": "Mizar",
+      "designation": "HR 5054",
+      "hr": 5054,
+      "hip": 65378
+    },
+    "17851": {
+      "name": "Pleione",
+      "designation": "HR 1180",
+      "hr": 1180,
+      "hip": 17851
+    },
+    "11767": {
+      "name": "Polaris",
+      "designation": "HR 424",
+      "hr": 424,
+      "hip": 11767
+    },
+    "37279": {
+      "name": "Procyon",
+      "designation": "HR 2943",
+      "hr": 2943,
+      "hip": 37279
+    },
+    "84345": {
+      "name": "Rasalgethi",
+      "designation": "* alf Her",
+      "hr": 6406,
+      "hip": 84345
+    },
+    "49669": {
+      "name": "Regulus",
+      "designation": "HR 3982",
+      "hr": 3982,
+      "hip": 49669
+    },
+    "24436": {
+      "name": "Rigel",
+      "designation": "HR 1713",
+      "hr": 1713,
+      "hip": 24436
+    },
+    "113881": {
+      "name": "Scheat",
+      "designation": "HR 8775",
+      "hr": 8775,
+      "hip": 113881
+    },
+    "32349": {
+      "name": "Sirius",
+      "designation": "HR 2491",
+      "hr": 2491,
+      "hip": 32349
+    },
+    "65474": {
+      "name": "Spica",
+      "designation": "HR 5056",
+      "hr": 5056,
+      "hip": 65474
+    },
+    "68756": {
+      "name": "Thuban",
+      "designation": "HR 5291",
+      "hr": 5291,
+      "hip": 68756
+    },
+    "91262": {
+      "name": "Vega",
+      "designation": "HR 7001",
+      "hr": 7001,
+      "hip": 91262
+    },
+    "20889": {
+      "name": "Ain",
+      "designation": "HR 1409",
+      "hr": 1409,
+      "hip": 20889
+    },
+    "86796": {
+      "name": "Cervantes",
+      "designation": "HR 6585",
+      "hr": 6585,
+      "hip": 86796
+    },
+    "53721": {
+      "name": "Chalawan",
+      "designation": "HR 4277",
+      "hr": 4277,
+      "hip": 53721
+    },
+    "75458": {
+      "name": "Edasich",
+      "designation": "HR 5744",
+      "hr": 5744,
+      "hip": 75458
+    },
+    "116727": {
+      "name": "Errai",
+      "designation": "HR 8974",
+      "hr": 8974,
+      "hip": 116727
+    },
+    "90344": {
+      "name": "Fafnir",
+      "designation": "HR 6945",
+      "hr": 6945,
+      "hip": 90344
+    },
+    "113368": {
+      "name": "Fomalhaut",
+      "designation": "HR 8728",
+      "hr": 8728,
+      "hip": 113368
+    },
+    "113357": {
+      "name": "Helvetios",
+      "designation": "HR 8729",
+      "hr": 8729,
+      "hip": 113357
+    },
+    "46471": {
+      "name": "Intercrus",
+      "designation": "HR 3743",
+      "hr": 3743,
+      "hip": 46471
+    },
+    "97938": {
+      "name": "Libertas",
+      "designation": "HR 7595",
+      "hr": 7595,
+      "hip": 97938
+    },
+    "103527": {
+      "name": "Musica",
+      "designation": "HR 8030",
+      "hr": 8030,
+      "hip": 103527
+    },
+    "80838": {
+      "name": "Ogma",
+      "designation": "HD 149026",
+      "hr": null,
+      "hip": 80838
+    },
+    "37826": {
+      "name": "Pollux",
+      "designation": "HR 2990",
+      "hr": 2990,
+      "hip": 37826
+    },
+    "16537": {
+      "name": "Ran",
+      "designation": "HR 1084",
+      "hr": 1084,
+      "hip": 16537
+    },
+    "7513": {
+      "name": "Titawin",
+      "designation": "HR 458",
+      "hr": 458,
+      "hip": 7513
+    },
+    "116076": {
+      "name": "Veritate",
+      "designation": "HR 8930",
+      "hr": 8930,
+      "hip": 116076
+    }
+  }
+}

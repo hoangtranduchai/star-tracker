@@ -1,0 +1,118 @@
+{
+  "summary": {
+    "camera": {
+      "mode": "hd1024",
+      "width": 1024,
+      "height": 683,
+      "pixel_um": 21.796875,
+      "focal_mm": 50.0,
+      "note": "APS-C class still camera demo, long side ~1024. No sensor/lens brand."
+    },
+    "dataset_dir": "E:\\VinAI\\Vinspace\\star_tracker_an_danh\\data\\sim_dataset\\hd1024",
+    "n_frames_written": 500,
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "cnn_torch_device": "cuda",
+    "n_requested": 3,
+    "seed": 7,
+    "match_radius_px": 5.0,
+    "wall_s": 0.33131090000006225,
+    "generate_s": 0.0,
+    "infer_s": 0.26356549999854906,
+    "classical": {
+      "n_frames": 3,
+      "n_frames_with_matches": 3,
+      "rmse_px_mean": 0.06547948321258033,
+      "rmse_px_median": 0.05559564838570935,
+      "rmse_px_p90": 0.08436252713538105,
+      "matched_stars_total": 121,
+      "gt_stars_total": 125,
+      "time_ms_mean": 30.306266666533094,
+      "time_ms_median": 33.11889999986306,
+      "time_s_per_frame_mean": 0.030306266666533094
+    },
+    "cnn": {
+      "n_frames": 3,
+      "n_frames_with_matches": 3,
+      "rmse_px_mean": 0.4520135412910014,
+      "rmse_px_median": 0.5179193405522845,
+      "rmse_px_p90": 0.5485116793962389,
+      "matched_stars_total": 125,
+      "gt_stars_total": 125,
+      "time_ms_mean": 55.89060000026317,
+      "time_ms_median": 54.01830000027985,
+      "time_s_per_frame_mean": 0.05589060000026317
+    },
+    "institution": {
+      "school": "Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc B\u00e1ch khoa, \u0110\u1ea1i h\u1ecdc \u0110\u00e0 N\u1eb5ng",
+      "faculty": "Khoa C\u00f4ng ngh\u1ec7 th\u00f4ng tin"
+    }
+  },
+  "frames": [
+    {
+      "i": 0,
+      "n_gt": 49,
+      "classical": {
+        "n_pred": 47,
+        "n_gt": 49,
+        "n_matched": 47,
+        "rmse_px": 0.09155424682279897,
+        "mean_err_px": 0.0732789076752487,
+        "time_ms": 13.065699999970093
+      },
+      "cnn": {
+        "n_pred": 50,
+        "n_gt": 49,
+        "n_matched": 49,
+        "rmse_px": 0.5179193405522845,
+        "mean_err_px": 0.3046382193335765,
+        "time_ms": 51.13040000014735,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 1,
+      "n_gt": 34,
+      "classical": {
+        "n_pred": 33,
+        "n_gt": 34,
+        "n_matched": 33,
+        "rmse_px": 0.05559564838570935,
+        "mean_err_px": 0.04862189504559096,
+        "time_ms": 44.73419999976613
+      },
+      "cnn": {
+        "n_pred": 57,
+        "n_gt": 34,
+        "n_matched": 34,
+        "rmse_px": 0.5561597641072276,
+        "mean_err_px": 0.3173040587987703,
+        "time_ms": 54.01830000027985,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    },
+    {
+      "i": 2,
+      "n_gt": 42,
+      "classical": {
+        "n_pred": 41,
+        "n_gt": 42,
+        "n_matched": 41,
+        "rmse_px": 0.04928855442923269,
+        "mean_err_px": 0.04024079036650022,
+        "time_ms": 33.11889999986306
+      },
+      "cnn": {
+        "n_pred": 62,
+        "n_gt": 42,
+        "n_matched": 42,
+        "rmse_px": 0.2819615192134923,
+        "mean_err_px": 0.23351205159024885,
+        "time_ms": 62.52310000036232,
+        "backend": "cnn_zhao2024",
+        "error": null
+      }
+    }
+  ]
+}
