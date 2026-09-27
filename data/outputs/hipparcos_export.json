@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "source": "HIPPARCOS+filt",
+  "n_stars": 4537,
+  "npz_bytes": 200653,
+  "kvector_pairs": 333211,
+  "kvector_bytes": 3555053,
+  "tsv": "starcat.tsv"
+}

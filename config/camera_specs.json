@@ -1,0 +1,49 @@
+{
+  "project": "Star tracker demo — Trường Đại học Bách khoa, Đại học Đà Nẵng",
+  "subsystem": "Attitude from star field",
+  "faculty": "Khoa Công nghệ thông tin",
+  "camera_note": "Public stand-in: common APS-C 24 MP still camera and a 50 mm lens. Names of the sensor and the lens are not part of this demo.",
+  "sensor": {
+    "class": "APS-C still camera",
+    "resolution_width_px": 6000,
+    "resolution_height_px": 4000,
+    "total_pixels_mp": 24.0,
+    "pixel_size_um": 3.72,
+    "quantity": 1
+  },
+  "lens": {
+    "class": "50 mm still lens",
+    "focal_length_mm": 50.0,
+    "fov_horizontal_deg": 25.16,
+    "fov_vertical_deg": 16.93,
+    "fov_diagonal_deg": 30.03
+  },
+  "distortion": {
+    "k1": 0.0,
+    "k2": 0.0,
+    "k3": 0.0,
+    "p1": 0.0,
+    "p2": 0.0,
+    "note": "Synthetic frames use zero distortion."
+  },
+  "radiometry": {
+    "assumption": true,
+    "e_per_s_v0": 3.3e6,
+    "qe": 1.0,
+    "read_noise_e": 5.0,
+    "dark_e_per_s": 10.0,
+    "gain_dn_per_e": 1.0,
+    "full_well_e": 12000.0,
+    "bit_depth": 12,
+    "bias_dn": 64.0,
+    "hot_pixel_frac": 1.0e-5,
+    "cosmic_rate_per_frame": 2.0,
+    "note": "Simulation defaults only. Not a camera datasheet."
+  },
+  "operational_requirements": {
+    "star_visual_magnitude_limit": 6.0,
+    "exposure_time_ms": [100, 200],
+    "centroid_accuracy_px": 0.1,
+    "downlink_data_format": "Quaternion J2000 [q0, q1, q2, q3] (16 bytes float32)"
+  }
+}
