@@ -1,0 +1,1 @@
+Kính gửi Ban giám khảo, toàn bộ mã nguồn của dự án Star Tracker và lịch sử quản lý phiên bản được lưu trữ công khai tại GitHub: https://github.com/hoangtranduchai/star-tracker

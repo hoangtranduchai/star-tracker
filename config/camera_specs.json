@@ -4,6 +4,7 @@
   "faculty": "Khoa Công nghệ thông tin",
   "camera_note": "Public stand-in: common APS-C 24 MP still camera and a 50 mm lens. Names of the sensor and the lens are not part of this demo.",
   "sensor": {
+    "model": "APS-C (Tùy chỉnh)",
     "class": "APS-C still camera",
     "resolution_width_px": 6000,
     "resolution_height_px": 4000,
@@ -12,6 +13,7 @@
     "quantity": 1
   },
   "lens": {
+    "model": "50mm f/1.8 (Tùy chỉnh)",
     "class": "50 mm still lens",
     "focal_length_mm": 50.0,
     "fov_horizontal_deg": 25.16,
