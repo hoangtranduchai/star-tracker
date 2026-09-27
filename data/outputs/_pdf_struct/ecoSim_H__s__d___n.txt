@@ -1,0 +1,242 @@
+===== PAGE 1 =====
+HỒ SƠ DỰ ÁN DỰ THI BẢNG C 
+Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ nhân tạo năm 2026 
+----------------------------------------- 
+ 
+Số lượng thí sinh trong đội thi 1 người  2 người ☐ 3 người ☐ 
+Thí sinh thứ nhất (đội trưởng) 
+Họ và tên: Nguyễn Quang Chiến 
+Ngày/tháng/năm sinh: 23/03/2007 
+Lớp hành chính, ngành, khoa, 
+trường: 
+25T_Nhat1 , Ngành Công nghệ thông tin ( Ngoại 
+Ngữ Nhật) , Khoa Công nghệ thông tin , Trường 
+Đại học Bách Khoa – Đại học Đà Nẵng 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+K27/9/7 Nguyễn Lương Bằng , Phường Liên Chiểu 
+, Thành phố Đà Nẵng 
+Điện thoại: 0934989320 
+Email: Nguyenquanhchienpp2303@gmail.com 
+Thí sinh thứ hai 
+Họ và tên:  
+Ngày/tháng/năm sinh:  
+Lớp hành chính, ngành, khoa, 
+trường: 
+ 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+ 
+Điện thoại:  
+Email:  
+Thí sinh thứ ba 
+Họ và tên:  
+Ngày/tháng/năm sinh:  
+Lớp hành chính, ngành, khoa, 
+trường: 
+ 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+ 
+Điện thoại:  
+Email:  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 2 =====
+2 
+ 
+ 
+ 
+NỘI DUNG HỒ SƠ DỰ ÁN 
+ 
+1. Bài toán hoặc vấn đề thực tiễn cần giải quyết 
+ 
+Trước khi triển khai một chiến dịch tiếp thị, doanh nghiệp thường phải khảo sát khách 
+hàng, tổ chức thảo luận nhóm hoặc chạy quảng cáo thử. Những cách này có thể mất nhiều 
+ngày, tốn chi phí và chỉ kiểm tra được một số ít phương án. Nếu thông điệp không phù 
+hợp, doanh nghiệp thường chỉ phát hiện sau khi đã chi tiền. EcoSim được xây dựng để tạo 
+ra một mạng xã hội mô phỏng, nơi nhiều người dùng ảo có tính cách, sở thích và cách phản 
+ứng khác nhau cùng tương tác với chiến dịch. Nhờ đó, doanh nghiệp có thể quan sát trước 
+những phản ứng có thể xảy ra, phát hiện thông điệp dễ gây tranh luận và lựa chọn phương 
+án cần kiểm chứng ngoài thực tế. 
+2. Mục tiêu, phạm vi và đối tượng ứng dụng của sản phẩm  
+ 
+Mục tiêu của EcoSim là giúp người dùng đưa bản mô tả chiến dịch vào hệ thống và nhận 
+lại một báo cáo dễ hiểu về cách cộng đồng ảo đã phản ứng. Hệ thống cho biết nội dung nào 
+được chú ý, nhóm người nào phản ứng tích cực hoặc tiêu cực, cuộc thảo luận thay đổi ra 
+sao qua thời gian và vì sao một người dùng ảo đưa ra phản ứng đó. Sản phẩm hiện tập 
+trung vào chiến dịch tiếp thị, truyền thông và tình huống khủng hoảng thương hiệu. Người 
+sử dụng phù hợp gồm phòng tiếp thị của doanh nghiệp, công ty quảng cáo, doanh nghiệp 
+thương mại điện tử, nhóm nghiên cứu, giảng viên và sinh viên. 
+EcoSim là công cụ hỗ trợ hình thành và sàng lọc giả thuyết. Kết quả mô phỏng không thay 
+thế khảo sát người thật và không được xem là cam kết chắc chắn về doanh thu hay hành vi 
+thị trường. 
+3. Dữ liệu sử dụng, nguồn dữ liệu và tính hợp lệ của dữ liệu 
+ 
+Hệ thống sử dụng ba nhóm dữ liệu. Thứ nhất là tài liệu mô tả chiến dịch do người dùng tải 
+lên, chẳng hạn như mục tiêu, sản phẩm, đối tượng hướng tới, thông điệp và rủi ro dự kiến. 
+Thứ hai là kho hồ sơ mẫu dùng để tạo người dùng ảo đa dạng về độ tuổi, nghề nghiệp, mối 
+quan tâm và thói quen. Thứ ba là dữ liệu do chính quá trình mô phỏng tạo ra, gồm bài 
+đăng, bình luận, lượt thích và sự thay đổi sở thích. EcoSim không cần tên thật, số điện 
+thoại hoặc địa chỉ của một cá nhân cụ thể để vận hành. Chỉ những tài liệu mà người dùng 
+có quyền sử dụng mới được đưa vào hệ thống; dữ liệu hồ sơ phải được ẩn danh hoặc tổng 
+hợp và phải được kiểm tra nguồn gốc, giấy phép trước khi sử dụng thương mại. 
+Mỗi chiến dịch và mỗi lần mô phỏng được lưu riêng để tránh trộn lẫn dữ liệu. Đơn vị sử 
+dụng có thể quy định ai được xem, thời gian lưu và thời điểm xóa tài liệu. 
+4. Quy trình tiền xử lý, làm sạch, chuẩn hóa hoặc tổ chức dữ liệu 
+ 
+Đầu tiên, tài liệu chiến dịch được chia thành các phần nhỏ theo nội dung để hệ thống 
+không bỏ sót thông tin nằm ở cuối tài liệu. Các ký tự thừa, khoảng trắng và dữ liệu lặp 
+được làm sạch. Sau đó, hệ thống nhận biết những đối tượng quan trọng như sản phẩm, 
+thương hiệu, khách hàng mục tiêu, kênh truyền thông và rủi ro, rồi nối chúng thành một 
+bản đồ quan hệ. Với hồ sơ người dùng ảo, hệ thống loại bỏ trường không cần thiết, ẩn 
+thông tin nhận dạng và chọn khoảng 60% hồ sơ có liên quan đến lĩnh vực của chiến dịch, 
+===== PAGE 3 =====
+3 
+ 
+ 
+40% còn lại được chọn đa dạng để tránh mọi người đều có cùng quan điểm. Cuối cùng, dữ 
+liệu được kiểm tra đúng định dạng trước khi đưa vào mô phỏng. 
+Các bài đăng và hành vi được lưu theo từng vòng để người dùng có thể xem lại diễn biến 
+và kiểm tra báo cáo được tạo từ dữ liệu nào. 
+5. Thuật toán, mô hình, phương pháp hoặc công cụ trí tuệ nhân tạo được sử dụng 
+ 
+EcoSim sử dụng các phương pháp trí tuệ nhân tạo sau: (1) Mô hình ngôn ngữ lớn, thường 
+gọi tắt là LLM, dùng để đọc tài liệu chiến dịch, bổ sung mô tả cho người dùng ảo, viết bài 
+đăng, bình luận và diễn giải kết quả thành báo cáo. (2) Đồ thị tri thức dùng để sắp xếp các 
+thông tin như thương hiệu, sản phẩm, khách hàng và rủi ro thành một bản đồ có quan hệ rõ 
+ràng. (3) Phương pháp biểu diễn câu chữ thành các dãy số và so sánh mức độ gần nghĩa, 
+giúp mỗi người dùng ảo nhìn thấy những bài viết phù hợp với sở thích của mình. (4) Các 
+quy tắc xác suất quyết định khi nào một người đăng bài, thích hoặc bình luận; cách này tiết 
+kiệm hơn việc hỏi mô hình AI cho mọi hành động nhỏ. (5) Bộ nhớ ngắn hạn và cơ chế thay 
+đổi sở thích giúp người dùng ảo nhớ nội dung đã xem và thay đổi dần sau mỗi lần tương 
+tác. (6) Mô hình RoBERTa phân loại bình luận thành tích cực, trung tính hoặc tiêu cực. (7) 
+Công cụ rút từ khóa nhận biết chủ đề đang được quan tâm. 
+Các thành phần trên phối hợp theo nguyên tắc: máy tính thực hiện việc đếm, so sánh và 
+kiểm tra; mô hình ngôn ngữ chỉ đảm nhiệm những phần cần hiểu hoặc tạo câu chữ tự 
+nhiên. 
+6. Quy trình huấn luyện, tinh chỉnh, tích hợp hoặc khai thác mô hình (nếu có) 
+ 
+Đội thi không tự huấn luyện một mô hình AI lớn từ đầu mà kết hợp các mô hình có sẵn vào 
+một quy trình chung. Người dùng cung cấp tài liệu chiến dịch và chọn số người dùng ảo, 
+số vòng mô phỏng cùng các tình huống bất ngờ muốn thử. Hệ thống đưa cho mô hình ngôn 
+ngữ những yêu cầu có cấu trúc rõ ràng, sau đó kiểm tra câu trả lời có đủ trường thông tin 
+và đúng định dạng hay không. Nếu mô hình trả lời lỗi, chương trình sử dụng quy tắc dự 
+phòng để quá trình không bị dừng. Mô hình phân tích cảm xúc được chạy trực tiếp trên bài 
+đăng và bình luận. Sau mỗi lần điều chỉnh, đội thi kiểm tra lại toàn bộ chuỗi từ đọc tài liệu, 
+tạo người dùng, chạy tương tác đến lập báo cáo. 
+Việc điều chỉnh hiện nay tập trung vào cách đặt yêu cầu cho mô hình, tỷ lệ chọn hồ sơ, xác 
+suất hành động và tốc độ thay đổi sở thích. Hệ thống chưa sử dụng một bộ dữ liệu riêng để 
+huấn luyện lại mô hình nền tảng. 
+7. Chỉ số, phương pháp hoặc tiêu chí đánh giá kết quả 
+ 
+Hệ thống được đánh giá bằng các số liệu có thể đếm trực tiếp: số bài đăng, lượt thích, bình 
+luận, số người tham gia thảo luận và mức độ tương tác qua từng vòng. Cảm xúc được chia 
+thành tích cực, trung tính và tiêu cực; chênh lệch giữa tỷ lệ tích cực và tiêu cực cho biết 
+tâm trạng chung của cộng đồng mô phỏng. Ngoài ra, có thể kiểm tra người dùng ảo có 
+phản ứng đa dạng hay không, có nhớ nội dung cũ hay không, sở thích có thay đổi hợp lý 
+hay không và báo cáo có dẫn lại được bài đăng hoặc số liệu làm căn cứ hay không. Khi 
+chạy lại cùng một giá trị khởi tạo, kết quả cũng được so sánh để kiểm tra tính ổn định. 
+EcoSim không tự suy ra các chỉ số mà mô phỏng không thu thập, chẳng hạn doanh thu, số 
+đơn hàng hoặc tỷ lệ mua hàng. Độ chính xác so với thị trường thật cần được đánh giá thêm 
+bằng khảo sát và chiến dịch thực tế. 
+===== PAGE 4 =====
+4 
+ 
+ 
+8. Kết quả thử nghiệm, phân tích ưu điểm, hạn chế và khả năng mở rộng 
+ 
+Phiên bản thử nghiệm đã chạy với khoảng 100 người dùng ảo trên một máy chủ thông 
+thường. Một kịch bản 24 vòng có thể hoàn thành trong khoảng 20 đến 30 phút, tùy mô 
+hình AI và cấu hình sử dụng. Kết quả cho thấy hệ thống có thể tạo nhiều kiểu người dùng, 
+cho họ xem các bảng tin khác nhau, ghi nhớ tương tác, thay đổi sở thích và phản ứng với 
+một sự kiện khủng hoảng được chèn vào giữa quá trình mô phỏng. Ưu điểm là có thể chạy 
+lại nhiều kịch bản, xem diễn biến theo thời gian và kiểm tra căn cứ của báo cáo. Hạn chế 
+lớn nhất là phản ứng được tạo ra bởi người dùng ảo nên chưa thể khẳng định sẽ giống hoàn 
+toàn người thật; các xác suất hành vi cũng cần được hiệu chỉnh bằng nhiều thử nghiệm 
+thực tế hơn. 
+Hệ thống có thể mở rộng bằng cách chạy nhiều lần với các nhóm người dùng và tình 
+huống khác nhau, nhưng cần kiểm tra khả năng phục vụ nhiều người cùng lúc, theo dõi chi 
+phí và đối chiếu với dữ liệu thực trước khi áp dụng ở quy mô lớn. 
+9. So sánh với phương án hoặc mô hình cơ sở, phân tích đóng góp của các thành phần 
+trong hệ thống (nếu có) 
+ 
+Khảo sát và thảo luận nhóm sử dụng ý kiến của người thật nên có giá trị kiểm chứng cao, 
+nhưng thường tốn thời gian, chi phí và khó lặp lại nhiều lần. Việc đưa hai mẫu quảng cáo 
+A và B ra thị trường để so sánh cho kết quả thực tế nhưng phải dùng ngân sách và chỉ thực 
+hiện sau khi nội dung đã được công bố. EcoSim không thay thế các phương pháp này; sản 
+phẩm đóng vai trò là bước thử ban đầu để loại bỏ phương án yếu và tìm ra câu hỏi cần 
+khảo sát. Điểm khác biệt của EcoSim so với một chương trình mô phỏng đơn giản là mỗi 
+người dùng ảo có hồ sơ riêng, chỉ nhìn thấy nội dung phù hợp, nhớ những gì đã tương tác 
+và có thể thay đổi sở thích. Báo cáo cuối không chỉ nêu kết luận mà còn chỉ ra số liệu hoặc 
+hành vi đã dẫn đến kết luận đó. 
+Nhờ kết hợp bản đồ bối cảnh, cộng đồng đa dạng, quá trình tương tác có trí nhớ và báo cáo 
+có căn cứ, EcoSim tạo ra một quy trình thử nghiệm hoàn chỉnh thay vì chỉ hỏi AI dự đoán 
+bằng một câu lệnh duy nhất. 
+10. Kiến trúc hệ thống và phương án triển khai 
+ 
+Hệ thống gồm bốn phần chính. Phần thứ nhất là trang web để người dùng tải tài liệu, chọn 
+số người dùng ảo, số vòng và theo dõi kết quả. Phần thứ hai đọc tài liệu và tạo bản đồ bối 
+cảnh của chiến dịch. Phần thứ ba tạo cộng đồng ảo và điều khiển quá trình đăng bài, xem 
+bài, thích, bình luận, ghi nhớ và thay đổi sở thích qua từng vòng. Phần thứ tư tổng hợp số 
+liệu, phân tích cảm xúc, hỗ trợ phỏng vấn từng người dùng ảo và tạo báo cáo. Dữ liệu của 
+mỗi lần mô phỏng được lưu trong một khu vực riêng để không ảnh hưởng đến lần chạy 
+khác. Toàn bộ hệ thống có thể chạy trên máy chủ của dự án hoặc được cài trong hạ tầng 
+riêng của doanh nghiệp nếu cần bảo mật cao. 
+Khi triển khai thực tế cần bổ sung tài khoản và phân quyền, sao lưu dữ liệu, giới hạn số lần 
+chạy, theo dõi chi phí và bảo vệ khóa truy cập các dịch vụ AI. 
+11. Phân tích rủi ro, yêu cầu bảo mật, đạo đức trí tuệ nhân tạo và an toàn dữ liệu 
+ 
+Rủi ro thứ nhất là dữ liệu hồ sơ không cân bằng có thể làm cộng đồng ảo thiên lệch. Rủi ro 
+thứ hai là mô hình ngôn ngữ có thể tạo nội dung nghe hợp lý nhưng không có căn cứ. Rủi 
+===== PAGE 5 =====
+5 
+ 
+ 
+ro thứ ba là tài liệu chiến dịch có thể chứa thông tin bí mật. Rủi ro thứ tư là người dùng 
+hiểu nhầm kết quả mô phỏng thành dự báo chắc chắn. Để giảm các rủi ro này, EcoSim 
+chọn hồ sơ theo cả mức liên quan và mức đa dạng, lưu lại hành động làm bằng chứng, 
+không cho báo cáo tự tạo các con số hệ thống không đo được và yêu cầu con người xem lại 
+trước khi ra quyết định. Dữ liệu cần được phân quyền, mã hóa khi truyền và lưu, tách riêng 
+giữa các chiến dịch và xóa theo yêu cầu. 
+Hệ thống phải thông báo rõ mọi nhân vật và lời nói trong mô phỏng là nhân tạo; không 
+dùng kết quả để đánh giá một cá nhân thật hoặc quyết định vấn đề ảnh hưởng quyền lợi 
+của con người khi chưa được kiểm định độc lập. 
+12. Hướng phát triển, hoàn thiện và khả năng ứng dụng trong thực tiễn 
+ 
+Tối ưu sản phẩm hoạt động tốt trên một lĩnh vực hẹp . Định hướng sẽ  hoạt động  trên lĩnh 
+vực cafe ở việt Nam , các dữ liệu về các bài viết , hành vi của người dùng sẽ được lấy thực 
+tế từ Việt Nam . Cải thiện thêm kiến trúc của sản phẩm sử dụng các mô hình Ai mới như 
+Jev ,laya để cải thiện chi phí cũng , tốc độ , độ chính xác , tự xây dựng lại code và không 
+sử dụng các framework , api  có sẵn vì đã qua giai đoạn poc của sản phẩm , hướng tới một 
+sản phẩm có thể chạy nội bộ .Tối ưu hóa lại cách người dùng ảo đọc bài viết  và ra quyết 
+định. , ngoài nền tảng mạng xã hội ảo thì bổ sung thêm nền tảng mua sắm online ảo để dự 
+đoán xu hướng mua của người dùng , mô phỏng khủng hoảng truyền thông chân thật hơn . 
+Mục tiêu dài hạn là giúp nhiều doanh nghiệp nhỏ, sinh viên và nhà nghiên cứu tiếp cận một 
+môi trường thử nghiệm chiến dịch với chi phí phù hợp trước khi sử dụng ngân sách ngoài 
+đời thực. 
+13. Lịch sử câu lệnh và hình ảnh minh chứng quá trình phát triển sản phẩm từ bản 
+nháp đến khi hoàn thiện 
+https://drive.google.com/drive/folders/1RHLOhEpujXJ-
+uelT5lu6ZSUQzsfmJRq0?usp=sharing 
+ 
+ 
+ 
+ 
+Đà Nẵng, ngày 19 tháng 9 năm 2026 
+Đại diện đội thi 
+(Ký, ghi rõ họ tên) 
+ 
+ 
+ 
+ 
+Nguyễn Quang Chiến 
+ 

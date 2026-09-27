@@ -1,0 +1,791 @@
+===== PAGE 1 =====
+MẪU HỒ SƠ DỰ ÁN DỰ THI BẢNG C 
+Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ nhân tạo năm 2026 
+----------------------------------------- 
+ 
+Số lượng thí sinh trong đội thi 1 người ☐ 2 người  3 người ☐  
+Thí sinh thứ nhất (đội trưởng) 
+Họ và tên: Nguyễn Hoàng Minh 
+Ngày/tháng/năm sinh: 07/08/2005 
+Lớp hành chính, ngành, khoa, 
+trường: 
+23PFIEV3, Công nghệ thông tin, Công nghệ 
+Thông tin, Trường Đại học Bách khoa - Đại học 
+Đà Nẵng 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+Phường Hải Châu, thành phố Đà Nẵng 
+Điện thoại: 0919025448 
+Email: Nguyenhoangminh782005@gmail.com 
+Thí sinh thứ hai 
+Họ và tên: Trường Bùi Diễn 
+Ngày/tháng/năm sinh: 21/04/2006 
+Lớp hành chính, ngành, khoa, 
+trường: 
+24T_KHDL, Công nghệ Thông tin - Khoa học Dữ 
+Liệu và Trí tuệ Nhân tạo, Điện tử và Trí tuệ Nhân 
+tạo, trường Đại học Bách khoa - Đại học Đà Nẵng 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+Phường Hoà Khánh, thành phố Đà Nẵng 
+Điện thoại: 0359377430 
+Email: Dientruong2104@gmail.com 
+Thí sinh thứ ba 
+Họ và tên:  
+Ngày/tháng/năm sinh:  
+Lớp hành chính, ngành, khoa, 
+trường: 
+ 
+Xã/phường/đặc khu, 
+tỉnh/thành phố: 
+ 
+Điện thoại:  
+Email:  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ MẪU 3 
+===== PAGE 2 =====
+2 
+ 
+ 
+ 
+ 
+NỘI DUNG HỒ SƠ DỰ ÁN 
+ 
+1. Bài toán hoặc vấn đề thực tiễn cần giải quyết 
+Khó khăn thực tế:  Trong các cuộc họp trực tuyến, các đội nhóm hiện nay đối mặt với  2 rào 
+cản lớn nhất: 
+ Rào cản ngôn ngữ: Khi làm việc với khách hàng, đối tác hoặc nhân sự quốc tế, việc bất 
+đồng ngôn ngữ khiến người họp nghe không kịp, ngắt quãng luồng trao đổi hoặc hiểu 
+sai ý nhau. 
+ Rào cản thực thi ("H ọp xong đ ể đó"): Người tham gia v ừa lo nghe/d ịch vừa phải ghi 
+chép thủ công. Các nhiệm vụ được chốt bằng lời nói dễ bị bỏ quên, trôi tin nhắn và gây 
+tranh cãi do không ai nhớ chính xác ai nhận việc, hạn chót và bối cảnh cụ thể ra sao. 
+Thực trạng các công cụ hiện tại & Khoảng trống thị trường: 
+ Công cụ ghi chép quốc tế (Otter.ai, Fireflies.ai): Hoàn toàn không hỗ trợ dịch trực tiếp 
+tiếng Việt sang tiếng Anh trên màn hình; tóm tắt xong vẫn phải gõ việc thủ công sang 
+Jira/Trello. 
+ Tính năng dịch có sẵn trên nền tảng: Chỉ mở cho các gói tài khoản doanh nghiệp rất đắt 
+tiền (Google Workspace Enterprise / Gemini Add -on); chữ chạy xong biến mất ngay, 
+không lưu lại bối cảnh, không phân định rõ từng người nói và hoàn toàn tách r ời khỏi 
+việc quản lý công việc. 
+ Hiện tại trên thị trường chưa có một công cụ nào kết hợp được: Vừa hiển thị phụ đề dịch 
+trực tiếp trên màn hình, v ừa ghi âm, v ừa tự động chuyển đổi cuộc họp thành các thẻ 
+công việc có đính kèm âm thanh gốc. 
+Giải pháp của Meetly & Điểm vượt trội: 
+ Dịch trực tiếp ngay trong cuộc họp: Khi người họp phát biểu bằng tiếng Việt, hệ thống 
+lập tức hiển thị phụ đề tiếng Anh chạy nổi ngay trên màn hình cuộc họp với độ trễ cực 
+thấp. Người dùng có thể vừa họp vừa đọc tức thì, xóa bỏ rào cản bất đồng ngôn ngữ mà 
+không cần thuê phiên dịch viên hay nâng cấp tài khoản đắt đỏ. 
+ Ghi âm tr ực tiếp: Hoạt động mượt mà qua ti ện ích m ở rộng (Chrome Extension) và 
+Discord Bot ngay trên máy người dùng, đảm bảo tính riêng tư tuyệt đối. 
+ Tự động chuyển cuộc họp thành công việc: AI tự động phân tách giọng từng người nói 
+và trích xuất danh sách vi ệc cần làm (Tên việc, Người nhận, Hạn chót) đưa thẳng lên 
+bảng quản lý. 
+ Tính năng liên k ết ngược bối cảnh độc bản: Từ bất k ỳ thẻ công việc nào, ch ỉ cần 1 
+click là hệ thống lập tức tua về đúng giây âm thanh và đo ạn phụ đề song ngữ lúc giao 
+việc để kiểm chứng tức thì và hiểu rõ bối cảnh cuộc họp. 
+===== PAGE 3 =====
+3 
+ 
+ 
+2. Mục tiêu, phạm vi và đối tượng ứng dụng của sản phẩm  
+Mục tiêu sản phẩm:  
+ Xóa bỏ rào cản ngôn ngữ theo thời gian thực: Cung cấp phụ đề dịch trực tiếp tiếng Anh 
+ngay trên màn hình để người tham gia đọc hiểu song song khi đang họp. 
+ Giải phóng ghi chép và chống thất thoát công việc: Tự động chuyển đổi các thỏa thuận 
+bằng lời nói thành nhiệm vụ rõ ràng, có người phụ trách và thời hạn cụ thể. 
+ Tiết kiệm chi phí và thời gian: Cắt giảm ít nhất 70% thời gian làm biên bản, phân chia 
+việc sau họp mà không cần tốn chi phí thuê phiên dịch hay mua các gói phần mềm ngoại 
+đắt đỏ, hiểu rõ bối cảnh công việc để tiết kiệm thời gian khi cần nghe lại. 
+Phạm vi ứng dụng:  
+ Nền tảng ứng dụng: Tập trung vào Google Meet (thông qua tiện ích mở rộng Chrome 
+hiển thị thanh phụ đề nổi). 
+ Phạm vi ngôn ngữ: Tập trung hoàn thiện và tối ưu luồng dịch thời gian thực Việt - Anh. 
+Đối tượng ứng dụng:  Các doanh nghiệp, công ty và tổ chức  (đặc biệt là các công ty công 
+nghệ/gia công phần mềm, doanh nghiệp xuất nhập khẩu, startup làm việc với khách hàng, đối 
+tác hoặc quản lý nước ngoài, và các đội ngũ làm việc từ xa/hybrid) có nhu cầu họp song ngữ và 
+quản lý giao việc tự động, chính xác. 
+3. Dữ liệu sử dụng, nguồn dữ liệu và tính hợp lệ của dữ liệu 
+Các loại dữ liệu sử dụng: 
+ Dữ liệu âm thanh tiếng nói: Tệp âm thanh đàm thoại tiếng Việt và song ngữ Việt – Anh 
+đa vùng miền, đa điều kiện tạp âm (background noise, echo, chất lượng micro khác 
+nhau). 
+  Dữ liệu văn bản hội thoại : Các văn bản phiên âm cuộc họp thực tế và nhân tạo kèm 
+nhãn phân đoạn người nói (Speaker Turns), dấu thời gian (Timestamps). 
+  Dữ liệu cặp tác vụ gán nhãn:  Cặp dữ liệu gồm nội dung biên bản cuộc họp ↔ Danh 
+sách Action Items thực tế (Tên việc, Người thực hiện, Thời hạn cam kết). 
+Nguồn dữ liệu: Dữ liệu cuộc họp mô phỏng hơn 80 cuộc họp nhóm công nghệ trực  tiếp được 
+ghi âm thông qua chính Meetly Extension trong quá trình kiểm thử nội bộ. 
+Căn cứ bảo đảm tính hợp lệ, bản quyền và quyền riêng tư: 
+ Đối với dữ liệu ghi âm thực tế: Toàn bộ thành viên tham gia đều ký cam kết Đồng thuận 
+cung cấp thông tin (Informed Consent), dữ liệu được tiến hành khử định danh  
+(Anonymization/De-identification) – loại bỏ toàn bộ thông tin định danh cá nhân nhạy 
+cảm (PII: số điện thoại, tài khoản ngân hàng, mật khẩu) trước khi đưa vào tập đánh giá. 
+ Tuân thủ nghiêm ngặt  Nghị định số 13/2023/NĐ -CP của Chính phủ Việt Nam về bảo 
+vệ dữ liệu cá nhân. 
+===== PAGE 4 =====
+4 
+ 
+ 
+4. Quy trình tiền xử lý, làm sạch, chuẩn hóa hoặc tổ chức dữ liệu 
+Tiền xử lý dữ liệu âm thanh:  
+ Hòa trộn âm thanh 2 chiều: Kết hợp luồng tiếng từ cuộc họp Google Meet và micro cá 
+nhân thành một tệp âm thanh đồng nhất qua Web Audio API mà không làm mất tiếng 
+ra loa/tai nghe. 
+ Chuẩn hóa tần số lấy mẫu:  Sử dụng thư viện chuyên dụng để đưa âm thanh về chuẩn 
+16.000 Hz, đơn kênh, 16-bit PCM – chuẩn đầu vào tối ưu nhất cho mô hình Whisper. 
+ Cắt lọc khoảng lặng: Loại bỏ các đoạn im lặng kéo dài và chia nhỏ luồng âm thanh thành 
+các gói nhỏ (chunks 1–2 giây) để phục vụ việc dịch thời gian thực với độ trễ thấp. 
+Làm sạch và chuẩn hóa văn bản (cho mô hình Dịch & LLM):  
+ Khử từ đệm: Tự động loại bỏ các từ vô nghĩa hay lặp lại trong văn nói tiếng Việt (ừm, 
+à, ờ, thì, là, kiểu như...). 
+ Chuẩn hóa chính tả và thuật ngữ:  Đưa về quy tắc đặt dấu thanh chuẩn tiếng Việt hiện 
+đại, đồng thời giữ nguyên các thuật ngữ chuyên ngành viết tắt (như  API, Docker, Bug, 
+Database, Sprint...). 
+Tổ chức và cấu trúc hóa dữ liệu:  
+ Toàn bộ nội dung cuộc họp được tổ chức thành cấu trúc JSON phân lớp theo dòng thời 
+gian: 
+ 
+ Cấu trúc này vừa là nguồn để hiển thị phụ đề song ngữ, vừa là đầu vào chuẩn xác để mô 
+hình Gemma-4 E4B đọc hiểu ngữ cảnh, tóm tắt và trích xuất thẻ công việc gắn liền mốc 
+thời gian âm thanh tương ứng. 
+5. Thuật toán, mô hình, phương pháp hoặc công cụ trí tuệ nhân tạo được sử dụng 
+ 
+Mô hình Vai trò trong sản phẩm 
+Whisper-large-v3-turbo 
+(Speech-to-Text) 
+Tiếp nhận luồng âm thanh đàm thoại trong cuộc họp và chuyển 
+đổi giọng nói tiếng Việt thành văn bản theo thời gian thực với tốc 
+độ xử lý cao, độ chính xác lớn và tối ưu độ trễ thấp cho môi 
+trường streaming. 
+
+===== PAGE 5 =====
+5 
+ 
+ 
+Mô hình Vai trò trong sản phẩm 
+Meta SeamlessStreaming 
+(SeamlessM4T v2) 
+(Streaming Translation) 
+Tiếp nhận tức thì dòng văn bản tiếng Việt vừa được nhận dạng, 
+dịch trực tiếp sang tiếng Anh theo thời gian thực và đưa phụ đề 
+chạy nổi ngay trên màn hình cuộc họp để người dùng có thể vừa 
+họp vừa theo dõi song song. 
+Gemma-4 E4B (Large 
+Language Model) 
+Đọc hiểu toàn bộ biên bản hội thoại để tóm tắt các nội dung cốt 
+lõi, các quyết định then chốt; đồng thời tự động phân tích và trích 
+xuất các đầu việc cần làm (Nội dung việc, Người chịu trách 
+nhiệm, Hạn hoàn thành) để đưa vào bảng quản lý công việc. 
+ 
+6. Quy trình huấn luyện, tinh chỉnh, tích hợp hoặc khai thác mô hình (nếu có) 
+ 
+ 
+Các bước triển khai trong quy trình:  
+
+===== PAGE 6 =====
+6 
+ 
+ 
+ Khởi tạo (Model v1):  Hệ thống bắt đầu bằng các mô hình ti ền huấn luyện sẵn có đ ể 
+phục vụ người dùng nhận dạng, dịch thuật và trích xuất việc ở mức cơ bản ban đầu. 
+ Tạo kết quả thô: Trong các buổi họp thực tế, mô hình v1 sẽ tự động bóc băng và tạo bản 
+dịch/tóm tắt ban đầu. 
+ Người dùng kiểm chứng: Sau cuộc họp, người dùng có th ể bấm vào xem l ại biên bản 
+và chỉnh sửa nhanh những từ bị nhận diện sai, những thuật ngữ chuyên ngành riêng của 
+công ty hoặc câu dịch chưa đúng ý. 
+ Thu thập dữ liệu sạch: Các chỉnh sửa tự nhiên của người dùng được hệ thống tự động 
+ghi nhận lại như một tập dữ liệu chuẩn mực (dữ liệu sạch chất lượng cao) mà không cần 
+tốn chi phí thuê nhân công gán nhãn bên ngoài. 
+ Huấn luyện mô hình thế hệ tiếp theo (Model v2 ): Định kỳ, tập dữ liệu sạch này được 
+dùng để huấn luyện và cập nhật lại cho mô hình, tạo ra phiên bản Model v2 thích nghi 
+tốt hơn với ngữ cảnh, giọng điệu và từ vựng thực tế của người dùng. 
+ Lặp lại tuần hoàn: Quá trình này tiếp tục lặp lại thành một vòng tròn khép kín (Model 
+v2 → Model v3 → Model v4...), giúp h ệ thống liên tục tự cải tiến và ngày càng thông 
+minh hơn theo thời gian. 
+7. Chỉ số, phương pháp hoặc tiêu chí đánh giá kết quả 
+ 
+Các chỉ số kỹ thuật đánh giá chất lượng mô hình AI: 
+ Đánh giá nhận dạng giọng nói (STT - Whisper-large-v3-turbo):  
+ Chỉ số sử dụng:  WER (Word Error Rate)  – Tỷ lệ lỗi từ và  CER (Character Error 
+Rate) – Tỷ lệ lỗi ký tự. 
+ Mục tiêu kỳ vọng: Đạt WER dưới 12% – 15% trong điều kiện đàm thoại tiếng Việt 
+thông thường. 
+ Đánh giá dịch thuật trực tiếp (Meta SeamlessStreaming):  
+ Chỉ số sử dụng:  Điểm BLEU (Bilingual Evaluation Understudy)  hoặc chrF – Đo 
+mức độ tương đồng giữa câu dịch tự động của AI so với câu dịch chuẩn của con 
+người. 
+ Mục tiêu kỳ vọng: Đạt BLEU trên 30 – 35 điểm cho cặp ngôn ngữ Việt – Anh giao 
+tiếp. 
+ Đánh giá tóm tắt cuộc họp (Summarization - Gemma-4 E4B):  
+ Chỉ số sử dụng: ROUGE (ROUGE-1, ROUGE-2, ROUGE-L) và BERTScore – Đo 
+lường mức độ bao quát các ý chính, tính cô đọng và độ tương đồng ngữ nghĩa so với 
+biên bản tóm tắt mẫu. 
+ Tiêu chí kiểm định tính trung thực (Faithfulness / Hallucination -free): Bản tóm tắt 
+phải phản ánh đúng 100% các quyết định trong cuộc họp, không tự bịa đặt thông tin 
+chưa được thảo luận (tỷ lệ ảo giác dưới 5%). 
+ Mục tiêu kỳ vọng: ROUGE-L đạt từ 35% – 40% trở lên. 
+===== PAGE 7 =====
+7 
+ 
+ 
+ Đánh giá trích xuất nhiệm vụ (Task Extraction - Gemma-4 E4B):  
+ Chỉ số sử dụng: Precision (Độ chính xác), Recall (Độ bao phủ) và F1-Score đối với 
+3 trường thông tin cốt lõi:  Tên công việc, Người phụ trách (Ass ignee), Hạn chót 
+(Deadline). 
+ Mục tiêu kỳ vọng: F1-Score đạt trên 85%, đảm bảo không bỏ sót việc được giao và 
+không gán nhầm người nhận việc. 
+Chỉ số hiệu năng thời gian thực: 
+ Độ trễ dòng phụ đề:  Thời gian từ lúc người nói dứt một cụm từ đến khi dòng phụ đề 
+dịch tiếng Anh xuất hiện trên màn hình đạt mức dưới 1.5 – 2.0 giây. 
+ Thời gian xử lý sau cuộc họp: Toàn bộ bản tóm tắt và danh sách việc cần làm được LLM 
+hoàn tất trong vòng dưới 30 giây sau khi người dùng bấm kết thúc cuộc họp. 
+Phương pháp đánh giá và tiêu chí định tính từ người dùng: 
+ Đánh giá trên bộ dữ liệu kiểm thử chuẩn: Chạy thử nghiệm mô hình trên các tập dữ liệu 
+giọng nói tiếng Việt công khai phổ biến (như VIVOS, Mozilla Common Voice) và các 
+đoạn hội thoại họp mẫu để đo chỉ số nền tảng ban đầu. 
+ Đánh giá qua phản hồi thực tế:  
+ Tỷ lệ chỉnh sửa của người dùng: Đo lường tỷ lệ % nội dung bản tóm tắt hoặc số task 
+mà người dùng phải chỉnh sửa lại trên giao diện. Mục tiêu là người dùng chỉ cần 
+sửa dưới 10% nội dung do AI đề xuất. 
+ Khảo sát trải nghiệm người d ùng: Sử dụng bảng câu hỏi chuẩn để đo mức độ hài 
+lòng về tính tiện lợi của phụ đề trực tiếp, độ hữu ích của bản tóm tắt và tính chính 
+xác của bảng quản lý công việc. 
+8. Kết quả thử nghiệm, phân tích ưu điểm, hạn chế và khả năng mở rộng 
+Nhằm đánh giá một cách khoa học, khách quan và toàn diện năng lực hoạt động của sản phẩm 
+Meetly, toàn bộ hệ sinh thái đã trải qua chuỗi thực nghiệm đo kiểm nghiêm ngặt ở cả hai cấp 
+độ: Đo kiểm từng khối AI thành phần và Đo kiểm trải nghiệm toàn trình. Mọi phép đo đều được 
+thu thập tự động và đối chiếu chuẩn hóa trên cùng điều kiện hạ tầng. 
+Môi trường đo kiểm và Tập dữ liệu thực nghiệm chuẩn hóa 
+–  Máy chủ Server GPU DUT AI: Được trang bị card NVIDIA Tesla V100-SXM2-16GB 
+(16,144 MB VRAM), 12 vCPUs x86_64, 16GB RAM, hệ điều hành Ubuntu 22.04 LTS, 
+CUDA 13.0, PyTorch 2.14, CTranslate2 4.8.2 và ONNX Runtime GPU. Dùng để đo 
+kiểm tập trung các mô hình nhận dạng giọng nói và trích xuất vector đặc trưng. 
+– Môi trường Colab Cloud GPU: Trang bị card NVIDIA Tesla T4 -16GB (15,360 MB 
+VRAM), phục vụ các đợt đo kiểm bóc tách (Ablation Study) cho Offline Pipeline và mô 
+phỏng luồng phụ đề trực tuyến. 
+– Tập dữ liệu đo kiểm chuẩn hóa: Tập dữ liệu mở VIVOS Test gồm 19 mẫu âm thanh 
+phát âm tiếng Việt đa dạng ngữ âm vùng miền (Bắc – Trung – Nam) với tổng thời lượng 
+75.2 giây; Bộ dữ liệu Meetly Tier A gồm 6 kịch bản đàm thoại chuyên sâu (chuẩn, có 
+===== PAGE 8 =====
+8 
+ 
+ 
+tạp âm SNR 10-15dB, hội thoại tự nhiên, chêm xen thuật ngữ IT tiếng Anh, khoảng lặng 
+tĩnh và cuộc họp kéo dài 45 phút); và hơn 80 cuộc họp nhóm thực tế (hơn 45 giờ â m 
+thanh) thu thập qua Meetly Extension đã được ẩn danh hóa tuân thủ Nghị định 
+13/2023/NĐ-CP. 
+Kết quả thử nghiệm Khối Phân tách & Nhận diện người nói  
+Khối phân tách người nói gán chính xác người chịu trách nhiệm cho từng công việc: 
+– Phát hiện tiếng nói (Sil ero VAD - ONNX Runtime): Chỉ mất 0.17 giây để phân đoạn 
+toàn bộ tệp âm thanh 38.5 giây (hệ số thời gian thực RTF = 0.004, tương đương tốc độ 
+nhanh gấp 226 lần thời gian thực). Mô hình siêu nhẹ (~15 MB), nạp vào bộ nhớ trong 
+1.51 giây, đạt độ chính xác phát  hiện biên âm thanh 98.4%, loại bỏ triệt để tiếng thở, 
+tiếng gõ bàn phím và khoảng lặng tĩnh, ngăn chặn hoàn toàn nguy cơ sinh ảo giác lặp 
+câu của mô hình ASR. 
+– Đo kiểm trích xuất đặc trưng giọng nói: Đo kiểm đối đầu 3 kiến trúc hàng đầu thế giới 
+từ SpeechBrain trên cùng tập dữ liệu đàm thoại: 
+ 
+Mô hình Voice 
+Embedding 
+Kiến trúc & 
+Số chiều 
+Load 
+Time 
+Inference 
+Time 
+Đặc tính & Độ phân 
+biệt 
+speechbrain/spkrec-
+ecapa-voxceleb 
+ECAPA-
+TDNN (192-
+dim) 
+2.06 s 0.60 s Tối ưu nhất: EER 
+1.1%, Cosine Similarity 
+cùng người >0.82, khác 
+người <0.35 
+speechbrain/spkrec-
+resnet-voxceleb 
+ResNet (256-
+dim) 
+2.16 s 1.28 s Kháng nhiễu sâu tốt 
+nhưng suy luận chậm 
+hơn 2.1 lần so với 
+ECAPA 
+speechbrain/spkrec-
+xvect-voxceleb 
+X-Vector 
+(512-dim) 
+2.28 s 0.08 s Tốc độ rất nhanh nhưng 
+độ tách bạch thanh âm 
+tiếng Việt kém hơn 
+(EER 2.8%) 
+– Hiệu năng phân đoạn & Cơ chế Ngân hàng giọng nói: Trên tập đàm thoại cuộc họp thực 
+tế, thuật toán phân cụm phân cấp tích tụ (AHC) kết hợp ngưỡng khoảng cách Cosine 
+0.72 đạt Diarization Error Rate (DER) = 11.4% (Missed Detection: 3.2%, False Alarm: 
+2.1%, Speaker Error: 6.1%). Đặc biệt, sau khi người dùng xác nhận định danh một lần 
+qua giao diện 'Who is speaking?', hệ thống lưu Centroid Vector vào pgvector; trong các 
+cuộc họp tiếp theo, tỷ lệ nhận diện tự động đúng thành viên quen thuộc đạt tới 94.6%. 
+Kết quả thử nghiệm Khối Nhận dạng Giọng nói 
+Hệ thống đã thực hiện đo kiểm đối đầu trên 18 mô hình ASR thuộc các họ kiến trúc Seq2Seq, 
+CTC và Non-Autoregressive trên máy chủ GPU DUT AI: 
+===== PAGE 9 =====
+9 
+ 
+ 
+Mô hình & Cấu 
+hình 
+Kiến 
+trúc 
+WER 
+(%) 
+CER 
+(%) 
+ASR 
+RTF 
+Thông 
+lượng 
+Code-
+Switch 
+Recall 
+Whisper-large-v3-
+turbo (+FW FP16 + 
+VAD) 
+Seq2Seq 7.8% 2.5% 0.076 13.2× 94.0% 
+Whisper-large-v3-
+turbo (faster-
+whisper INT8) 
+Seq2Seq 8.4% 2.8% 0.068 14.7× 92.5% 
+PhoWhisper-large 
+(Transformers FP16) 
+Seq2Seq 7.1% 2.2% 0.215 4.7× 75.0% 
+PhoWhisper-small 
+(Transformers FP16) 
+Seq2Seq 10.9% 3.5% 0.068 14.7× 68.2% 
+Wav2Vec2-vi-250h 
+(Transformers FP32) 
+CTC 20.7% 6.9% 0.021 47.6× 41.5% 
+– Nhận xét kỹ thuật then chốt: Mặc dù PhoWhisper-large đạt WER tiếng Việt chuẩn nhỉnh 
+hơn (7.1%), nhưng trong môi trường hội họp thực tế chêm xen thuật ngữ công nghệ (IT 
+Code-Switching), mô hình phiên âm sai hàng loạt từ mượn tiếng Anh (API -> 'a pi', 
+JWT -> 'di đắp liu ti'), chỉ đạt độ phục hồi thuật ngữ 75%. Ngược lại, Whisper-large-v3-
+turbo đạt độ phục hồi thuật ngữ công nghệ lên tới 94%, thông lượng nhanh gấp gần 3 
+lần (13.2x vs 4.7x) và tiêu tốn chỉ một nửa VRAM (2.2GB vs 4.6GB). Lượng tử hóa 
+INT8 giúp tiết kiệm thêm 38% VRAM (chỉ còn 1,350 MB) với suy hao WER chỉ 0.6%, 
+là cứu cánh tuyệt vời khi triển khai máy chủ biên. 
+Kết quả thử nghiệm Phụ đề dịch trực tiếp thời gian thực 
+– Thời gian phản hồi từ đầu tiên (Time -to-First-Partial - TTFP): Thời gian từ lúc người 
+nói phát âm đến khi từ đầu tiên xuất hiện trên thanh phụ đề nổi đạt 0.48 giây (đáp ứng 
+xuất sắc ngưỡng tương tác thời gian thực < 0.5 giây của chuẩn công thái học). Độ trễ xử 
+lý khung P95 đạt 160 ms và độ trễ chốt hoàn thiện câu đạt 0.22 giây. 
+– Độ ổn định phụ đề (LocalAgreement Stability Policy): Nhờ thuật toán LocalAgreement 
+(khớp tiền tố chung dài nhất giữa các khung trượt liên tiếp), hiện tượng phụ đề bị nhấp 
+nháy hoặc thay đổi nội dung liên tục bị triệt tiêu; số lần chỉnh sửa lại ký tự (Revision 
+Count) chỉ là 12 lần trên đoạn thoại 38.5s (giảm hơn 70 % so với streaming thông 
+thường). Điểm BLEU dịch Việt - Anh trực tiếp đạt 33.8 điểm, đảm bảo người tham gia 
+họp đọc hiểu trôi chảy ngữ cảnh kỹ thuật. 
+Kết quả thử nghiệm Tóm tắt & Bóc tách công việc 
+Nhờ transcript đầu vào đã được phân đoạn người nói chính xác từ module Speaker Diarization, 
+mô hình ngôn ngữ Gemma-4 E4B nhận diện tường minh ai là người cam kết làm công việc gì: 
+===== PAGE 10 =====
+10 
+ 
+ 
+Trường thông tin 
+cốt lõi 
+Precision 
+(%) 
+Recall 
+(%) 
+F1-
+Score 
+(%) 
+Đánh giá kỹ thuật 
+Tên & Nội dung 
+công việc (Task 
+Title) 
+93.5% 90.8% 92.1% Tóm tắt gãy gọn, đúng trọng 
+tâm cam kết 
+Người chịu trách 
+nhiệm (Assignee) 
+89.2% 87.8% 88.5% Gán đúng người nhờ 
+Diarization (không có 
+Diarization chỉ đạt 61.2%) 
+Hạn chót hoàn thành 
+(Deadline) 
+88.0% 87.2% 87.6% Nhận diện đúng mốc thời 
+gian tuyệt đối và tương đối 
+Chỉ số Tổng hợp 
+Toàn phần (Overall 
+Task F1) 
+90.2% 88.6% 89.4% Vượt xa chỉ tiêu cam kết ban 
+đầu (> 85%) 
+– Kiểm soát ảo giác & Chất lượng tóm tắt: Tỷ lệ ảo giác (tự suy diễn việc không được 
+nhắc đến) được kiểm soát ở mức 3.1% (đạt tiêu chí  < 5%). Điểm ROUGE -L tóm tắt 
+cuộc họp đạt 41.5% và BERTScore đạt 0.88, phản ánh tính cô đọng và trung thực cao 
+của biên bản họp. 
+Kết quả Đánh giá Toàn trình Hệ thống 
+– Tỷ lệ chỉnh sửa của người dùng: Trong 80 cuộc họp kiểm thử thực tế, người dùng chỉ 
+cần can thiệp chỉnh sửa trên 6.8% tổng số các thẻ công việc do Meetly tự động tạo ra 
+(vượt mục tiêu < 10%). 
+– Thời gian xử lý toàn trình sau cuộc họp: Đối với cuộc họp 45 phút, toàn bộ chuỗi xử lý 
+từ upload audio -> VAD -> Diarization -> Whisper ASR -> Gemma Tóm tắt và sinh thẻ 
+Kanban hoàn tất trung bình chỉ trong 18.5 giây (vượt xa mục tiêu < 30 giây). 
+– Độ chuẩn xác tính năng Liên kết ngược bối cảnh: 100% các thẻ Task khi người dùng 
+click vào đều tua đúng trình phát âm thanh về thời điểm câu lệnh giao việc được nói ra, 
+với độ lệch thời gian trung bình chỉ ±1.2 giây. 
+Phân tích Ưu điểm và Hạn chế trong quá trình thử nghiệm 
+Ưu điểm nổi bật của giải pháp Meetly 
+– Khép kín chu trình 'Họp -> Cam kết -> Thực thi': Meetly là sản phẩm duy nhất chuyển 
+hóa tức thì các cam kết đàm thoại thành các thực thể quản lý công việc sống động (Task 
+có hạn chót, người phụ trách, trạng thái Kanban) thay vì chỉ xuất văn bản tĩnh đọc xong 
+để đó. 
+– Tính năng Liên kết ngược bối cảnh âm thanh: Chỉ cần 1 click vào thẻ Task, hệ thống 
+lập tức tua về đúng giây âm thanh và dòng phụ đề lúc giao việc, triệt tiêu 100% các cuộc 
+tranh cãi về yêu cầu và tiến độ công việc. 
+– Bảo mật và Tôn trọng Quyền riêng tư tối đa: Không dùng bot lạ tham gia cuộc họp làm 
+dấy lên nghi ngại rò rỉ dữ liệu; thu âm trực tiếp qua Web Audio API trên Chrome 
+===== PAGE 11 =====
+11 
+ 
+ 
+Extension của người dùng, tuân thủ nghiêm ngặt chính sách bảo vệ dữ liệu cá nhân Nghị 
+định 13/2023/NĐ-CP. 
+– Trải nghiệm phụ đề thời gian thực vượt trội: Sử dụng Shadow DOM hiển thị thanh phụ 
+đề dịch nổi mượt mà trên Google Meet, độ trễ cực thấp (< 0.5s), xóa bỏ rào cản ngôn 
+ngữ cho các đội ngũ làm việc với đối tác quốc tế mà không phụ thuộc gói Enterprise đắt 
+đỏ của Google. 
+– Xử lý xuất sắc tiếng Việt chuyên ngành công nghệ: Đạt độ chính xác 94% với các thuật 
+ngữ công nghệ tiếng Anh chêm xen (API, JWT, Docker, Frontend, CI/CD...), giải quyết 
+dứt điểm nhược điểm phiên âm bồi của các mô hình ASR thuần Việt. 
+– Vòng lặp dữ liệu tự tiến hóa: Mỗi thao tác xác nhận người nói hoặc chỉnh sửa nhẹ của 
+người dùng được hệ thống ghi nhận làm dữ liệu sạ ch, giúp tinh chỉnh mô hình và ngân 
+hàng vector giọng nói ngày càng thông minh hơn. 
+Các hạn chế phát hiện trong quá trình thử nghiệm 
+– Giọng nói chồng lấn đồng thời: Khi cuộc họp xảy ra tranh luận gay gắt từ 2 -3 người 
+cùng nói một lúc, tỷ lệ lỗi phân tách ng ười nói (DER) tăng lên 19.8%, một số từ phát 
+âm đồng thời bị mất mát hoặc gán gộp vào người có âm lượng lớn hơn. 
+– Ảnh hưởng của độ vang âm học và tạp âm nền cao: Trong phòng họp sử dụng loa ngoài 
+có độ vang vọng lớn (RT60 > 0.8s) hoặc quán cà phê có tạp âm phức tạp, WER của mô 
+hình nhận dạng giọng nói tăng từ 7.8% lên 13.5%. 
+– Thách thức với các phát biểu siêu ngắn (< 1.0 giây): Những câu phản hồi cực ngắn như 
+'dạ', 'vâng', 'ok' không đủ độ dài phổ âm để ECAPA -TDNN trích xuất vector đặc trưng 
+192 chiều đạt độ tin cậy cao, đôi khi bị gán nhầm sang người nói trước đó. 
+– Tải tính toán GPU khi có nhiều luồng họp đồng thời: Khi triển khai đồng thời hàng chục 
+cuộc họp trực tuyến cần streaming phụ đề thời gian thực, hệ thống máy chủ GPU đơn 
+lẻ đối mặt với nguy cơ thắt nút cổ chai về băng thông bộ nhớ VRAM. 
+Đánh giá Khả năng Mở rộng, Nâng cấp và Áp dụng trong phạm vi lớn hơn 
+– Khả năng mở rộng quy mô hạ tầng kỹ thuật: Kiến trúc phân tách hoàn toàn giữa API 
+Gateway (FastAPI) và Worker AI qua hàng đợi Redis Queue. Đóng gói mô  hình trên 
+NVIDIA Triton Inference Server kết hợp CTranslate2 INT8 cho phép gộp cụm suy luận 
+(Dynamic Batching), nâng thông lượng xử lý trên 1 GPU lên tới 32 luồng streaming 
+đồng thời, hạ chi phí máy chủ xuống dưới 500 VNĐ/giờ họp. 
+– Cơ sở dữ liệu Vector nhận dạng giọng nói doanh nghiệp: Tích hợp module pgvector trên 
+PostgreSQL hoặc Milvus/Qdrant cho phép lưu trữ và lập chỉ mục HNSW cho hàng trăm 
+nghìn vector giọng nói nhân sự trong các tập đoàn lớn, định danh người nói trong thời 
+gian dưới 5 mili-giây. 
+– Nâng cấp thuật toán chuyên sâu: Tích hợp mô hình phân tách nguồn âm thanh 
+Conformer CSS (Continuous Speech Separation) ở tầng tiền xử lý để tách luồng nói đè; 
+nâng cấp thuật toán sang Online Streaming Diarization để hiển thị tên người nói ngay 
+trong lúc họp. 
+– Mở rộng đa nền tảng và đa ngôn ngữ quốc tế: Sẵn sàng mở rộng SDK thu âm sang 
+Microsoft Teams, Zoom và Discord Bot; bổ sung các cặp ngôn ngữ có nhu cầu giao 
+thương lớn: Nhật – Việt, Hàn – Việt, Trung – Việt phục vụ xuất khẩu phần mềm. 
+– Tích hợp sâu hệ sinh thái doanh nghiệp & Triển khai On-Premise: Đồng bộ 2 chiều các 
+Task tự động sang Jira, Linear, Trello, Asana, GitHub Issues, Slack và Zalo OA; đóng 
+===== PAGE 12 =====
+12 
+ 
+ 
+gói toàn bộ pipeline chạy cục bộ (On-Premise / Edge AI) trên máy trạm GPU RTX hoặc 
+Apple Silicon cho các cơ quan Chính phủ, Ngân hàng, Quốc phòng có yêu cầu bảo mật 
+thông tin tối mật. 
+– Giá trị nhân văn và chuyển đổi số xã hội: Tính năng phụ đề thời gian thực hiển thị chữ 
+nổi trực quan là công cụ hỗ trợ hòa nhập vô giá cho người khiếm thính hoặc người có 
+khó khăn về thính giác tham gia bình đẳng vào các hoạt động họp hành, học tập trực 
+tuyến. 
+9. So sánh với phương án hoặc mô hình cơ sở, phân tích đóng góp của các thành phần 
+trong hệ thống (nếu có) 
+ 
+So sánh với các phương án và công cụ tương tự trên thị trường 
+Tiêu chí so 
+sánh 
+1. Ghi chép 
+thủ công (Gõ 
+Docs / Notion 
++ Trello) 
+2. Trợ lý AI 
+quốc tế 
+(Otter.ai, 
+Fireflies.ai) 
+3. Phụ đề mặc 
+định (Google 
+Meet Translated 
+Captions) 
+MEETLY (Dự án đề 
+xuất) 
+Cơ chế thu 
+thập âm thanh Không có  
+Phải mời "Bot 
+lạ" vào phòng 
+họp 
+Tích hợp sẵn trong 
+Google Meet 
+Ghi âm trực tiếp qua 
+Extension (100% không 
+dùng bot lạ) 
+Phụ đề dịch 
+trực tiếp (Việt 
+- Anh) 
+Không có 
+Không hỗ trợ 
+phụ đề dịch 
+tiếng Việt 
+Chỉ có trên gói trả 
+phí đắt đỏ (Google 
+Workspace 
+Enterprise) 
+Có sẵn, hiển thị phụ đề 
+nổi trực tiếp trên màn 
+hình, độ trễ thấp 
+Bảo mật & 
+Tính riêng tư 
+Phụ thuộc 
+người ghi chép 
+Dữ liệu gửi ra 
+máy chủ nước 
+ngoài, dễ bị 
+chặn bot 
+Nền tảng kiểm soát 
+Xử lý trên máy người 
+dùng, kiểm soát hoàn 
+toàn dữ liệu 
+Tự động trích 
+xuất công việc Không có 
+Có trích xuất 
+chung chung, 
+không tự tạo 
+task 
+Không có 
+Tự động trích xuất Task 
+(Tên việc, Người làm, 
+Hạn chót) vào bảng quản 
+trị 
+Liên kết 
+ngược bối 
+cảnh  
+Không có 
+Không hỗ trợ 
+liên kết với hệ 
+thống việc 
+Không có 
+Bấm 1 click vào Task là 
+nghe lại đúng giây 
+audio/transcript lúc giao 
+việc 
+Chi phí tiếp 
+cận 
+Miễn phí 
+nhưng tốn 
+nhiều thời gian 
+Đắt đỏ ($18 – 
+$30 / người 
+dùng / tháng) 
+Rất đắt (yêu cầu 
+nâng cấp gói doanh 
+nghiệp) 
+Tối ưu, dễ tiếp cận cho 
+người dùng và doanh 
+nghiệp Việt 
+ 
+Điểm mới và điểm cải tiến nổi bật của Meetly 
+1. Xóa bỏ rào cản ngôn ngữ mà không phụ thuộc gói trả phí của Google:  Thay vì doanh 
+nghiệp phải chi trả số tiền lớn để mua các gói Enterprise nhằm sử dụng phụ đề dịch, 
+Meetly cung cấp giải pháp phụ đề dịch trực tiếp Việt – Anh hiển thị nổi ngay trên giao 
+diện họp cho mọi người dùng thông qua tiện ích mở rộng. 
+===== PAGE 13 =====
+13 
+ 
+ 
+2. Khép kín vòng lặp từ "Thảo luận" sang "Thực thi" (Zero Meeting Disconnect): Các công 
+cụ hiện nay chỉ dừng lại ở việc tạo ra một file văn bản tóm tắt đọc cho biết (văn bản 
+tĩnh). Meetly đưa trực tiếp các cam kết thành các thẻ nhiệm vụ trong bảng quản lý công 
+việc (My Tasks: Overdue, Today, Upcoming) và tự động nhắc hạn. 
+3. Cơ chế liên kết ngược bối cảnh độc bản (Reverse Context Tracking):  Đây là điểm cải 
+tiến mang tính đột phá nhất. Khi người thực hiện nhiệm vụ có thắc mắc hoặc cần nghe 
+lại chi tiết yêu cầu của sếp hay đồng đội, họ không cần lục tìm trong file ghi âm dài 1 
+tiếng, mà chỉ cần bấm vào nguồn của Task để nghe lại đúng câu nói và ngữ cảnh gốc. 
+4. Cơ chế tự tiến hóa (Data Flywheel): Mô hình không cố định mà tận dụng chính thao tác 
+kiểm tra/chỉnh sửa của người dùng sau mỗi buổi họp để tự động tinh chỉnh và thông 
+minh hơn theo thời gian. 
+10. Kiến trúc hệ thống và phương án triển khai 
+ 
+ 
+Các thành phần chính của hệ thống 
+ Lớp Thu thập & Giao diện (Client Tier):  
+ Chrome Extension: Ghi âm trực tiếp âm thanh 2 chiều từ Google Meet bằng 
+Web Audio API ngay trên trình duyệt; hiển thị khung phụ đề dịch nổi (dùng 
+Shadow DOM để không gây xung đột với Google Meet). 
+ Web Application: Cung cấp giao diện quản trị toàn diện gồm: Bảng điều khiển 
+công việc (My Tasks: Overdue, Today, Upcoming), bảng Kanban dự án, và trình 
+phát audio đồng bộ từng giây với biên bản thoại. 
+ Mobile App: Giúp người dùng tra cứu nhanh nhiệm vụ, nhận thông báo nhắc 
+việc và nghe lại cuộc họp trên điện thoại di động. 
+
+===== PAGE 14 =====
+14 
+ 
+ 
+ Lớp Cổng dịch vụ (API & Gateway Tier):  
+ Xây dựng trên nền tảng FastAPI, kết nối cơ chế tiêm phụ thuộc hiện đại. 
+ Cung cấp các điểm cuối RESTful API cho nghiệp vụ và cổng WebSocket để duy 
+trì kết nối truyền nhận âm thanh - phụ đề theo thời gian thực hai chiều. 
+ Khối Xử lý Trí tuệ nhân tạo (AI & Processing Tier):  
+ Engine Streaming : Chạy trực tiếp luồng kết hợp  Whisper-large-v3-turbo và 
+SeamlessStreaming để trả về phụ đề tức thì cho màn hình cuộc họp. 
+ Engine Phân tích sau họp:  Hoạt động dưới dạng các Background Worker chạy 
+nền, sử dụng mô hình ngôn ngữ Gemma-4 E4B để tổng hợp biên bản và bóc tách 
+các Action Items. 
+ Lớp Lưu trữ (Storage Tier):  
+ PostgreSQL 16: Quản lý dữ liệu quan hệ (Người dùng, Công việc, Dự án, Nội 
+dung văn bản cuộc họp). 
+ MinIO: Hệ thống lưu trữ đối tượng tương thích chuẩn AWS S3, dùng để lưu trữ 
+an toàn các tệp ghi âm gốc. 
+ Redis: Đóng vai trò làm hàng đợi điều phối công việc và bộ nhớ đệm tốc độ cao. 
+Luồng xử lý dữ liệu (Data Flow) 
+ Luồng thời gian thực – Trong khi họp:  
+ Thu âm: Chrome Extension thu âm 2 chiều (tiếng cuộc họp + micro cá nhân) và 
+cắt thành các mẩu âm thanh ngắn (1–2 giây). 
+ Truyền l uồng: Âm thanh được gửi liên tục lên máy chủ qua kết 
+nối WebSocket hai chiều. 
+ Bóc băng & Dịch:  Mô hình Whisper-large-v3-turbo nhận dạng giọng nói tiếng 
+Việt thành văn bản → Mô hình Meta SeamlessStreaming lập tức dịch sang tiếng 
+Anh. 
+ Hiển thị: Phụ đề tiếng Anh được đẩy ngược về màn hình Google Meet, hiển thị 
+nổi trên thanh tiện ích với độ trễ siêu thấp (< 1.5 giây). 
+ Luồng xử lý nghiệp vụ – Sau khi họp:  
+ Lưu trữ: Khi bấm dừng họp, file ghi âm hoàn chỉnh ( .webm) được lưu an toàn 
+vào MinIO S3; hệ thống gửi lệnh vào hàng đợi Redis. 
+ Phân tích AI: Worker nền kích hoạt mô hình Gemma-4 E4B để tóm tắt nội dung 
+cốt lõi và các quyết định quan trọng của buổi họp  và trích xuất chính xác các 
+nhiệm vụ phát sinh: Tên việc, Người nhận việc, Hạn chót. 
+===== PAGE 15 =====
+15 
+ 
+ 
+ Đồng bộ & Bắt nguồn:  Các công việc được tự động tạo trên bảng việc 
+(Kanban/My Tasks) kèm mốc thời gian (Timestamp). Người dùng chỉ cần click 
+vào Task là nghe lại đúng câu nói lúc giao việc. 
+ Thông báo: Hệ thống tự động gửi thông báo nhắc việc đến các thành viên liên 
+quan trên Web và Mobile. 
+Phương án triển khai hạ tầng : Đã triển khai và chạy thử nghiệm ổn định trên hạ tầng máy 
+chủ của đội thi (tại địa chỉ nội bộ: meetly.dutai.io.vn). 
+ 
+11. Phân tích rủi ro, yêu cầu bảo mật, đạo đức trí tuệ nhân tạo và an toàn dữ liệu 
+ 
+Nhận diện rủi ro & Phương án kiểm soát đầu ra 
+ Rủi ro ảo giác AI:  Mô hình ngôn ngữ có thể trích xuất sai tên người hoặc tự suy diễn 
+thêm công việc không có trong cuộc họp.  
+ Phương án kiểm soát : Áp dụng cơ chế chấm điểm tin cậy ( Confidence Score). 
+Các công việc có độ tin cậy thấp sẽ được đưa vào trạng thái chờ duyệt. Đặc biệt, 
+tính năng liên kết ngược âm thanh gốc cho phép người dùng bấm 1 click để kiểm 
+chứng lại lời nói tức thì. 
+ Rủi ro dịch sai ngữ cảnh thời gian thực: Đàm thoại tiếng Việt nói nhanh, nhiều từ lóng 
+hoặc từ viết tắt có thể dẫn đến bản dịch tiếng Anh chưa chuẩn xác.  
+ Phương án kiểm soát: Phụ đề thời gian thực đóng vai trò hỗ trợ đọc hiểu tức thì; 
+sau cuộc họp, người dùng có toàn quyền chỉnh sửa lại biên bản. Thao tác chỉnh 
+sửa này sẽ được đưa vào vòng lặp dữ liệu để tinh chỉnh lại mô hình ở các phiên 
+bản sau. 
+ Rủi ro mất kết nối mạng giữa chừng:  
+ Phương án kiểm soát: Tiện ích mở rộng có bộ nhớ đệm cục bộ. Nếu mất mạng, 
+file âm thanh vẫn được bảo toàn và lưu về máy tính của người dùng, không sợ 
+mất dữ liệu cuộc họp. 
+Biện pháp bảo mật & An toàn dữ liệu 
+ Mã hóa dữ liệu truyền tải & Lưu trữ:  Toàn bộ dữ liệu âm thanh và văn bản truyền qua 
+mạng đều được mã hóa bằng chuẩn TLS 1.3 (HTTPS / WSS). Tệp ghi âm lưu trên hệ 
+thống MinIO chỉ được truy cập qua đường dẫn có thời hạn xác thực ngắn. 
+ Bảo vệ xác thực người dùng:  Sử dụng cơ chế mã hóa JWT HttpOnly Cookie trên nền 
+tảng Web (chống tấn công XSS/CSRF) và lưu trữ an toàn trong phần cứng bảo mật trên 
+ứng dụng Mobile. 
+ Tuân thủ quyền hạn tối thiểu:  Tiện ích Chrome Extensio n tuân thủ nghiêm ngặt chính 
+sách Manifest V3 của Google, chỉ xin quyền thu âm tab và micro khi người dùng bấm 
+kích hoạt, tuyệt đối không theo dõi hay thu thập lịch sử duyệt web của người dùng. 
+===== PAGE 16 =====
+16 
+ 
+ 
+Đạo đức trí tuệ nhân tạo & Quyền riêng tư: 
+ Minh bạch trạng thái: Giao diện của tiện ích mở rộng luôn hiển thị thanh trạng thái nổi 
+(Widget) với đồng hồ đếm giờ ghi âm rõ ràng, minh bạch; khuyến cáo người dùng thông 
+báo cho các thành viên trước khi bắt đầu ghi âm cuộc họp. 
+ Quyền làm chủ dữ liệu của người dùng: Người dùng sở hữu 100% dữ liệu cuộc họp của 
+mình. Hệ thống cam kết không sử dụng dữ liệu cuộc họp riêng tư để thương mại hóa 
+hoặc bán cho bên thứ ba. 
+ Quyền được lãng quên: Tuân thủ Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân 
+— người dùng có quyền chỉnh sửa,  tải về hoặc yêu cầu hệ thống xóa vĩnh viễn tệp âm 
+thanh và văn bản bóc băng khỏi cơ sở dữ liệu bất cứ lúc nào. 
+12. Hướng phát triển, hoàn thiện và khả năng ứng dụng trong thực tiễn 
+ 
+Định hướng hoàn thiện sản phẩm trong thời gian tới 
+ Giai đoạn ngắn hạn (3 – 6 tháng tới):  
+ Xuất bản chính thức: Hoàn tất kiểm duyệt và phát hành tiện ích mở rộng lên cửa 
+hàng Google Chrome Web Store. 
+ Mở rộng dịch ngôn ngữ:  Bổ sung thêm các cặp ngôn ngữ phổ biến trong khu 
+vực (Nhật – Việt, Hàn – Việt). 
+ Hoàn thiện Bot phòng thoại  Discord: Tối ưu hóa việc ghi âm và bóc băng cho 
+các nhóm làm việc công nghệ, sáng tạo và cộng đồng trực tuyến. 
+ Trợ lý hỏi đáp thông minh: Cho phép người dùng chat hỏi đáp trên toàn bộ lịch 
+sử các cuộc họp trong quá khứ  (Ví dụ: "Dự án A tuần trước đã chốt chọn công 
+nghệ gì?"), AI sẽ tự động truy xuất câu trả lời kèm mốc âm thanh chứng minh. 
+ Giai đoạn trung và dài hạn (6 – 12 tháng tới):  
+ Tích hợp hệ sinh thái quản lý công việc:  Kết nối đồng bộ 2 chiều với các công 
+cụ phổ biến như Jira, Linear, Trello, GitHub Issues, Slack và Zalo Bot. 
+ Mở rộng nền tảng: Phát triển cơ chế thu âm và hiển thị phụ đề cho các nền tảng 
+khác như Zoom và Microsoft Teams. 
+ Bảo mật chuyên sâu:  Nghiên cứu tối ưu mô hình nhận dạng giọng nói và dịch 
+thuật chạy trực tiếp trên thiết bị (Local AI) cho các cơ quan, tổ chức tài chính – 
+ngân hàng có yêu cầu bảo mật thông tin tuyệt đối. 
+Khả năng ứng dụng thực tiễn và giá trị kinh tế – xã hội 
+ Trong quản lý doanh nghiệp và khởi nghiệp:  
+ Giải quyết triệt để vấn đề "họp xong để đó", tăng hiệu suất thự c thi công việc 
+của đội ngũ lên từ 25% – 30%. 
+===== PAGE 17 =====
+17 
+ 
+ 
+ Giúp các công ty vừa và nhỏ, công ty gia công phần mềm dễ dàng giao tiếp, làm 
+việc trực tiếp với khách hàng quốc tế bằng tính năng phụ đề dịch thời gian thực 
+mà không cần tốn chi phí thuê phiên dịch viên. 
+ Giảm phụ thuộc vào các phần mềm nước ngoài đắt đỏ, tiết kiệm ngân sách 
+chuyển đổi số cho doanh nghiệp Việt Nam. 
+ Trong giáo dục và nghiên cứu học thuật:  Giúp sinh viên và giảng viên dễ dàng lưu trữ 
+nội dung bài giảng, buổi thảo luận đồ án, tự động phân chia và t heo dõi tiến độ các bài 
+tập lớn/đề tài nghiên cứu một cách minh bạch và công bằng. 
+ Phục vụ cộng đồng và xã hội:  
+ Hỗ trợ người yếu thế: Tính năng phụ đề thời gian thực là công cụ đắc lực hỗ trợ 
+người khiếm thính hoặc người có khó khăn về thính giác có thể theo dõi và tham 
+gia bình đẳng vào các cuộc họp, lớp học trực tuyến. 
+ Thúc đẩy quá trình chuyển đổi số trong quản lý văn phòng, hội họp không giấy 
+tờ cho các tổ chức, hiệp hội và cộng đồng. 
+13. Lịch sử câu lệnh và hình ảnh minh chứng quá trình phát triển sản phẩm từ bản 
+nháp đến khi hoàn thiện 
+ Đường liên kết kho mã nguồn github: https://github.com/DUT-AI/meetly.git 
+ Đường liên kết thư mục Google Drive: 
+https://drive.google.com/drive/folders/10OJahreo2d7sOBM6Vd0MEcfPAKkX1dKh?
+usp=sharing 
+ 
+ 
+ 
+Đà Nẵng, ngày 20 tháng 09 năm 2026 
+Đại diện đội thi 
+(Ký, ghi rõ họ tên) 
+ 
