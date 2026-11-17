@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=30" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=30" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=32" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=32" />
 </head>
 <body>
   <!-- ROW 1: Minimalist Top Command Header (~52px) -->
@@ -83,14 +83,24 @@
         </label>
       </div>
 
+      <button type="button" id="btn-theme-toggle" class="cmd-theme-btn" aria-pressed="false" title="Chuyển nhanh giữa Nền Sáng (Daylight) và Nền Vũ trụ Sáng">
+        <span id="theme-toggle-icon" class="theme-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.55 1.55M17.52 17.52l1.55 1.55M2 12h2.2M19.8 12H22M4.93 19.07l1.55-1.55M17.52 6.48l1.55-1.55" />
+          </svg>
+        </span>
+        <span id="theme-toggle-label">Nền Sáng</span>
+      </button>
+
       <button type="button" id="btn-open-drawer" class="cmd-drawer-btn" title="Mở bảng tùy chỉnh hướng ngắm, quang học và tải ảnh riêng">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="6" x2="20" y2="6" />
           <line x1="4" y1="12" x2="20" y2="12" />
           <line x1="4" y1="18" x2="20" y2="18" />
-          <circle cx="9" cy="6" r="2" fill="#060a14" />
-          <circle cx="15" cy="12" r="2" fill="#060a14" />
-          <circle cx="10" cy="18" r="2" fill="#060a14" />
+          <circle cx="9" cy="6" r="2" fill="currentColor" />
+          <circle cx="15" cy="12" r="2" fill="currentColor" />
+          <circle cx="10" cy="18" r="2" fill="currentColor" />
         </svg>
         <span>Tùy chỉnh &amp; Tải ảnh</span>
       </button>
@@ -180,11 +190,18 @@
                 <span id="cap-compare3d">Cảm biến quang học · Chưa nạp khung ảnh</span>
               </div>
 
-              <div class="sensor-layer-pills" role="group" aria-label="Lớp hiển thị cảm biến">
+              <div class="sensor-layer-pills" role="group" aria-label="Lớp hiển thị và độ sáng cảm biến">
                 <button type="button" id="btn-compare3d-raw" class="sensor-pill-btn">Ảnh thô</button>
                 <button type="button" id="btn-compare3d-annotated" class="sensor-pill-btn active">Lớp nhận diện</button>
+                <button type="button" id="btn-img-bright" class="sensor-pill-btn is-bright-boost" title="Độ sáng ảnh cảm biến: chuyển giữa Sáng rõ (1.4×), Rực rỡ (2.0×) và Gốc (1.0×)">
+                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.55 1.55M17.52 17.52l1.55 1.55M2 12h2.2M19.8 12H22M4.93 19.07l1.55-1.55M17.52 6.48l1.55-1.55" />
+                  </svg>
+                  <span id="img-bright-label">Sáng rõ (1.4×)</span>
+                </button>
                 <button type="button" id="btn-zoom-sensor" class="sensor-pill-btn" title="Phóng to khung ảnh quang học">
-                  <svg viewBox="0 0 24 24" width="11.5" height="11.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <svg viewBox="0 0 24 24" width="11.5" height="11.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="15 3 21 3 21 9" />
                     <polyline points="9 21 3 21 3 15" />
                     <line x1="21" y1="3" x2="14" y2="10" />
@@ -207,7 +224,7 @@
                   <p>Chọn <strong>Bầu trời chuẩn</strong> hoặc <strong>Trời thực ESA</strong> trên thanh đầu trang để đối chiếu trực tiếp ảnh cảm biến với bầu trời 3D.</p>
                 </div>
               </div>
-              <img id="compare3d-img" alt="Khung ảnh sao thuần khiết từ cảm biến" hidden />
+              <img id="compare3d-img" class="img-bright-std" alt="Khung ảnh sao thuần khiết từ cảm biến" hidden />
               <canvas id="sensor-overlay-canvas" class="sensor-overlay-canvas"></canvas>
               <div id="sensor-star-tooltip" class="sensor-star-tooltip" hidden></div>
             </div>
@@ -238,7 +255,7 @@
           <!-- Floating Picture-in-Picture Sensor Card (visible in full-screen orbit3d after run) -->
           <div id="pip-sensor-card" class="floating-pip-card" hidden>
             <div class="pip-thumb-wrap">
-              <img id="pip-sensor-img" alt="Ảnh cảm biến thu nhỏ" />
+              <img id="pip-sensor-img" class="img-bright-std" alt="Ảnh cảm biến thu nhỏ" />
               <span id="pip-sensor-badge" class="pip-badge">SOLVED</span>
             </div>
             <div class="pip-footer">
@@ -942,7 +959,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=30"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=30"></script>
+  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=32"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=32"></script>
 </body>
 </html>

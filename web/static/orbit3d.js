@@ -410,41 +410,43 @@
         const polarCap = absLat + micro * 120 > 74.5;
 
         if (polarCap && (elev > -0.16 || absLat > 81.5)) {
-          const shade = 0.88 + 0.10 * clamp(elev + 0.2, 0, 1);
-          r = 216 * shade;
-          g = 229 * shade;
-          b = 241 * shade;
-          waterSpec = 0.12;
+          const shade = 0.93 + 0.07 * clamp(elev + 0.2, 0, 1);
+          r = 242 * shade;
+          g = 248 * shade;
+          b = 255 * shade;
+          waterSpec = 0.16;
         } else if (elev <= 0.0) {
           const depth = clamp(-elev / 0.48, 0, 1);
           const om = 1 - depth;
           const shelf = om * om * om;
-          r = 5 + 14 * om + 16 * shelf;
-          g = 17 + 28 * om + 36 * shelf;
-          b = 38 + 46 * om + 42 * shelf;
+          // Vivid NASA Blue Marble sapphire-azure oceans: deep rgb(18, 74, 166) -> shallow rgb(42, 138, 235)+
+          r = 18 + 14 * om + 14 * shelf;
+          g = 74 + 38 * om + 32 * shelf;
+          b = 166 + 44 * om + 28 * shelf;
           waterSpec = 0.92;
         } else {
-          waterSpec = 0.04;
+          waterSpec = 0.05;
           const hNorm = clamp(elev / 0.55, 0, 1);
           const mClamp = clamp(moist, 0, 1);
           const arid = clamp(1.0 - moist * 1.25, 0, 1);
-          let lr = 26 + 22 * latVeg;
-          let lg = 52 + 24 * mClamp - 10 * latCool;
-          let lb = 36 + 10 * mClamp;
-          lr += arid * (108 - lr);
-          lg += arid * (94 - lg);
-          lb += arid * (68 - lb);
+          // Rich emerald/olive vegetation -> warm golden desert sand -> bright snow peaks
+          let lr = 42 + 22 * latVeg;
+          let lg = 124 + 28 * mClamp - 12 * latCool;
+          let lb = 74 + 16 * mClamp;
+          lr += arid * (198 - lr);
+          lg += arid * (166 - lg);
+          lb += arid * (108 - lb);
           if (hNorm > 0.52) {
-            const rockT = clamp((hNorm - 0.52) / 0.32, 0, 1);
-            lr += rockT * (92 - lr);
-            lg += rockT * (89 - lg);
-            lb += rockT * (86 - lb);
+            const rockT = clamp((hNorm - 0.52) / 0.30, 0, 1);
+            lr += rockT * (152 - lr);
+            lg += rockT * (142 - lg);
+            lb += rockT * (132 - lb);
           }
-          if (hNorm > 0.80) {
-            const snowT = clamp((hNorm - 0.80) / 0.18, 0, 1);
-            lr += snowT * (220 - lr);
-            lg += snowT * (228 - lg);
-            lb += snowT * (236 - lb);
+          if (hNorm > 0.78) {
+            const snowT = clamp((hNorm - 0.78) / 0.18, 0, 1);
+            lr += snowT * (242 - lr);
+            lg += snowT * (248 - lg);
+            lb += snowT * (255 - lb);
           }
           r = lr;
           g = lg;
@@ -486,10 +488,11 @@
     c.width = 256;
     c.height = 128;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#081428";
+    // Bright silver-cyan busbar substrate (multiplied with vivid cobalt 0x3b82f6 solarMat)
+    ctx.fillStyle = "#bae6fd";
     ctx.fillRect(0, 0, 256, 128);
 
-    // Individual monocrystalline photovoltaic cells
+    // Individual monocrystalline photovoltaic cells with luminous silver-cyan grid lines
     const cols = 8;
     const rows = 4;
     const pad = 2;
@@ -498,23 +501,23 @@
     for (let r = 0; r < rows; r++) {
       for (let col = 0; col < cols; col++) {
         const grad = ctx.createLinearGradient(col * cw, r * ch, (col + 1) * cw, (r + 1) * ch);
-        grad.addColorStop(0, "#0c203e");
-        grad.addColorStop(0.5, "#102a52");
-        grad.addColorStop(1, "#091933");
+        grad.addColorStop(0, "#dbeafe");
+        grad.addColorStop(0.5, "#eff6ff");
+        grad.addColorStop(1, "#bfdbfe");
         ctx.fillStyle = grad;
         ctx.fillRect(col * cw + pad, r * ch + pad, cw - pad * 2, ch - pad * 2);
 
-        ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
-        ctx.lineWidth = 0.75;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
+        ctx.lineWidth = 1.1;
         ctx.beginPath();
         ctx.moveTo(col * cw + cw * 0.5, r * ch + pad);
         ctx.lineTo(col * cw + cw * 0.5, (r + 1) * ch - pad);
         ctx.stroke();
       }
     }
-    ctx.strokeStyle = "rgba(202, 154, 70, 0.45)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, 254, 126);
+    ctx.strokeStyle = "#fde68a";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1.5, 1.5, 253, 125);
 
     const tex = new THREE.CanvasTexture(c);
     if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -577,6 +580,7 @@
 
     orbitRingLine: null,
     satelliteGroup: null,
+    satBeaconMat: null,
     attitudeGroup: null,
     spacecraftMeshes: [],
     frustumGroup: null,
@@ -874,9 +878,9 @@
     const gGeom = new THREE.BufferGeometry();
     gGeom.setAttribute("position", new THREE.Float32BufferAttribute(gridPos, 3));
     const gMat = new THREE.LineBasicMaterial({
-      color: 0x94a3b8,
+      color: 0x93c5fd,
       transparent: true,
-      opacity: 0.068,
+      opacity: 0.19,
       depthWrite: false
     });
     group.add(new THREE.LineSegments(gGeom, gMat));
@@ -884,15 +888,15 @@
     const eqGeom = new THREE.BufferGeometry();
     eqGeom.setAttribute("position", new THREE.Float32BufferAttribute(eqPos, 3));
     const eqMat = new THREE.LineBasicMaterial({
-      color: 0x7dd3fc,
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.135,
+      opacity: 0.38,
       depthWrite: false
     });
     group.add(new THREE.LineSegments(eqGeom, eqMat));
 
-    // Subtle North Celestial Pole (+Y in World) crosshair marker
-    const poleSpan = 6.5;
+    // Crisp North Celestial Pole (+Y in World) crosshair marker
+    const poleSpan = 7.5;
     const poleGeom = new THREE.BufferGeometry();
     poleGeom.setAttribute(
       "position",
@@ -905,9 +909,9 @@
       )
     );
     const poleMat = new THREE.LineBasicMaterial({
-      color: 0x7dd3fc,
+      color: 0x67e8f9,
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.68,
       depthWrite: false
     });
     group.add(new THREE.LineSegments(poleGeom, poleMat));
@@ -1007,10 +1011,11 @@
           lum *= (1.0 - 0.52 * dustLane);
           lum = clamp(lum, 0.0, 1.0);
 
-          vec3 coolCloud = vec3(0.38, 0.50, 0.72);
-          vec3 warmBulge = vec3(0.68, 0.62, 0.58);
-          vec3 col = mix(coolCloud, warmBulge, clamp(core * 1.15, 0.0, 0.78));
-          gl_FragColor = vec4(col, lum * 0.135);
+          vec3 coolCloud = vec3(0.52, 0.68, 0.95);
+          vec3 warmBulge = vec3(0.85, 0.78, 0.72);
+          vec3 col = mix(coolCloud, warmBulge, clamp(core * 1.15, 0.0, 0.80));
+          vec3 ambientSky = vec3(0.035, 0.065, 0.13) * (0.65 + 0.35 * disk);
+          gl_FragColor = vec4(ambientSky + col * (lum * 0.34), 1.0);
         }
       `,
       side: THREE.BackSide,
@@ -1062,8 +1067,8 @@
       pos[i * 3] = tmp.x * R_DUST;
       pos[i * 3 + 1] = tmp.y * R_DUST;
       pos[i * 3 + 2] = tmp.z * R_DUST;
-      sizes[i] = 0.85 + rng() * 1.05;
-      alphas[i] = 0.07 + rng() * 0.12;
+      sizes[i] = 1.3 + rng() * 1.5;
+      alphas[i] = 0.24 + rng() * 0.32;
     }
 
     const geom = new THREE.BufferGeometry();
@@ -1093,8 +1098,8 @@
           vec2 c = gl_PointCoord - vec2(0.5);
           float r2 = dot(c, c) * 4.0;
           if (r2 > 1.0) discard;
-          float falloff = exp(-r2 * 3.6);
-          gl_FragColor = vec4(vec3(0.78, 0.85, 0.96), vAlpha * falloff);
+          float falloff = exp(-r2 * 2.6);
+          gl_FragColor = vec4(vec3(0.84, 0.91, 1.0), vAlpha * falloff);
         }
       `,
       transparent: true,
@@ -1125,10 +1130,10 @@
         void main() {
           vAlpha = aAlpha;
           vColor = aColor;
-          vBright = clamp((aSize - 7.5) / 5.0, 0.0, 1.0);
+          vBright = clamp((aSize - 9.5) / 7.0, 0.0, 1.0);
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = clamp(aSize * uZoomBoost * uPixelRatio, 1.25, 44.0);
+          gl_PointSize = clamp(aSize * uZoomBoost * uPixelRatio, 2.8, 56.0);
         }
       `,
       fragmentShader: `
@@ -1139,13 +1144,13 @@
           vec2 uv = gl_PointCoord - vec2(0.5);
           float r = length(uv) * 2.0;
           if (r > 1.0) discard;
-          float core = exp(-r * r * 10.5);
-          float halo = 0.38 * exp(-r * 3.2) * (1.0 - r);
-          float spikeX = exp(-abs(uv.y) * 34.0) * exp(-abs(uv.x) * 4.5);
-          float spikeY = exp(-abs(uv.x) * 34.0) * exp(-abs(uv.y) * 4.5);
-          float spikes = vBright * 0.28 * (spikeX + spikeY) * (1.0 - r);
+          float core = exp(-r * r * 5.5);
+          float halo = 0.58 * exp(-r * 2.4) * (1.0 - r);
+          float spikeX = exp(-abs(uv.y) * 28.0) * exp(-abs(uv.x) * 3.8);
+          float spikeY = exp(-abs(uv.x) * 28.0) * exp(-abs(uv.y) * 3.8);
+          float spikes = vBright * 0.38 * (spikeX + spikeY) * (1.0 - r);
           float intensity = clamp(core + halo + spikes, 0.0, 1.0);
-          vec3 col = mix(vColor, vec3(1.0), clamp(core * 0.65, 0.0, 1.0));
+          vec3 col = mix(vColor, vec3(1.0), clamp(core * 0.76, 0.0, 1.0));
           gl_FragColor = vec4(col, intensity * vAlpha);
         }
       `,
@@ -1209,15 +1214,15 @@
       pos[i * 3 + 1] = wy * R_SKY;
       pos[i * 3 + 2] = wz * R_SKY;
 
-      // Astronomical magnitude -> point size & alpha
+      // Astronomical magnitude -> vivid high-visibility point size & alpha
       let sz;
-      if (m <= 0.5) sz = 11.5 - m * 1.6;
-      else if (m <= 2.2) sz = 9.2 - (m - 0.5) * 1.9;
-      else if (m <= 4.2) sz = 5.9 - (m - 2.2) * 1.35;
-      else sz = Math.max(1.55, 3.2 - (m - 4.2) * 0.72);
+      if (m <= 0.5) sz = 16.5 - m * 2.1;
+      else if (m <= 2.2) sz = 12.5 - (m - 0.5) * 2.4;
+      else if (m <= 4.2) sz = 8.2 - (m - 2.2) * 1.5;
+      else sz = Math.max(3.0, 5.2 - (m - 4.2) * 1.1);
       sizes[i] = sz;
 
-      alphas[i] = clamp(Math.pow(10, -0.155 * (m - 0.8)), 0.24, 1.0);
+      alphas[i] = clamp(Math.pow(10, -0.09 * (m - 0.8)), 0.68, 1.0);
 
       const [cr, cg, cb] = starTintFor(id, m, scheme);
       colors[i * 3] = cr;
@@ -1305,7 +1310,7 @@
   function buildEarthAndAtmosphere(THREE) {
     const group = new THREE.Group();
     const { dayTex, auxTex } = buildEarthTextures(THREE);
-    const sunDir = new THREE.Vector3(0.76, 0.28, 0.58).normalize();
+    const sunDir = new THREE.Vector3(0.55, 0.38, 0.74).normalize();
     state.sunDirWorld = sunDir;
 
     const earthMat = new THREE.ShaderMaterial({
@@ -1343,7 +1348,7 @@
           vec3 V = normalize(cameraPosition - vPosWorld);
           vec3 L = normalize(uSunDir);
 
-          vec4 daySample = uHasMaps > 0.5 ? texture2D(uDayMap, vUv) : vec4(0.05, 0.13, 0.26, 0.9);
+          vec4 daySample = uHasMaps > 0.5 ? texture2D(uDayMap, vUv) : vec4(0.16, 0.54, 0.92, 0.9);
           vec4 auxSample = uHasMaps > 0.5 ? texture2D(uAuxMap, vec2(vUv.x + uCloudShift, vUv.y)) : vec4(0.0);
           float cityMask = uHasMaps > 0.5 ? texture2D(uAuxMap, vUv).g : 0.0;
 
@@ -1352,34 +1357,34 @@
           float cloudAmt = auxSample.r;
 
           float ndl = dot(N, L);
-          float dayFactor = smoothstep(-0.14, 0.22, ndl);
+          float dayFactor = smoothstep(-0.22, 0.24, ndl);
           float diff = max(ndl, 0.0);
 
-          // Subtle twilight scattering along terminator
-          float twilight = smoothstep(-0.20, 0.02, ndl) * (1.0 - smoothstep(0.0, 0.26, ndl));
-          vec3 twilightCol = vec3(0.36, 0.19, 0.11) * twilight * 0.34;
+          // Warm twilight scattering along terminator
+          float twilight = smoothstep(-0.24, 0.04, ndl) * (1.0 - smoothstep(0.0, 0.30, ndl));
+          vec3 twilightCol = vec3(0.46, 0.28, 0.16) * twilight * 0.38;
 
-          // Solar glint over oceans
+          // Crisp solar glint over sapphire oceans
           vec3 H = normalize(L + V);
-          float spec = pow(max(dot(N, H), 0.0), 46.0) * waterSpec * smoothstep(-0.02, 0.25, ndl) * 0.42;
+          float spec = pow(max(dot(N, H), 0.0), 38.0) * waterSpec * smoothstep(-0.05, 0.25, ndl) * 0.52;
 
-          // Surface + cloud layer composition
-          vec3 surfaceDay = baseAlbedo * (0.12 + 0.96 * diff) + vec3(0.68, 0.82, 0.98) * spec;
-          vec3 cloudDay = vec3(0.88, 0.92, 0.97) * (0.14 + 0.92 * diff);
-          vec3 litColor = mix(surfaceDay, cloudDay, cloudAmt * 0.68);
+          // Bright Blue Marble surface + crisp white cloud layer
+          vec3 surfaceDay = baseAlbedo * (0.32 + 0.88 * diff) + vec3(0.78, 0.91, 1.0) * spec;
+          vec3 cloudDay = vec3(0.96, 0.98, 1.0) * (0.38 + 0.76 * diff);
+          vec3 litColor = mix(surfaceDay, cloudDay, cloudAmt * 0.66);
 
-          // Night side ambient cosmos + delicate inhabited city lights (occluded by thick clouds)
-          vec3 nightBase = baseAlbedo * 0.032 + vec3(0.008, 0.015, 0.030);
-          float nightMask = smoothstep(0.05, -0.22, ndl);
-          vec3 cityCol = vec3(1.0, 0.76, 0.42) * cityMask * nightMask * (1.0 - cloudAmt * 0.72) * 0.62;
-          vec3 nightColor = mix(nightBase + cityCol, vec3(0.014, 0.022, 0.038), cloudAmt * 0.45);
+          // Luminous moonlit night hemisphere + gleaming golden city lights (100% visible Earth!)
+          vec3 nightBase = baseAlbedo * 0.42 + vec3(0.045, 0.095, 0.19);
+          float nightMask = smoothstep(0.08, -0.22, ndl);
+          vec3 cityCol = vec3(1.0, 0.82, 0.45) * cityMask * nightMask * (1.0 - cloudAmt * 0.58) * 0.95;
+          vec3 nightColor = mix(nightBase + cityCol, vec3(0.22, 0.35, 0.54), cloudAmt * 0.42);
 
           vec3 col = mix(nightColor, litColor, dayFactor) + twilightCol;
 
-          // Rayleigh atmospheric limb haze
-          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.4);
-          float sunLimb = smoothstep(-0.35, 0.45, ndl);
-          col += vec3(0.26, 0.58, 0.95) * fresnel * (0.14 + 0.46 * sunLimb);
+          // Vivid Rayleigh blue atmospheric limb glow
+          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+          float sunLimb = smoothstep(-0.42, 0.45, ndl);
+          col += vec3(0.38, 0.74, 1.0) * fresnel * (0.34 + 0.58 * sunLimb);
 
           gl_FragColor = vec4(col, 1.0);
         }
@@ -1413,10 +1418,10 @@
           vec3 V = normalize(cameraPosition - vPosWorld);
           // BackSide: N points outward, dot(N, V) is negative near center and 0 at limb
           float viewDot = clamp(-dot(N, V), 0.0, 1.0);
-          float rim = pow(1.0 - viewDot, 3.2) * smoothstep(0.0, 0.35, viewDot + 0.12);
-          float sunFacing = smoothstep(-0.42, 0.55, dot(N, normalize(uSunDir)));
-          vec3 col = mix(vec3(0.10, 0.25, 0.48), vec3(0.32, 0.68, 0.98), sunFacing);
-          float alpha = rim * (0.16 + 0.56 * sunFacing);
+          float rim = pow(1.0 - viewDot, 3.0) * smoothstep(0.0, 0.36, viewDot + 0.14);
+          float sunFacing = smoothstep(-0.45, 0.55, dot(N, normalize(uSunDir)));
+          vec3 col = mix(vec3(0.24, 0.54, 0.92), vec3(0.38, 0.74, 1.0), sunFacing);
+          float alpha = rim * (0.32 + 0.62 * sunFacing);
           gl_FragColor = vec4(col, alpha);
         }
       `,
@@ -1439,7 +1444,50 @@
   function buildSpacecraftAndFrustum(THREE) {
     const satGroup = new THREE.Group();
     const attGroup = new THREE.Group();
+    attGroup.scale.setScalar(1.55);
     satGroup.add(attGroup);
+
+    // Crisp glowing cyan satellite locator beacon ring & point-sprite halo at satellite center
+    const beaconGeom = new THREE.BufferGeometry();
+    beaconGeom.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0], 3));
+    const satBeaconMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uPixelRatio: { value: 1.0 },
+        uOpacity: { value: 1.0 },
+        uTime: { value: 0.0 }
+      },
+      vertexShader: `
+        uniform float uPixelRatio;
+        uniform float uTime;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          float pulse = 1.0 + 0.07 * sin(uTime * 3.4);
+          gl_PointSize = 54.0 * pulse * uPixelRatio;
+        }
+      `,
+      fragmentShader: `
+        uniform float uOpacity;
+        void main() {
+          vec2 uv = (gl_PointCoord - vec2(0.5)) * 2.0;
+          float r = length(uv);
+          if (r > 1.0) discard;
+          float ring = smoothstep(0.065, 0.014, abs(r - 0.74));
+          float halo = 0.28 * exp(-r * r * 3.2);
+          float alpha = clamp((ring * 0.76 + halo) * uOpacity, 0.0, 1.0);
+          if (alpha < 0.01) discard;
+          vec3 col = mix(vec3(0.22, 0.74, 0.98), vec3(0.88, 0.96, 1.0), ring * 0.55);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending
+    });
+    const beaconPts = new THREE.Points(beaconGeom, satBeaconMat);
+    beaconPts.frustumCulled = false;
+    satGroup.add(beaconPts);
 
     const panelTex = buildSolarPanelTexture(THREE);
     const meshes = [];
@@ -1450,45 +1498,56 @@
       return m;
     }
 
+    // Bright aerospace silver-white bus, gleaming gold MLI thermal foil, and vivid electric cobalt solar wings
     const titaniumMat = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      metalness: 0.72,
-      roughness: 0.34
+      color: 0xf1f5f9,
+      emissive: 0x1e293b,
+      emissiveIntensity: 0.45,
+      metalness: 0.18,
+      roughness: 0.32
     });
     const darkAnodizedMat = new THREE.MeshStandardMaterial({
-      color: 0x161f2e,
-      metalness: 0.62,
-      roughness: 0.42
+      color: 0xdbeafe,
+      emissive: 0x1e3a5f,
+      emissiveIntensity: 0.42,
+      metalness: 0.20,
+      roughness: 0.30
     });
     const goldFoilMat = new THREE.MeshStandardMaterial({
-      color: 0xc4923e,
-      metalness: 0.82,
+      color: 0xfbbf24,
+      emissive: 0x78350f,
+      emissiveIntensity: 0.45,
+      metalness: 0.25,
       roughness: 0.28
     });
     const baffleInnerMat = new THREE.MeshBasicMaterial({
-      color: 0x05080f
+      color: 0x0f172a
     });
     const lensMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0c4a6e,
-      emissiveIntensity: 0.65,
-      metalness: 0.9,
+      color: 0x7dd3fc,
+      emissive: 0x38bdf8,
+      emissiveIntensity: 0.85,
+      metalness: 0.15,
       roughness: 0.12
     });
     const solarMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
+      color: 0x3b82f6,
       map: panelTex,
-      metalness: 0.45,
-      roughness: 0.26
+      emissive: 0x1d4ed8,
+      emissiveIntensity: 0.42,
+      metalness: 0.15,
+      roughness: 0.25
     });
 
-    // Octagonal spacecraft bus (aligned so Star Tracker looks out along local -Z = +camBore)
+    // Octagonal spacecraft forward avionics bus (aligned so Star Tracker looks out along local -Z = +camBore)
     const bus = trackMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.135, 8), titaniumMat));
     bus.rotation.x = Math.PI * 0.5;
     attGroup.add(bus);
 
-    // Warm-gold MLI thermal blanket core wrap
-    const foilCore = trackMesh(new THREE.Mesh(new THREE.BoxGeometry(0.098, 0.098, 0.118), goldFoilMat));
+    // Gleaming bright-gold MLI thermal blanket wrap around mid/aft bus exterior (radius 0.0755 > 0.072!)
+    const foilCore = trackMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.0755, 0.0755, 0.082, 8), goldFoilMat));
+    foilCore.rotation.x = Math.PI * 0.5;
+    foilCore.position.z = 0.024;
     attGroup.add(foilCore);
 
     // Aft adapter ring & thruster nozzle (+Z side)
@@ -1506,7 +1565,7 @@
     baffleOuter.position.set(0, 0, -0.108);
     attGroup.add(baffleOuter);
 
-    const baffleRim = trackMesh(new THREE.Mesh(new THREE.TorusGeometry(0.040, 0.0032, 10, 28), titaniumMat));
+    const baffleRim = trackMesh(new THREE.Mesh(new THREE.TorusGeometry(0.040, 0.0036, 10, 28), goldFoilMat));
     baffleRim.position.set(0, 0, -0.151);
     attGroup.add(baffleRim);
 
@@ -1527,22 +1586,22 @@
 
     // Dual deployable solar wings along +-X (perpendicular to optical axis)
     for (const sign of [-1, 1]) {
-      const boom = trackMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.065, 8), titaniumMat));
+      const boom = trackMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.065, 8), titaniumMat));
       boom.rotation.z = Math.PI * 0.5;
       boom.position.set(sign * 0.095, 0, 0);
       attGroup.add(boom);
 
-      const wingFrame = trackMesh(new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.104, 0.005), darkAnodizedMat));
+      const wingFrame = trackMesh(new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.104, 0.006), titaniumMat));
       wingFrame.position.set(sign * 0.265, 0, 0);
       attGroup.add(wingFrame);
 
       const wingCells = trackMesh(new THREE.Mesh(new THREE.PlaneGeometry(0.288, 0.094), solarMat));
-      wingCells.position.set(sign * 0.265, 0, -0.0032);
+      wingCells.position.set(sign * 0.265, 0, -0.0036);
       wingCells.rotation.y = Math.PI;
       attGroup.add(wingCells);
 
       const wingCellsBack = trackMesh(new THREE.Mesh(new THREE.PlaneGeometry(0.288, 0.094), solarMat));
-      wingCellsBack.position.set(sign * 0.265, 0, 0.0032);
+      wingCellsBack.position.set(sign * 0.265, 0, 0.0036);
       attGroup.add(wingCellsBack);
     }
 
@@ -1553,8 +1612,8 @@
 
     const coneMat = new THREE.ShaderMaterial({
       uniforms: {
-        uColor: { value: new THREE.Color(0x7dd3fc) },
-        uOpacity: { value: 0.14 }
+        uColor: { value: new THREE.Color(0x38bdf8) },
+        uOpacity: { value: 0.26 }
       },
       vertexShader: `
         attribute float aFade;
@@ -1581,7 +1640,7 @@
     const edgeMat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: new THREE.Color(0x7dd3fc) },
-        uOpacity: { value: 0.52 }
+        uOpacity: { value: 0.88 }
       },
       vertexShader: `
         attribute float aFade;
@@ -1605,6 +1664,7 @@
     });
 
     state.satelliteGroup = satGroup;
+    state.satBeaconMat = satBeaconMat;
     state.attitudeGroup = attGroup;
     state.spacecraftMeshes = meshes;
     state.frustumGroup = frustumGroup;
@@ -1622,7 +1682,7 @@
       if (ch.geometry) ch.geometry.dispose();
     }
 
-    const L = 2.65;
+    const L = 1.90;
     const tanH = Math.tan(clamp(state.fovHDeg, 2, 130) * 0.5 * DEG2RAD);
     const tanV = Math.tan(clamp(state.fovVDeg, 2, 130) * 0.5 * DEG2RAD);
     const hw0 = 0.036;
@@ -1650,7 +1710,7 @@
     const triFade = [];
     for (const [a, b, c, d] of quads) {
       triPos.push(...a, ...b, ...c, ...a, ...c, ...d);
-      triFade.push(1, 1, 0, 1, 0, 0);
+      triFade.push(1, 1, 0.22, 1, 0.22, 0.22);
     }
 
     const coneGeom = new THREE.BufferGeometry();
@@ -1658,15 +1718,15 @@
     coneGeom.setAttribute("aFade", new THREE.Float32BufferAttribute(triFade, 1));
     state.frustumGroup.add(new THREE.Mesh(coneGeom, state.frustumConeMat));
 
-    // 4 corner rays + subtle central boresight optical axis
+    // 4 corner rays + luminous central boresight optical axis
     const linePos = [
       ...n0, ...f0,
       ...n1, ...f1,
       ...n2, ...f2,
       ...n3, ...f3,
-      0, 0, 0, 0, 0, -L * 1.12
+      0, 0, 0, 0, 0, -L * 1.15
     ];
-    const lineFade = [1, 0.06, 1, 0.06, 1, 0.06, 1, 0.06, 0.65, 0.0];
+    const lineFade = [1, 0.26, 1, 0.26, 1, 0.26, 1, 0.26, 0.85, 0.16];
     const edgeGeom = new THREE.BufferGeometry();
     edgeGeom.setAttribute("position", new THREE.Float32BufferAttribute(linePos, 3));
     edgeGeom.setAttribute("aFade", new THREE.Float32BufferAttribute(lineFade, 1));
@@ -1720,15 +1780,15 @@
     const borderGeom = new THREE.BufferGeometry();
     borderGeom.setAttribute("position", new THREE.Float32BufferAttribute(borderPts, 3));
     const borderMat = new THREE.LineBasicMaterial({
-      color: 0x7dd3fc,
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.92,
       depthWrite: false
     });
     state.skyFovGroup.add(new THREE.LineSegments(borderGeom, borderMat));
 
     // Crisp viewfinder corner L-brackets + center boresight reticle + top orientation tick
-    const brk = 0.13;
+    const brk = 0.14;
     const accentPts = [];
     const corners = [
       [-1, 1, 1, -1],
@@ -1743,9 +1803,9 @@
       accentPts.push(...c0, ...ch, ...c0, ...cv);
     }
 
-    // Center boresight subtle crosshair (with open center gap)
+    // Center boresight crosshair (with open center gap)
     const chIn = 0.022;
-    const chOut = 0.065;
+    const chOut = 0.068;
     for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       accentPts.push(
         ...gnomonicPoint(ax * chIn, ay * chIn, R_FRAME * 0.999),
@@ -1755,15 +1815,15 @@
     // Top-edge orientation notch (shows image top v=0)
     accentPts.push(
       ...gnomonicPoint(0, 1.0, R_FRAME * 0.999),
-      ...gnomonicPoint(0, 1.045, R_FRAME * 0.999)
+      ...gnomonicPoint(0, 1.05, R_FRAME * 0.999)
     );
 
     const accentGeom = new THREE.BufferGeometry();
     accentGeom.setAttribute("position", new THREE.Float32BufferAttribute(accentPts, 3));
     const accentMat = new THREE.LineBasicMaterial({
-      color: 0x7dd3fc,
+      color: 0x34d399,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.96,
       depthWrite: false
     });
     state.skyFovGroup.add(new THREE.LineSegments(accentGeom, accentMat));
@@ -1927,7 +1987,7 @@
         void main() {
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = 21.0 * uPixelRatio;
+          gl_PointSize = 26.0 * uPixelRatio;
         }
       `,
       fragmentShader: `
@@ -1935,12 +1995,12 @@
           vec2 uv = (gl_PointCoord - vec2(0.5)) * 2.0;
           float r = length(uv);
           if (r > 1.0) discard;
-          float ring = smoothstep(0.11, 0.02, abs(r - 0.62));
+          float ring = smoothstep(0.115, 0.02, abs(r - 0.60));
           float axis = min(abs(uv.x), abs(uv.y));
-          float ticks = smoothstep(0.085, 0.02, axis) * step(0.68, r) * step(r, 0.96);
-          float alpha = clamp(ring * 0.86 + ticks * 0.72, 0.0, 1.0);
+          float ticks = smoothstep(0.09, 0.02, axis) * step(0.66, r) * step(r, 0.98);
+          float alpha = clamp(ring * 0.96 + ticks * 0.88, 0.0, 1.0);
           if (alpha < 0.02) discard;
-          vec3 col = mix(vec3(0.204, 0.827, 0.600), vec3(0.490, 0.827, 0.988), ticks);
+          vec3 col = mix(vec3(0.204, 0.827, 0.600), vec3(0.220, 0.741, 0.973), ticks);
           gl_FragColor = vec4(col, alpha);
         }
       `,
@@ -2104,24 +2164,53 @@
     const basePhi = Math.acos(clamp(backDir.y, -1, 1));
     const baseTheta = Math.atan2(backDir.x, backDir.z);
 
-    state.targetRadius = 4.75;
+    state.targetRadius = 5.15;
     state.targetPhi = clamp(basePhi - 0.16, 0.24, Math.PI - 0.24);
     state.targetTheta = baseTheta + 0.44;
-    state.targetLookAt.copy(state.camBore).multiplyScalar(0.58);
+    state.targetLookAt.copy(state.camBore).multiplyScalar(0.54);
 
-    // Orient sun so Earth exhibits a crisp ~60% illuminated crescent from this vantage
+    const camApprox = new THREE.Vector3(
+      Math.sin(state.targetPhi) * Math.sin(state.targetTheta),
+      Math.cos(state.targetPhi),
+      Math.sin(state.targetPhi) * Math.cos(state.targetTheta)
+    );
+    const rightApprox = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), camApprox);
+    if (rightApprox.lengthSq() > 1e-5) rightApprox.normalize();
+    else rightApprox.set(1, 0, 0);
+
+    // Pick initial orbital phase in foreground upper-left sweet spot (never clipped by top HUD!)
+    if (state.orbitU && state.orbitV) {
+      let bestAng = state.orbitAngle;
+      let bestScore = -1e9;
+      const candPos = new THREE.Vector3();
+      for (let k = 0; k < 36; k++) {
+        const ang = (k / 36) * Math.PI * 2;
+        const c = Math.cos(ang) * R_ORBIT;
+        const s = Math.sin(ang) * R_ORBIT;
+        candPos.set(
+          state.orbitU.x * c + state.orbitV.x * s,
+          state.orbitU.y * c + state.orbitV.y * s,
+          state.orbitU.z * c + state.orbitV.z * s
+        );
+        const frontScore = candPos.dot(camApprox);
+        const heightPenalty = Math.abs(candPos.y - 0.78);
+        const sidePenalty = Math.abs(candPos.dot(rightApprox) + 0.65);
+        const score = 1.15 * frontScore - 1.75 * heightPenalty - 0.65 * sidePenalty;
+        if (score > bestScore) {
+          bestScore = score;
+          bestAng = ang;
+        }
+      }
+      state.orbitAngle = bestAng;
+    }
+
+    // Orient sun so Earth exhibits a bright sunlit Blue Marble face from this vantage
     if (state.sunDirWorld && state.earthMaterial && state.atmosMaterial) {
-      const camApprox = new THREE.Vector3(
-        Math.sin(state.targetPhi) * Math.sin(state.targetTheta),
-        Math.cos(state.targetPhi),
-        Math.sin(state.targetPhi) * Math.cos(state.targetTheta)
-      );
-      const rightApprox = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), camApprox).normalize();
       state.sunDirWorld
         .copy(camApprox)
-        .multiplyScalar(0.45)
-        .addScaledVector(rightApprox, 0.78)
-        .add(new THREE.Vector3(0, 0.34, 0))
+        .multiplyScalar(0.62)
+        .addScaledVector(rightApprox, 0.54)
+        .add(new THREE.Vector3(0, 0.36, 0))
         .normalize();
       state.earthMaterial.uniforms.uSunDir.value.copy(state.sunDirWorld);
       state.atmosMaterial.uniforms.uSunDir.value.copy(state.sunDirWorld);
@@ -2185,9 +2274,12 @@
       state.dotEl.classList.add("is-idle");
       state.telemetryTextEl.textContent = "Chế độ tìm kiếm sao — chưa khóa hướng";
       if (state.telemetryMetaEl) {
+        const cleanCat = String(state.catalogSource || "").toUpperCase().includes("HIP")
+          ? "Hipparcos"
+          : "Yale BSC5";
         state.telemetryMetaEl.textContent =
           state.catalogCount > 100
-            ? `${state.catalogCount.toLocaleString("vi-VN")} sao thực ${state.catalogSource}`
+            ? `${state.catalogCount.toLocaleString("vi-VN")} sao thực ${cleanCat}`
             : "Bầu trời thực J2000";
       }
     }
@@ -2498,13 +2590,29 @@
     state.povPitchOff += (state.targetPovPitch - state.povPitchOff) * damp;
     state.povZoomMul += (state.targetPovZoom - state.povZoomMul) * damp;
 
-    const povCamPos = satPos.clone().addScaledVector(state.camBore, 0.16);
+    const povCamPos = satPos.clone().addScaledVector(state.camBore, 0.26);
     const panQuat = new THREE.Quaternion().setFromEuler(
       new THREE.Euler(state.povPitchOff, state.povYawOff, 0, "YXZ")
     );
     const povCamQuat = sensorQuat.clone().multiply(panQuat);
     const aspect = width / Math.max(height, 1);
     const povVfov = computePovTargetVfovDeg(aspect);
+
+    // Keep Sun oriented in the front-upper-right hemisphere relative to Orbit camera so Earth is always vivid & sunlit
+    if (state.sunDirWorld && state.earthMaterial && state.atmosMaterial) {
+      const camDir = orbitCamPos.clone().normalize();
+      const camSide = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), camDir);
+      if (camSide.lengthSq() > 1e-5) camSide.normalize();
+      else camSide.set(1, 0, 0);
+      state.sunDirWorld
+        .copy(camDir)
+        .multiplyScalar(0.62)
+        .addScaledVector(camSide, 0.54)
+        .add(new THREE.Vector3(0, 0.36, 0))
+        .normalize();
+      state.earthMaterial.uniforms.uSunDir.value.copy(state.sunDirWorld);
+      state.atmosMaterial.uniforms.uSunDir.value.copy(state.sunDirWorld);
+    }
 
     // 6. Blend Orbit <-> POV camera poses seamlessly
     const b = state.povBlend;
@@ -2531,14 +2639,18 @@
       for (let i = 0; i < state.spacecraftMeshes.length; i++) {
         state.spacecraftMeshes[i].material.opacity = meshVis;
       }
-      const baseConeAlpha = state.solveState === "solved" ? 0.14 : 0.07;
-      const baseEdgeAlpha = state.solveState === "solved" ? 0.50 : 0.22;
+      if (state.satBeaconMat) {
+        state.satBeaconMat.uniforms.uOpacity.value = meshVis;
+        state.satBeaconMat.uniforms.uTime.value = nowMs * 0.001;
+      }
+      const baseConeAlpha = state.solveState === "solved" ? 0.26 : 0.18;
+      const baseEdgeAlpha = state.solveState === "solved" ? 0.88 : 0.62;
       state.frustumConeMat.uniforms.uOpacity.value = baseConeAlpha * meshVis;
       state.frustumEdgeMat.uniforms.uOpacity.value = baseEdgeAlpha * meshVis;
     }
     if (state.orbitRingLine) {
       state.orbitRingLine.visible = meshVis > 0.02;
-      state.orbitRingLine.material.opacity = 0.26 * meshVis;
+      state.orbitRingLine.material.opacity = 0.68 * meshVis;
     }
 
     // Scale star PSF size gently when zoomed into narrow sensor FOV
@@ -2613,7 +2725,7 @@
     state.webglOk = true;
     const dpr = clamp(typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1, 1, 2);
     renderer.setPixelRatio(dpr);
-    renderer.setClearColor(0x03060d, 1.0);
+    renderer.setClearColor(0x060c1b, 1.0);
     if (THREE.SRGBColorSpace) {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
     }
@@ -2632,12 +2744,14 @@
     state.orbitLookAt = new THREE.Vector3(0, 0, 0);
     state.targetLookAt = new THREE.Vector3(0, 0, 0);
 
-    // Subtle cosmos + sun lighting for the 3D spacecraft metallic bus & gold foil
-    const ambient = new THREE.AmbientLight(0x8fa8c8, 0.65);
-    const hemi = new THREE.HemisphereLight(0xdbeafe, 0x0f172a, 0.55);
-    const sunLight = new THREE.DirectionalLight(0xfff7ed, 2.2);
-    sunLight.position.set(6, 3.5, 5);
-    scene.add(ambient, hemi, sunLight);
+    // Bright 360-degree aerospace lighting so satellite silver bus, gold foil & cobalt wings gleam around all of Earth
+    const ambient = new THREE.AmbientLight(0xdbeafe, 1.35);
+    const hemi = new THREE.HemisphereLight(0xf0f9ff, 0x38bdf8, 1.45);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.35);
+    sunLight.position.set(6, 4.0, 6);
+    const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.65);
+    fillLight.position.set(-6, -3.0, -5);
+    scene.add(ambient, hemi, sunLight, fillLight);
 
     // 1. Celestial Sky Group (Milky Way Galactic band, J2000 stars, cosmic dust, RA/Dec grid, FOV footprint, reticles)
     const skyGroup = new THREE.Group();
@@ -2679,7 +2793,7 @@
     const ringMat = new THREE.LineBasicMaterial({
       color: 0x7dd3fc,
       transparent: true,
-      opacity: 0.26,
+      opacity: 0.68,
       depthWrite: false
     });
     const ringLine = new THREE.Line(new THREE.BufferGeometry(), ringMat);
@@ -2687,6 +2801,7 @@
     scene.add(ringLine);
 
     const satGroup = buildSpacecraftAndFrustum(THREE);
+    if (state.satBeaconMat) state.satBeaconMat.uniforms.uPixelRatio.value = dpr;
     scene.add(satGroup);
 
     rebuildOrbitPlane(state.camBore);
@@ -2765,7 +2880,7 @@
         state.camBore.set(...icrsToWorldXYZ(dcm[2][0], dcm[2][1], dcm[2][2])).normalize();
 
         if (state.frustumConeMat && state.frustumEdgeMat) {
-          state.frustumConeMat.uniforms.uColor.value.setHex(0x7dd3fc);
+          state.frustumConeMat.uniforms.uColor.value.setHex(0x38bdf8);
           state.frustumEdgeMat.uniforms.uColor.value.setHex(0x7dd3fc);
         }
 
@@ -2862,6 +2977,7 @@
     if (state.starMaterial) state.starMaterial.uniforms.uPixelRatio.value = dpr;
     if (state.reticleMaterial) state.reticleMaterial.uniforms.uPixelRatio.value = dpr;
     if (state.highlightMaterial) state.highlightMaterial.uniforms.uPixelRatio.value = dpr;
+    if (state.satBeaconMat) state.satBeaconMat.uniforms.uPixelRatio.value = dpr;
     if (state.dustPoints) state.dustPoints.material.uniforms.uPixelRatio.value = dpr;
     state.camera.aspect = w / h;
     state.camera.updateProjectionMatrix();

@@ -106,6 +106,7 @@ def test_orbit3d_stage_and_single_webgl_root_wired(star_tracker_root: object) ->
 def test_full_viewport_cosmos_observatory_layout(star_tracker_root: object) -> None:
     html_src: str = (star_tracker_root / 'web' / 'templates' / 'index.html').read_text(encoding='utf-8')
     js_src: str = (star_tracker_root / 'web' / 'static' / 'app.js').read_text(encoding='utf-8')
+    css_src: str = (star_tracker_root / 'web' / 'static' / 'app.css').read_text(encoding='utf-8')
 
     _verify_ui('<aside class="sidebar">' not in html_src, 'Legacy permanent left sidebar should be removed')
     _verify_ui('id="config-drawer"' in html_src, 'Missing slide-over #config-drawer')
@@ -114,6 +115,13 @@ def test_full_viewport_cosmos_observatory_layout(star_tracker_root: object) -> N
     _verify_ui('id="sensor-overlay-canvas"' in html_src, 'Missing interactive #sensor-overlay-canvas')
     _verify_ui('id="pip-sensor-card"' in html_src, 'Missing floating PiP sensor card in 3D stage')
     _verify_ui('clean_url' in js_src and 'detected_uv' in js_src, 'Missing clean_url / detected_uv sensor overlay wiring in app.js')
+    _verify_ui('id="btn-theme-toggle"' in html_src, 'Missing #btn-theme-toggle in index.html')
+    _verify_ui('id="btn-img-bright"' in html_src, 'Missing #btn-img-bright in index.html')
+    _verify_ui('getElementById("btn-theme-toggle")' in js_src, 'Missing btn-theme-toggle wiring in app.js')
+    _verify_ui('getElementById("btn-img-bright")' in js_src, 'Missing btn-img-bright wiring in app.js')
+    _verify_ui('dataset.theme' in js_src, 'Missing dataset.theme toggle logic in app.js')
+    _verify_ui('[data-theme="light"]' in css_src, 'Missing [data-theme="light"] theme rules in app.css')
+    _verify_ui('brightness(' in css_src, 'Missing starfield brightness boost CSS filter in app.css')
 
 
 def test_human_copy_free_of_robotic_disclaimers(star_tracker_root: object) -> None:
@@ -145,3 +153,4 @@ def test_flask_index_and_frames_route() -> None:
     _verify_ui(frames_res.status_code == 200)
     frames = frames_res.get_json()['frames']
     _verify_ui(any((f['file'].startswith('tetra3/') for f in frames)), 'Expected tetra3 frames in /api/frames')
+

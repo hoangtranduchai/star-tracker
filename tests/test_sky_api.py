@@ -226,7 +226,7 @@ def test_save_clean_png_exact_aspect_and_deep_space_black(tmp_path: Path) -> Non
 
 
 def test_api_run_clean_url_borderless_png_and_detected_uv(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    star_tracker_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(web_app, 'BASE', tmp_path)
     client = web_app.app.test_client()
@@ -267,5 +267,66 @@ def test_api_run_clean_url_borderless_png_and_detected_uv(
     assert (w_px, h_px) == (1500, 1000)
     assert w_px * 2 == h_px * 3
     assert int(np.median(clean_img)) == 0
+    assert int(np.median(clean_img)) <= 15
     assert int(clean_img.max()) >= 220
+    star_peaks = [
+        int(
+            clean_img[
+                max(0, int(round(float(v))) - 3) : min(h_px, int(round(float(v))) + 4),
+                max(0, int(round(float(u))) - 3) : min(w_px, int(round(float(u))) + 4),
+            ].max()
+        )
+        for u, v in detected_uv
+    ]
+    assert max(star_peaks) >= 210
+    assert min(star_peaks) >= 210
+
+    # Downsampled to 650px CSS width: stars must remain bright and unmistakable
+    css_h = int(round(h_px * (650.0 / float(w_px))))
+    s42_css = cv2.resize(clean_img, (650, css_h), interpolation=cv2.INTER_AREA)
+    s42_css_peaks = [
+        int(
+            s42_css[
+                max(0, int(round(float(v) * css_h / h_px)) - 2) : min(css_h, int(round(float(v) * css_h / h_px)) + 3),
+                max(0, int(round(float(u) * 650.0 / w_px)) - 2) : min(650, int(round(float(u) * 650.0 / w_px)) + 3),
+            ].max()
+        )
+        for u, v in detected_uv
+    ]
+    assert max(s42_css_peaks) >= 210
+    assert float(np.median(s42_css_peaks)) >= 210.0
+
+    # Real 16-bit ESA tetra3 Alt60 sky frame (1024x768) & extended glare/silhouette scenes
+    from src.demo_session import DemoEngine, RunRequest
+
+    engine = DemoEngine(star_tracker_root)
+    alt60_path = star_tracker_root / 'data' / 'tetra3' / '2019-07-29T204726_Alt60_Azi-135_Try1.tiff'
+    if alt60_path.is_file():
+        t3_dir = tmp_path / 'tetra3_alt60'
+        t3_out = engine.run(RunRequest(image=alt60_path, out_dir=t3_dir, save_png=True))
+        assert t3_out.success
+        t3_png = cv2.imread(str(t3_dir / 'demo_clean.png'), cv2.IMREAD_UNCHANGED)
+        assert t3_png is not None and t3_png.dtype == np.uint8
+        assert float(np.median(t3_png)) <= 15.0
+        t3_h, t3_w = t3_png.shape[:2]
+        t3_peaks = [
+            int(
+                t3_png[
+                    max(0, int(round(float(v))) - 3) : min(t3_h, int(round(float(v))) + 4),
+                    max(0, int(round(float(u))) - 3) : min(t3_w, int(round(float(u))) + 4),
+                ].max()
+            )
+            for u, v in t3_out.payload['detected_uv']
+        ]
+        assert len(t3_peaks) >= 8
+        assert min(t3_peaks) >= 210
+
+    msh_path = star_tracker_root / 'data' / 'uploads' / 'mount_st_helens_1.png'
+    if msh_path.is_file():
+        msh_clean = save_clean_png(cv2.imread(str(msh_path), cv2.IMREAD_GRAYSCALE), tmp_path / 'msh_clean.png')
+        msh_png = cv2.imread(str(msh_clean), cv2.IMREAD_UNCHANGED)
+        assert msh_png is not None
+        assert float(np.median(msh_png)) <= 15.0
+        assert int(msh_png.max()) >= 210
+
 

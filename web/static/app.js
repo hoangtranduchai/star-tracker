@@ -10,6 +10,9 @@
   const btnMountPreset = document.getElementById("btn-mount-preset");
   const btnTetra3Preset = document.getElementById("btn-tetra3-preset");
   const btnWelcomeRun = document.getElementById("btn-welcome-run");
+  const btnThemeToggle = document.getElementById("btn-theme-toggle");
+  const themeToggleIcon = document.getElementById("theme-toggle-icon");
+  const themeToggleLabel = document.getElementById("theme-toggle-label");
   const btnOpenDrawer = document.getElementById("btn-open-drawer");
   const btnCloseDrawer = document.getElementById("btn-close-drawer");
   const btnPipExpand = document.getElementById("btn-pip-expand");
@@ -86,6 +89,8 @@
 
   const btnCompare3dRaw = document.getElementById("btn-compare3d-raw");
   const btnCompare3dAnnotated = document.getElementById("btn-compare3d-annotated");
+  const btnImgBright = document.getElementById("btn-img-bright");
+  const imgBrightLabel = document.getElementById("img-bright-label");
   const btnZoomSensor = document.getElementById("btn-zoom-sensor");
   const compare3dImg = document.getElementById("compare3d-img");
   const slotCompare3d = document.getElementById("slot-compare3d");
@@ -156,6 +161,87 @@
 
   if (form) {
     form.addEventListener("submit", (ev) => ev.preventDefault());
+  }
+
+  /* =======================================================================
+     UI Theme Toggle (Luminous Space Navy <-> Daylight White Studio)
+     & 2D Starfield Brightness Boost Controls
+     ======================================================================= */
+  const ICON_SUN_SVG =
+    '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.55 1.55M17.52 17.52l1.55 1.55M2 12h2.2M19.8 12H22M4.93 19.07l1.55-1.55M17.52 6.48l1.55-1.55"/></svg>';
+  const ICON_MOON_SVG =
+    '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+
+  let activeTheme = "cosmos";
+  function applyUiTheme(mode, persist = true) {
+    activeTheme = mode === "light" ? "light" : "cosmos";
+    if (activeTheme === "light") {
+      document.documentElement.dataset.theme = "light";
+    } else {
+      delete document.documentElement.dataset.theme;
+    }
+    if (btnThemeToggle) {
+      btnThemeToggle.setAttribute("aria-pressed", activeTheme === "light" ? "true" : "false");
+    }
+    if (themeToggleIcon) {
+      themeToggleIcon.innerHTML = activeTheme === "light" ? ICON_MOON_SVG : ICON_SUN_SVG;
+    }
+    if (themeToggleLabel) {
+      themeToggleLabel.textContent = activeTheme === "light" ? "Nền Tối" : "Nền Sáng";
+    }
+    if (persist) {
+      try {
+        window.localStorage.setItem("st_ui_theme", activeTheme);
+      } catch (_) {
+        // Ignore storage restrictions
+      }
+    }
+  }
+
+  try {
+    const savedTheme = window.localStorage.getItem("st_ui_theme");
+    if (savedTheme === "light") {
+      applyUiTheme("light", false);
+    } else {
+      applyUiTheme("cosmos", false);
+    }
+  } catch (_) {
+    applyUiTheme("cosmos", false);
+  }
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener("click", () => {
+      applyUiTheme(activeTheme === "light" ? "cosmos" : "light", true);
+    });
+  }
+
+  const IMG_BRIGHT_PRESETS = [
+    { id: "std", label: "Sáng rõ (1.4×)", cls: "img-bright-std", boost: true },
+    { id: "vivid", label: "Rực rỡ (2.0×)", cls: "img-bright-vivid", boost: true },
+    { id: "raw", label: "Gốc (1.0×)", cls: "img-bright-raw", boost: false }
+  ];
+  let imgBrightIdx = 0;
+
+  function applyImgBrightnessPreset(idx) {
+    imgBrightIdx = ((idx % IMG_BRIGHT_PRESETS.length) + IMG_BRIGHT_PRESETS.length) % IMG_BRIGHT_PRESETS.length;
+    const preset = IMG_BRIGHT_PRESETS[imgBrightIdx];
+    [compare3dImg, pipSensorImg, imgIn].forEach((el) => {
+      if (!el) return;
+      el.classList.remove("img-bright-std", "img-bright-vivid", "img-bright-raw");
+      el.classList.add(preset.cls);
+    });
+    if (imgBrightLabel) imgBrightLabel.textContent = preset.label;
+    if (btnImgBright) btnImgBright.classList.toggle("is-bright-boost", preset.boost);
+  }
+
+  applyImgBrightnessPreset(0);
+
+  if (btnImgBright) {
+    btnImgBright.addEventListener("click", () => {
+      applyImgBrightnessPreset(imgBrightIdx + 1);
+    });
   }
 
   /* =======================================================================
@@ -385,61 +471,62 @@
     }
 
     if (compare3dSource === "annotated") {
-      // 1. Subtle optical boresight center crosshair
+      // 1. Crisp optical boresight center crosshair
       const cx = offX + drawW * 0.5;
       const cy = offY + drawH * 0.5;
       ctx.save();
-      ctx.strokeStyle = "rgba(103, 232, 249, 0.22)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.48)";
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.moveTo(cx - 18, cy);
+      ctx.moveTo(cx - 20, cy);
       ctx.lineTo(cx - 6, cy);
       ctx.moveTo(cx + 6, cy);
-      ctx.lineTo(cx + 18, cy);
-      ctx.moveTo(cx, cy - 18);
+      ctx.lineTo(cx + 20, cy);
+      ctx.moveTo(cx, cy - 20);
       ctx.lineTo(cx, cy - 6);
       ctx.moveTo(cx, cy + 6);
-      ctx.lineTo(cx, cy + 18);
+      ctx.lineTo(cx, cy + 20);
       ctx.stroke();
 
-      // Subtle sensor boundary hairline
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.14)";
+      // Crisp sensor boundary frame
+      ctx.strokeStyle = "rgba(125, 211, 252, 0.32)";
+      ctx.lineWidth = 1.2;
       ctx.strokeRect(offX + 0.5, offY + 0.5, Math.max(0, drawW - 1), Math.max(0, drawH - 1));
       ctx.restore();
 
-      // 2. Unidentified detected centroids (delicate ice-cyan rings)
+      // 2. Unidentified detected centroids (vivid sky-cyan rings)
       ctx.save();
-      ctx.strokeStyle = "rgba(103, 232, 249, 0.68)";
-      ctx.lineWidth = 1.15;
+      ctx.strokeStyle = "#38BDF8";
+      ctx.lineWidth = 1.8;
       for (let i = 0; i < unmatchedPts.length; i++) {
         const p = unmatchedPts[i];
         ctx.beginPath();
-        ctx.arc(p.sx, p.sy, 4.8, 0, Math.PI * 2);
+        ctx.arc(p.sx, p.sy, 5.4, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.restore();
 
-      // 3. Identified catalog stars (emerald astrograph reticles + collision-free pill labels)
+      // 3. Identified catalog stars (bright emerald astrograph reticles + high-contrast pill labels)
       ctx.save();
       for (let i = 0; i < matchedPts.length; i++) {
         const p = matchedPts[i];
         ctx.strokeStyle = "#34D399";
-        ctx.lineWidth = 1.45;
+        ctx.lineWidth = 1.95;
         ctx.beginPath();
-        ctx.arc(p.sx, p.sy, 7.2, 0, Math.PI * 2);
+        ctx.arc(p.sx, p.sy, 8.0, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.strokeStyle = "rgba(103, 232, 249, 0.78)";
-        ctx.lineWidth = 1.05;
+        ctx.strokeStyle = "#38BDF8";
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(p.sx - 10.5, p.sy);
-        ctx.lineTo(p.sx - 7.8, p.sy);
-        ctx.moveTo(p.sx + 7.8, p.sy);
-        ctx.lineTo(p.sx + 10.5, p.sy);
-        ctx.moveTo(p.sx, p.sy - 10.5);
-        ctx.lineTo(p.sx, p.sy - 7.8);
-        ctx.moveTo(p.sx, p.sy + 7.8);
-        ctx.lineTo(p.sx, p.sy + 10.5);
+        ctx.moveTo(p.sx - 12.0, p.sy);
+        ctx.lineTo(p.sx - 8.6, p.sy);
+        ctx.moveTo(p.sx + 8.6, p.sy);
+        ctx.lineTo(p.sx + 12.0, p.sy);
+        ctx.moveTo(p.sx, p.sy - 12.0);
+        ctx.lineTo(p.sx, p.sy - 8.6);
+        ctx.moveTo(p.sx, p.sy + 8.6);
+        ctx.lineTo(p.sx, p.sy + 12.0);
         ctx.stroke();
       }
 
@@ -447,7 +534,7 @@
         .slice()
         .sort((a, b) => (a.hasIau !== b.hasIau ? (a.hasIau ? -1 : 1) : (a.mag || 9) - (b.mag || 9)));
 
-      ctx.font = "600 10.5px Inter, -apple-system, sans-serif";
+      ctx.font = "700 11.5px Inter, -apple-system, sans-serif";
       ctx.textBaseline = "middle";
       const placed = [];
       const maxLabels = 20;
@@ -457,12 +544,12 @@
         const p = sortedLabels[i];
         const txt = p.displayName;
         const tw = ctx.measureText(txt).width;
-        const pw = tw + 10;
-        const ph = 17;
-        let lx = p.sx + 10;
+        const pw = tw + 12;
+        const ph = 19;
+        let lx = p.sx + 11;
         let ly = p.sy - ph * 0.5;
         if (lx + pw > offX + drawW - 6) {
-          lx = p.sx - 10 - pw;
+          lx = p.sx - 11 - pw;
         }
         ly = Math.max(offY + 6, Math.min(offY + drawH - ph - 6, ly));
 
@@ -478,20 +565,20 @@
         placed.push([lx - 3, ly - 2, lx + pw + 3, ly + ph + 2]);
         countLbl++;
 
-        ctx.fillStyle = "rgba(6, 10, 20, 0.80)";
-        ctx.strokeStyle = p.hasIau ? "rgba(103, 232, 249, 0.34)" : "rgba(148, 163, 184, 0.22)";
+        ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+        ctx.strokeStyle = p.hasIau ? "rgba(56, 189, 248, 0.78)" : "rgba(52, 211, 153, 0.62)";
         ctx.lineWidth = 1;
         ctx.beginPath();
         if (typeof ctx.roundRect === "function") {
-          ctx.roundRect(lx, ly, pw, ph, 8);
+          ctx.roundRect(lx, ly, pw, ph, 9);
         } else {
           ctx.rect(lx, ly, pw, ph);
         }
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = p.hasIau ? "#F8FAFC" : "#CBD5E1";
-        ctx.fillText(txt, lx + 5, ly + ph * 0.5 + 0.5);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(txt, lx + 6, ly + ph * 0.5 + 0.5);
       }
       ctx.restore();
     }
@@ -901,6 +988,11 @@
   function openLightbox(src, title) {
     if (!imageModal || !modalImg || !src) return;
     modalImg.src = src;
+    const isRawLike = src.includes("demo_clean") || src.includes("demo_input");
+    modalImg.classList.remove("img-bright-std", "img-bright-vivid", "img-bright-raw");
+    if (isRawLike) {
+      modalImg.classList.add(IMG_BRIGHT_PRESETS[imgBrightIdx].cls);
+    }
     if (modalTitle) modalTitle.textContent = title || "Chi tiết Khung ảnh Quang học";
     modalZoomLevel = 1.0;
     modalImg.style.transform = "scale(1)";

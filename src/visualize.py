@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import cv2
 from cv2 import INTER_AREA, INTER_NEAREST, resize as cv_resize
-from numpy import arcsinh, ascontiguousarray, asarray, clip, cos, float64, median, percentile, sin, uint8, zeros
+from numpy import abs as npabs, arcsinh, ascontiguousarray, asarray, clip, cos, float32, float64, maximum, median, ones, percentile, sin, uint8, zeros
 from .starnames import compact_tag
 PNG_MAX_SIDE = 1600
 
@@ -30,12 +30,46 @@ def _decimate_for_png(image: object, result: object=None, max_side: object=PNG_M
         c_obj: object = SimpleNamespace(uv=asarray(c_obj.uv, dtype=float64) * scale_xy, axis_ratio=c_obj.axis_ratio, angle_rad=c_obj.angle_rad)
     return (scaled_img, SimpleNamespace(glare_mask=g_mask, centroids=c_obj, ident=result.ident))
 
+def _extract_star_layer(arr: object) -> tuple[object, float]:
+    """Isolate compact point-source stars from smooth vignetting, glare, and terrain silhouettes."""
+    arr_f32: object = arr.astype(float32)
+    se_close: object = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (19, 19))
+    se_open: object = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    bg_env: object = cv2.morphologyEx(cv2.morphologyEx(arr_f32, cv2.MORPH_CLOSE, se_close), cv2.MORPH_OPEN, se_open)
+    bg_env_f64: object = cv2.GaussianBlur(bg_env, (0, 0), sigmaX=1.0).astype(float64)
+    hp_res: object = arr - cv2.GaussianBlur(arr_f32, (0, 0), sigmaX=12.0).astype(float64)
+    hp_med: float = float(median(hp_res))
+    sigma_loc: float = max(1.4826 * float(median(npabs(hp_res - hp_med))), 1e-03)
+    star_raw: object = arr - bg_env_f64
+    sr_med: float = float(median(star_raw))
+    star_sig: object = clip(star_raw - (sr_med + 3.8 * sigma_loc), 0.0, None)
+    return (star_sig, sigma_loc)
+
 def _asinh_stretch(img: object) -> object:
-    shifted: object = clip(asarray(img, dtype=float64) - float(median(img)), 0.0, None)
+    arr: object = asarray(img, dtype=float64)
+    if arr.size == 0 or float(arr.max()) <= float(arr.min()):
+        return zeros(arr.shape[:2], dtype=float64)
+    bg: float = float(median(arr))
+    mad: float = float(median(npabs(arr - bg)))
+    sigma: float = max(1.4826 * mad, 1e-03)
+    shifted: object = clip(arr - (bg + 3.0 * sigma), 0.0, None)
     nz: object = shifted[shifted > 0.0]
-    soft_val: object = float(percentile(nz, 50)) if nz.size else 1.0
-    mapped: object = arcsinh(shifted / (soft_val + 1e-06))
-    return mapped / (float(mapped.max()) + 1e-09)
+    soft_val: float = max(float(percentile(nz, 50)) if nz.size else 1.0, 2.0 * sigma, 1e-06)
+    mapped: object = arcsinh(shifted / soft_val)
+    hi_p: float = float(percentile(mapped, 99.95))
+    denom: float = hi_p if hi_p > 0.0 else float(mapped.max()) + 1e-09
+    base: object = clip(mapped / denom, 0.0, 1.0) ** 0.72
+    star_sig, sigma_loc = _extract_star_layer(arr)
+    star_nz: object = star_sig[star_sig > 0.0]
+    if not star_nz.size:
+        return base
+    s_soft: float = max(float(percentile(star_nz, 50)), 2.0 * sigma_loc, 1e-06)
+    s_map: object = arcsinh(star_sig / s_soft)
+    s_hi: float = float(percentile(s_map, 99.98))
+    s_denom: float = s_hi if s_hi > 0.0 else float(s_map.max()) + 1e-09
+    s_norm: object = clip(s_map / s_denom, 0.0, 1.0) ** 0.72
+    s_dil: object = cv2.dilate(s_norm.astype(float32), ones((2, 2), dtype=uint8)).astype(float64)
+    return clip(maximum(base, maximum(s_norm, 0.72 * s_dil)), 0.0, 1.0)
 
 def image_stats(image: object) -> object:
     arr: object = asarray(image)
@@ -45,7 +79,7 @@ def image_stats(image: object) -> object:
 
 def _draw_starfield(ax: object, image: object, result: object, catalog: object, lookup: object) -> object:
     ax.set_facecolor('#05070B')
-    ax.imshow(_asinh_stretch(image), cmap='gray', origin='upper')
+    ax.imshow(_asinh_stretch(image), cmap='gray', vmin=0.0, vmax=1.0, origin='upper')
     if result is None:
         return
     if result.glare_mask is not None and result.glare_mask.any():
@@ -102,11 +136,51 @@ def save_clean_png(image: object, path: object, max_side: object=PNG_MAX_SIDE) -
     dest: object = Path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
     vis_img, _ = _decimate_for_png(image, None, max_side=max_side)
-    stretched: object = clip(asarray(_asinh_stretch(vis_img), dtype=float64), 0.0, 1.0)
-    black_floor: object = min(0.22, float(percentile(stretched, 92)) * 1.15)
-    lifted: object = clip((stretched - black_floor) / max(1.0 - black_floor, 1e-06), 0.0, 1.0)
-    polished: object = clip(lifted ** 1.3, 0.0, 1.0)
-    u8_img: object = ascontiguousarray((polished * 255.0).round().astype(uint8))
+    arr: object = asarray(vis_img, dtype=float64)
+    if arr.size == 0 or float(arr.max()) <= float(arr.min()):
+        u8_blank: object = zeros(arr.shape[:2], dtype=uint8)
+        if not cv2.imwrite(str(dest), u8_blank):
+            raise OSError(f'Failed to write clean PNG: {dest}')
+        return dest
+    bg: float = float(median(arr))
+    mad: float = float(median(npabs(arr - bg)))
+    sigma: float = max(1.4826 * mad, 1e-03)
+    raw_fg_frac: float = float((arr > bg + 1.8 * sigma).mean())
+    signal: object = clip(arr - (bg + 3.2 * sigma), 0.0, None)
+    p_hi: float = float(percentile(signal, 99.92))
+    s_max: float = float(signal.max())
+    hi: float = p_hi if p_hi > 0.0 else (s_max if s_max > 0.0 else 1.0)
+    nz: object = signal[signal > 0.0]
+    soft: float = max(float(percentile(nz, 55)) if nz.size else 1.0, 2.0 * sigma, 1e-04)
+    stretched: object = clip(arcsinh(signal / soft) / max(float(arcsinh(max(hi / soft, 1.05))), 1e-06), 0.0, 1.0)
+    base_bright: object = stretched ** 0.58
+    star_sig, sigma_loc = _extract_star_layer(arr)
+    star_nz: object = star_sig[star_sig > 0.0]
+    if star_nz.size:
+        p_star_hi: float = float(percentile(star_sig, 99.985))
+        s_star_max: float = float(star_sig.max())
+        hi_star: float = p_star_hi if p_star_hi > 2.0 * sigma_loc else (s_star_max if s_star_max > 0.0 else 1.0)
+        sig_strong: object = star_sig[star_sig > 2.0 * sigma_loc]
+        soft_star: float = max(float(percentile(sig_strong, 40)) if sig_strong.size else float(percentile(star_nz, 75)), 2.0 * sigma_loc, 1e-04)
+        star_stretched: object = clip(arcsinh(star_sig / soft_star) / max(float(arcsinh(max(hi_star / soft_star, 1.05))), 1e-06), 0.0, 1.0)
+        star_bright: object = star_stretched ** 0.58
+    else:
+        star_bright = zeros(arr.shape[:2], dtype=float64)
+    p10_val: float = float(percentile(arr, 10))
+    is_silhouette: bool = float(arr.max()) <= 255.0 and sigma > 3.5 * sigma_loc and (p10_val < 15.0)
+    if is_silhouette:
+        tw_hi: float = max(float(percentile(arr, 98.5)), p10_val + 1.0)
+        twilight: object = clip((arr - p10_val) / (tw_hi - p10_val), 0.0, 1.0) ** 1.35
+        base_bright = maximum(base_bright * 0.5, twilight * 0.24)
+    dilated: object = cv2.dilate(star_bright.astype(float32), ones((2, 2), dtype=uint8))
+    halo: object = cv2.GaussianBlur(dilated, (0, 0), sigmaX=1.15)
+    if is_silhouette or raw_fg_frac > 0.15:
+        star_boosted: object = clip(maximum(star_bright, 0.68 * dilated) + 0.24 * halo, 0.0, 1.0)
+        combined: object = clip(maximum(base_bright * 0.80, star_boosted), 0.0, 1.0)
+    else:
+        star_boosted = clip(maximum(star_bright, 0.78 * dilated) + 0.35 * halo, 0.0, 1.0)
+        combined = clip(maximum(base_bright, star_boosted), 0.0, 1.0)
+    u8_img: object = ascontiguousarray((combined * 255.0).round().astype(uint8))
     if not cv2.imwrite(str(dest), u8_img):
         raise OSError(f'Failed to write clean PNG: {dest}')
     return dest

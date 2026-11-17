@@ -1,11 +1,11 @@
-/* StarTrackerOrbit3D — Frameless Deep-Cosmos Observatory 3D Stage & HUD */
+/* StarTrackerOrbit3D — Vivid Bright-Cosmos Observatory 3D Stage & High-Contrast HUD */
 
 :where(.orbit3d-root) {
   position: relative;
   width: 100%;
   height: 100%;
   min-height: 360px;
-  background: radial-gradient(ellipse 95% 85% at 50% 46%, #070d1b 0%, #03060d 72%, #010307 100%);
+  background: radial-gradient(ellipse 95% 85% at 50% 46%, #0c1a36 0%, #071022 72%, #050b18 100%);
   border-radius: 14px;
   overflow: hidden;
   user-select: none;
@@ -16,8 +16,8 @@
 .orbit3d-root {
   position: relative;
   overflow: hidden;
-  background-color: #03060d;
-  color: #f8fafc;
+  background-color: #060c1b;
+  color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -46,7 +46,7 @@
   outline: none;
 }
 
-/* Projected 2D Star & Landmark Labels */
+/* Projected 2D Star & Landmark Labels (Always high-contrast on starry 3D sky) */
 .o3d-labels {
   position: absolute;
   inset: 0;
@@ -62,7 +62,7 @@
   will-change: transform, opacity;
   white-space: nowrap;
   pointer-events: none;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: 0.01em;
   transition: opacity 0.14s ease-out;
 }
@@ -71,26 +71,27 @@
   display: inline-flex;
   align-items: baseline;
   gap: 5px;
-  padding: 2.5px 7px 2.5px 6px;
+  padding: 3px 8.5px 3px 7px;
   border-radius: 9999px;
-  background: rgba(6, 10, 20, 0.72);
+  background: rgba(15, 25, 46, 0.90);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(103, 232, 249, 0.24);
-  color: #f8fafc;
-  font-size: 11px;
-  font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.62);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .o3d-star-label.is-matched::before {
   content: "";
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.78);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.92);
   align-self: center;
   flex-shrink: 0;
 }
@@ -99,36 +100,36 @@
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  padding: 3.5px 9px 3.5px 7px;
+  padding: 4px 10px 4px 8px;
   border-radius: 9999px;
-  background: rgba(9, 18, 34, 0.90);
+  background: rgba(14, 30, 58, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(103, 232, 249, 0.72);
-  box-shadow: 0 0 18px rgba(56, 189, 248, 0.35), 0 4px 14px rgba(0, 0, 0, 0.65);
+  border: 1.5px solid #67e8f9;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), 0 4px 14px rgba(0, 0, 0, 0.7);
   color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   z-index: 5;
 }
 
 .o3d-star-label.is-highlighted::before {
   content: "";
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 6.5px;
+  height: 6.5px;
   border-radius: 50%;
   background: #67e8f9;
-  box-shadow: 0 0 9px rgba(103, 232, 249, 0.95);
+  box-shadow: 0 0 10px rgba(103, 232, 249, 1);
   align-self: center;
   flex-shrink: 0;
 }
 
 .o3d-star-label .o3d-star-sub {
   font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', monospace;
-  font-size: 9.5px;
-  font-weight: 500;
-  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  color: #cbd5e1;
   font-variant-numeric: tabular-nums;
 }
 
@@ -137,15 +138,22 @@
 }
 
 .o3d-star-label.is-landmark {
-  color: rgba(203, 213, 225, 0.68);
-  font-size: 10.5px;
-  font-weight: 500;
-  padding-left: 6px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85);
+  display: inline-flex;
+  align-items: center;
+  padding: 1.5px 6.5px;
+  border-radius: 9999px;
+  background: rgba(13, 23, 42, 0.72);
+  border: 1px solid rgba(148, 197, 255, 0.28);
+  color: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
 }
 
 .o3d-star-label.is-landmark.is-pole {
-  color: rgba(103, 232, 249, 0.82);
+  color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.48);
+  background: rgba(14, 28, 52, 0.85);
 }
 
 /* Container-aware HUD Layer */
@@ -175,58 +183,59 @@
   align-items: center;
   gap: 8px;
   max-width: 100%;
-  padding: 5px 12px;
+  padding: 6px 13px;
   border-radius: 9999px;
-  background: rgba(9, 14, 26, 0.76);
+  background: rgba(20, 33, 58, 0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-  font-size: 11.5px;
+  border: 1px solid rgba(125, 211, 252, 0.36);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.48);
+  font-size: 12px;
   line-height: 1.3;
-  color: #e2e8f0;
+  color: #f8fafc;
   font-variant-numeric: tabular-nums;
 }
 
 .o3d-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: #64748b;
+  background: #94a3b8;
   transition: background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .o3d-status-dot.is-solved {
   background: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.72);
+  box-shadow: 0 0 9px rgba(52, 211, 153, 0.85);
 }
 
 .o3d-status-dot.is-lost {
   background: #f87171;
-  box-shadow: 0 0 8px rgba(248, 113, 113, 0.55);
+  box-shadow: 0 0 9px rgba(248, 113, 113, 0.72);
 }
 
 .o3d-status-dot.is-idle {
-  background: #67e8f9;
-  box-shadow: 0 0 7px rgba(103, 232, 249, 0.45);
+  background: #38bdf8;
+  box-shadow: 0 0 9px rgba(56, 189, 248, 0.75);
 }
 
 .o3d-telemetry-text {
   font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  color: #f8fafc;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .o3d-telemetry-meta {
-  font-size: 10.5px;
-  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  color: #cbd5e1;
   padding-left: 8px;
-  border-left: 1px solid rgba(148, 163, 184, 0.16);
+  border-left: 1px solid rgba(148, 197, 255, 0.32);
   white-space: nowrap;
 }
 
@@ -238,33 +247,34 @@
 }
 
 .o3d-hint-pill {
-  padding: 5px 10px;
+  padding: 5.5px 11px;
   border-radius: 9999px;
-  background: rgba(9, 14, 26, 0.62);
+  background: rgba(20, 33, 58, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  color: #94a3b8;
-  font-size: 10.5px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.01em;
   transition: opacity 0.35s ease;
 }
 
 .o3d-hint-pill.is-dimmed {
-  opacity: 0.38;
+  opacity: 0.65;
 }
 
 .o3d-pov-zoom {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 3px;
+  gap: 3px;
+  padding: 3.5px;
   border-radius: 9999px;
-  background: rgba(9, 14, 26, 0.80);
+  background: rgba(20, 33, 58, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(125, 211, 252, 0.36);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
@@ -277,11 +287,11 @@
   appearance: none;
   background: transparent;
   border: 1px solid transparent;
-  color: #94a3b8;
+  color: #e2e8f0;
   font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 500;
-  padding: 3.5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 9999px;
   cursor: pointer;
   transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
@@ -289,13 +299,14 @@
 }
 
 .o3d-mini-btn:hover {
-  color: #f8fafc;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .o3d-mini-btn.is-active {
-  color: #f8fafc;
-  background: rgba(103, 232, 249, 0.14);
-  border-color: rgba(103, 232, 249, 0.34);
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  border-color: rgba(186, 230, 253, 0.65);
 }
 
 /* Bottom Floating Control Bar */
@@ -308,14 +319,14 @@
   max-width: calc(100% - 20px);
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 4px;
+  gap: 4px;
+  padding: 4.5px;
   border-radius: 9999px;
-  background: rgba(9, 14, 26, 0.82);
+  background: rgba(20, 33, 58, 0.92);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.58);
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
 }
 
 .o3d-seg {
@@ -324,13 +335,13 @@
   gap: 2px;
   padding: 2px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(15, 25, 45, 0.65);
 }
 
 .o3d-sep {
   width: 1px;
-  height: 16px;
-  background: rgba(148, 163, 184, 0.16);
+  height: 17px;
+  background: rgba(148, 197, 255, 0.30);
   margin: 0 2px;
   flex-shrink: 0;
 }
@@ -340,15 +351,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 5.5px;
   background: transparent;
   border: 1px solid transparent;
-  color: #94a3b8;
+  color: #e2e8f0;
   font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1;
-  padding: 6px 10.5px;
+  padding: 6.5px 11.5px;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
@@ -356,33 +367,86 @@
 }
 
 .o3d-btn svg {
-  width: 13.5px;
-  height: 13.5px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
 }
 
 .o3d-btn:hover {
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.16);
 }
 
 .o3d-btn:focus-visible,
 .o3d-mini-btn:focus-visible {
-  outline: 1px solid rgba(103, 232, 249, 0.65);
+  outline: 2px solid #38bdf8;
   outline-offset: 1px;
 }
 
 .o3d-btn.is-active {
-  color: #f8fafc;
-  background: rgba(103, 232, 249, 0.15);
-  border-color: rgba(103, 232, 249, 0.34);
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  border-color: rgba(186, 230, 253, 0.65);
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
 }
 
 .o3d-btn.is-toggle-on {
-  color: #67e8f9;
-  background: rgba(103, 232, 249, 0.09);
-  border-color: rgba(103, 232, 249, 0.22);
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(125, 211, 252, 0.42);
+}
+
+/* Light Studio Theme Adaptation for Floating 3D HUD Pills */
+[data-theme="light"] .o3d-telemetry-pill,
+[data-theme="light"] .o3d-controls,
+[data-theme="light"] .o3d-pov-zoom,
+[data-theme="light"] .o3d-hint-pill {
+  background: rgba(255, 255, 255, 0.93);
+  border-color: rgba(148, 163, 184, 0.55);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.22);
+  color: #0f172a;
+}
+
+[data-theme="light"] .o3d-telemetry-text {
+  color: #0f172a;
+}
+
+[data-theme="light"] .o3d-telemetry-meta {
+  color: #334155;
+  border-left-color: #cbd5e1;
+}
+
+[data-theme="light"] .o3d-seg {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .o3d-sep {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] .o3d-btn,
+[data-theme="light"] .o3d-mini-btn {
+  color: #1e293b;
+}
+
+[data-theme="light"] .o3d-btn:hover,
+[data-theme="light"] .o3d-mini-btn:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .o3d-btn.is-active,
+[data-theme="light"] .o3d-mini-btn.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: #0284c7;
+}
+
+[data-theme="light"] .o3d-btn.is-toggle-on {
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.14);
+  border-color: rgba(2, 132, 199, 0.42);
 }
 
 /* Compact split-pane adaptation via CSS Container Query */
@@ -394,7 +458,7 @@
     display: none;
   }
   .o3d-btn.is-compact-icon {
-    padding: 6px 8px;
+    padding: 6.5px 8.5px;
   }
 }
 
@@ -403,19 +467,19 @@
     display: none;
   }
   .o3d-btn {
-    padding: 5px 8.5px;
-    font-size: 11px;
+    padding: 5.5px 9px;
+    font-size: 11.5px;
     gap: 4px;
   }
 }
 
 @container (max-width: 420px) {
   .o3d-telemetry-text {
-    font-size: 10px;
+    font-size: 10.5px;
   }
   .o3d-btn {
-    padding: 5px 7px;
-    font-size: 10.5px;
+    padding: 5px 7.5px;
+    font-size: 11px;
   }
 }
 
@@ -429,29 +493,29 @@
   justify-content: center;
   text-align: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 40%, #091122 0%, #03060d 82%);
-  color: #94a3b8;
+  background: radial-gradient(circle at 50% 40%, #162647 0%, #091326 82%);
+  color: #cbd5e1;
   z-index: 3;
 }
 
 .o3d-fallback svg {
-  width: 36px;
-  height: 36px;
-  color: #67e8f9;
-  opacity: 0.75;
+  width: 38px;
+  height: 38px;
+  color: #38bdf8;
+  opacity: 0.9;
   margin-bottom: 10px;
 }
 
 .o3d-fallback-title {
-  color: #f8fafc;
-  font-size: 13px;
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .o3d-fallback-desc {
-  font-size: 12px;
-  max-width: 340px;
-  line-height: 1.45;
-  color: #94a3b8;
+  font-size: 12.5px;
+  max-width: 360px;
+  line-height: 1.5;
+  color: #cbd5e1;
 }

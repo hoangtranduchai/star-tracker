@@ -13,9 +13,10 @@ env/
 venv/
 ENV/
 
-# IDEs
+# IDEs & Office lock files
 .vscode/
 .idea/
+~$*
 
 # Large ML Models
 *.pt
