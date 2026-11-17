@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 import matplotlib
 matplotlib.use('Agg')
+import cv2
 from cv2 import INTER_AREA, INTER_NEAREST, resize as cv_resize
 from numpy import arcsinh, ascontiguousarray, asarray, clip, cos, float64, median, percentile, sin, uint8, zeros
 from .starnames import compact_tag
@@ -94,6 +95,20 @@ def _save_viewport_png(path: object, image: object, result: object=None, catalog
     fig.subplots_adjust(left=0.06, right=0.995, top=0.995, bottom=0.06)
     fig.savefig(dest, dpi=130, facecolor=fig.get_facecolor())
     plt.close(fig)
+    return dest
+
+def save_clean_png(image: object, path: object, max_side: object=PNG_MAX_SIDE) -> object:
+    """Write a pure borderless 8-bit starfield PNG at exact sensor aspect ratio."""
+    dest: object = Path(path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    vis_img, _ = _decimate_for_png(image, None, max_side=max_side)
+    stretched: object = clip(asarray(_asinh_stretch(vis_img), dtype=float64), 0.0, 1.0)
+    black_floor: object = min(0.22, float(percentile(stretched, 92)) * 1.15)
+    lifted: object = clip((stretched - black_floor) / max(1.0 - black_floor, 1e-06), 0.0, 1.0)
+    polished: object = clip(lifted ** 1.3, 0.0, 1.0)
+    u8_img: object = ascontiguousarray((polished * 255.0).round().astype(uint8))
+    if not cv2.imwrite(str(dest), u8_img):
+        raise OSError(f'Failed to write clean PNG: {dest}')
     return dest
 
 def save_input_png(image: object, path: object, stats: object=None) -> object:

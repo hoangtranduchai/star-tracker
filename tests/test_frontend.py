@@ -19,7 +19,9 @@ def test_every_html_button_id_is_wired_in_js(star_tracker_root: object) -> objec
 
 def test_scripts_do_not_wait_for_never_firing_domcontentloaded(star_tracker_root: object) -> object:
     js_src: object = (star_tracker_root / 'web' / 'static' / 'app.js').read_text(encoding='utf-8')
-    _verify_ui('DOMContentLoaded' not in js_src)
+    orbit_src: object = (star_tracker_root / 'web' / 'static' / 'orbit3d.js').read_text(encoding='utf-8')
+    _verify_ui('DOMContentLoaded' not in js_src, 'DOMContentLoaded found in app.js')
+    _verify_ui('DOMContentLoaded' not in orbit_src, 'DOMContentLoaded found in orbit3d.js')
 
 
 def test_sexagesimal_inputs_are_preserved_as_strings(star_tracker_root: object) -> object:
@@ -80,6 +82,7 @@ def test_tetra3_preset_and_verification_fields_wired(star_tracker_root: object) 
 def test_orbit3d_stage_and_single_webgl_root_wired(star_tracker_root: object) -> None:
     html_src: str = (star_tracker_root / 'web' / 'templates' / 'index.html').read_text(encoding='utf-8')
     js_src: str = (star_tracker_root / 'web' / 'static' / 'app.js').read_text(encoding='utf-8')
+    orbit_src: str = (star_tracker_root / 'web' / 'static' / 'orbit3d.js').read_text(encoding='utf-8')
     css_src: str = (star_tracker_root / 'web' / 'static' / 'app.css').read_text(encoding='utf-8')
 
     _verify_ui(html_src.count('id="orbit3d-root"') == 1, 'Expected exactly one #orbit3d-root container in index.html')
@@ -96,7 +99,21 @@ def test_orbit3d_stage_and_single_webgl_root_wired(star_tracker_root: object) ->
 
     _verify_ui('StarTrackerOrbit3D' in js_src, 'Missing StarTrackerOrbit3D integration in app.js')
     _verify_ui('updateFromPayload' in js_src, 'Missing StarTrackerOrbit3D.updateFromPayload call in app.js')
+    _verify_ui('highlightStar' in js_src and 'highlightStar' in orbit_src, 'Missing 2D-3D highlightStar sync')
     _verify_ui('.stage-grid.is-compare3d' in css_src and '.stage-grid.is-orbit3d' in css_src, 'Missing stage-grid layout modes in app.css')
+
+
+def test_full_viewport_cosmos_observatory_layout(star_tracker_root: object) -> None:
+    html_src: str = (star_tracker_root / 'web' / 'templates' / 'index.html').read_text(encoding='utf-8')
+    js_src: str = (star_tracker_root / 'web' / 'static' / 'app.js').read_text(encoding='utf-8')
+
+    _verify_ui('<aside class="sidebar">' not in html_src, 'Legacy permanent left sidebar should be removed')
+    _verify_ui('id="config-drawer"' in html_src, 'Missing slide-over #config-drawer')
+    _verify_ui('id="btn-open-drawer"' in html_src, 'Missing #btn-open-drawer button')
+    _verify_ui('id="optical-viewer"' in html_src, 'Missing frameless #optical-viewer')
+    _verify_ui('id="sensor-overlay-canvas"' in html_src, 'Missing interactive #sensor-overlay-canvas')
+    _verify_ui('id="pip-sensor-card"' in html_src, 'Missing floating PiP sensor card in 3D stage')
+    _verify_ui('clean_url' in js_src and 'detected_uv' in js_src, 'Missing clean_url / detected_uv sensor overlay wiring in app.js')
 
 
 def test_human_copy_free_of_robotic_disclaimers(star_tracker_root: object) -> None:
@@ -123,6 +140,7 @@ def test_flask_index_and_frames_route() -> None:
     body: str = res.get_data(as_text=True)
     _verify_ui('btn-tetra3-preset' in body)
     _verify_ui('id="orbit3d-root"' in body)
+    _verify_ui('id="sensor-overlay-canvas"' in body)
     frames_res = client.get('/api/frames')
     _verify_ui(frames_res.status_code == 200)
     frames = frames_res.get_json()['frames']

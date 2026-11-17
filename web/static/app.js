@@ -1,16 +1,24 @@
-/* Star Tracker Web Application Controller */
+/* Star Tracker — Cosmos Observatory Frontend Controller */
 (function () {
   "use strict";
 
   const form = document.getElementById("run-form");
   const btnRun = document.getElementById("btn-run");
+  const btnDrawerRun = document.getElementById("btn-drawer-run");
   const btnSeed = document.getElementById("btn-seed42");
   const btnGlarePreset = document.getElementById("btn-glare-preset");
   const btnMountPreset = document.getElementById("btn-mount-preset");
   const btnTetra3Preset = document.getElementById("btn-tetra3-preset");
+  const btnWelcomeRun = document.getElementById("btn-welcome-run");
+  const btnOpenDrawer = document.getElementById("btn-open-drawer");
+  const btnCloseDrawer = document.getElementById("btn-close-drawer");
+  const btnPipExpand = document.getElementById("btn-pip-expand");
   const btnRadec = document.getElementById("btn-radec");
   const btnLoad = document.getElementById("btn-load");
   const btnUpload = document.getElementById("btn-upload");
+
+  const configDrawer = document.getElementById("config-drawer");
+  const drawerBackdrop = document.getElementById("drawer-backdrop");
 
   const localImage = document.getElementById("local-image");
   const localSidecar = document.getElementById("local-sidecar");
@@ -78,11 +86,22 @@
 
   const btnCompare3dRaw = document.getElementById("btn-compare3d-raw");
   const btnCompare3dAnnotated = document.getElementById("btn-compare3d-annotated");
+  const btnZoomSensor = document.getElementById("btn-zoom-sensor");
   const compare3dImg = document.getElementById("compare3d-img");
   const slotCompare3d = document.getElementById("slot-compare3d");
   const capCompare3d = document.getElementById("cap-compare3d");
+  const sensorLiveDot = document.getElementById("sensor-live-dot");
+  const sensorStageWrap = document.getElementById("sensor-stage-wrap");
+  const sensorOverlayCanvas = document.getElementById("sensor-overlay-canvas");
+  const sensorStarTooltip = document.getElementById("sensor-star-tooltip");
+
   const capOrbit3d = document.getElementById("cap-orbit3d");
   const orbit3dRoot = document.getElementById("orbit3d-root");
+  const welcomeHudCard = document.getElementById("welcome-hud-card");
+  const pipSensorCard = document.getElementById("pip-sensor-card");
+  const pipSensorImg = document.getElementById("pip-sensor-img");
+  const pipSensorBadge = document.getElementById("pip-sensor-badge");
+  const pipSensorMeta = document.getElementById("pip-sensor-meta");
 
   const imgIn = document.getElementById("input-img");
   const imgOut = document.getElementById("output-img");
@@ -118,15 +137,49 @@
   let radecTimer = 0;
   let storedFovRows = [];
   let storedIdRows = [];
-  let currentViewMode = "compare3d";
-  let compare3dSource = "raw";
+
+  // Default to full-screen 3D cosmos on initial idle load; switch to 50/50 compare3d on first solve
+  let currentViewMode = "orbit3d";
+  let userPinnedOrbitFullscreen = false;
+  let hasCompletedRun = false;
+
+  // Sensor viewer state
+  let compare3dSource = "annotated"; // "raw" | "annotated"
+  let usingCleanImage = false;
+  let lastCleanUrl = "";
   let lastInUrl = "";
   let lastOutUrl = "";
+  let lastSensorPayload = null;
+  let sensorOverlayPoints = [];
+  let hoveredSensorStar = null;
+  let catalogSelectedStarId = null;
 
   if (form) {
     form.addEventListener("submit", (ev) => ev.preventDefault());
   }
 
+  /* =======================================================================
+     Slide-Over Configuration Drawer Controls
+     ======================================================================= */
+  function openDrawer() {
+    if (!configDrawer || !drawerBackdrop) return;
+    drawerBackdrop.hidden = false;
+    configDrawer.hidden = false;
+  }
+
+  function closeDrawer() {
+    if (!configDrawer || !drawerBackdrop) return;
+    configDrawer.hidden = true;
+    drawerBackdrop.hidden = true;
+  }
+
+  if (btnOpenDrawer) btnOpenDrawer.addEventListener("click", openDrawer);
+  if (btnCloseDrawer) btnCloseDrawer.addEventListener("click", closeDrawer);
+  if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeDrawer);
+
+  /* =======================================================================
+     Formatting & Comparison Helpers
+     ======================================================================= */
   function fmt(v, digits = 5) {
     if (v === null || v === undefined || Number.isNaN(v)) return "—";
     if (typeof v === "number") {
@@ -187,7 +240,18 @@
 
   let abortCtrl = null;
   function setBusy(on, msg) {
-    [btnRun, btnSeed, btnGlarePreset, btnMountPreset, btnTetra3Preset, btnLoad, btnRadec, btnUpload].forEach((b) => {
+    [
+      btnRun,
+      btnDrawerRun,
+      btnSeed,
+      btnGlarePreset,
+      btnMountPreset,
+      btnTetra3Preset,
+      btnWelcomeRun,
+      btnLoad,
+      btnRadec,
+      btnUpload
+    ].forEach((b) => {
       if (!b) return;
       b.disabled = on;
       b.classList.toggle("busy", on);
@@ -195,6 +259,7 @@
     if (on && statusEl) {
       statusEl.className = "status-banner";
       statusEl.innerHTML = `<span class="busy-dot"></span><strong>Đang xử lý:</strong> ${msg}`;
+      statusEl.title = msg;
     }
   }
 
@@ -217,8 +282,325 @@
     }
   }
 
-  function setStageViewMode(mode) {
+  /* =======================================================================
+     Interactive 2D Sensor Starfield Canvas Overlay & 3D Hover Sync
+     ======================================================================= */
+  function drawSensorOverlay() {
+    if (!sensorOverlayCanvas || !sensorStageWrap) return;
+    const cw = sensorStageWrap.clientWidth;
+    const ch = sensorStageWrap.clientHeight;
+    if (cw < 8 || ch < 8) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.round(cw * dpr);
+    const targetH = Math.round(ch * dpr);
+    if (sensorOverlayCanvas.width !== targetW || sensorOverlayCanvas.height !== targetH) {
+      sensorOverlayCanvas.width = targetW;
+      sensorOverlayCanvas.height = targetH;
+    }
+
+    const ctx = sensorOverlayCanvas.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+
+    sensorOverlayPoints = [];
+    if (!usingCleanImage || !lastSensorPayload || !compare3dImg || compare3dImg.hidden) {
+      return;
+    }
+
+    const cam = lastSensorPayload.camera || {};
+    const st = lastSensorPayload.input_stats || {};
+    const camW = Number(cam.width || st.width || compare3dImg.naturalWidth || 1500);
+    const camH = Number(cam.height || st.height || compare3dImg.naturalHeight || 1000);
+    if (!(camW > 0 && camH > 0)) return;
+
+    const scale = Math.min(cw / camW, ch / camH);
+    const drawW = camW * scale;
+    const drawH = camH * scale;
+    const offX = (cw - drawW) * 0.5;
+    const offY = (ch - drawH) * 0.5;
+
+    const identList = Array.isArray(lastSensorPayload.identified_stars) ? lastSensorPayload.identified_stars : [];
+    const detUv = Array.isArray(lastSensorPayload.detected_uv) ? lastSensorPayload.detected_uv : [];
+
+    const matchedPts = [];
+    for (let i = 0; i < identList.length; i++) {
+      const s = identList[i];
+      if (!s || !Number.isFinite(Number(s.u_px)) || !Number.isFinite(Number(s.v_px))) continue;
+      const u = Number(s.u_px);
+      const v = Number(s.v_px);
+      const sx = offX + (u + 0.5) * scale;
+      const sy = offY + (v + 0.5) * scale;
+      const scheme = String(s.id_scheme || "HR").toUpperCase();
+      const code = `${scheme} ${s.id}`;
+      const displayName = s.iau_name || code;
+      const pt = {
+        isIdentified: true,
+        id: Number(s.id),
+        displayName,
+        hasIau: Boolean(s.iau_name),
+        code,
+        mag: Number(s.mag),
+        u,
+        v,
+        sx,
+        sy
+      };
+      matchedPts.push(pt);
+      sensorOverlayPoints.push(pt);
+    }
+
+    const unmatchedPts = [];
+    for (let i = 0; i < detUv.length; i++) {
+      const pair = detUv[i];
+      if (!Array.isArray(pair) || pair.length < 2) continue;
+      const u = Number(pair[0]);
+      const v = Number(pair[1]);
+      if (!Number.isFinite(u) || !Number.isFinite(v)) continue;
+      let dup = false;
+      for (let j = 0; j < matchedPts.length; j++) {
+        if (Math.hypot(matchedPts[j].u - u, matchedPts[j].v - v) < 2.6) {
+          dup = true;
+          break;
+        }
+      }
+      if (dup) continue;
+      const sx = offX + (u + 0.5) * scale;
+      const sy = offY + (v + 0.5) * scale;
+      const pt = {
+        isIdentified: false,
+        id: null,
+        displayName: "Tâm sáng phát hiện",
+        hasIau: false,
+        code: "",
+        mag: null,
+        u,
+        v,
+        sx,
+        sy
+      };
+      unmatchedPts.push(pt);
+      sensorOverlayPoints.push(pt);
+    }
+
+    if (compare3dSource === "annotated") {
+      // 1. Subtle optical boresight center crosshair
+      const cx = offX + drawW * 0.5;
+      const cy = offY + drawH * 0.5;
+      ctx.save();
+      ctx.strokeStyle = "rgba(103, 232, 249, 0.22)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - 18, cy);
+      ctx.lineTo(cx - 6, cy);
+      ctx.moveTo(cx + 6, cy);
+      ctx.lineTo(cx + 18, cy);
+      ctx.moveTo(cx, cy - 18);
+      ctx.lineTo(cx, cy - 6);
+      ctx.moveTo(cx, cy + 6);
+      ctx.lineTo(cx, cy + 18);
+      ctx.stroke();
+
+      // Subtle sensor boundary hairline
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.14)";
+      ctx.strokeRect(offX + 0.5, offY + 0.5, Math.max(0, drawW - 1), Math.max(0, drawH - 1));
+      ctx.restore();
+
+      // 2. Unidentified detected centroids (delicate ice-cyan rings)
+      ctx.save();
+      ctx.strokeStyle = "rgba(103, 232, 249, 0.68)";
+      ctx.lineWidth = 1.15;
+      for (let i = 0; i < unmatchedPts.length; i++) {
+        const p = unmatchedPts[i];
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, 4.8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 3. Identified catalog stars (emerald astrograph reticles + collision-free pill labels)
+      ctx.save();
+      for (let i = 0; i < matchedPts.length; i++) {
+        const p = matchedPts[i];
+        ctx.strokeStyle = "#34D399";
+        ctx.lineWidth = 1.45;
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, 7.2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(103, 232, 249, 0.78)";
+        ctx.lineWidth = 1.05;
+        ctx.beginPath();
+        ctx.moveTo(p.sx - 10.5, p.sy);
+        ctx.lineTo(p.sx - 7.8, p.sy);
+        ctx.moveTo(p.sx + 7.8, p.sy);
+        ctx.lineTo(p.sx + 10.5, p.sy);
+        ctx.moveTo(p.sx, p.sy - 10.5);
+        ctx.lineTo(p.sx, p.sy - 7.8);
+        ctx.moveTo(p.sx, p.sy + 7.8);
+        ctx.lineTo(p.sx, p.sy + 10.5);
+        ctx.stroke();
+      }
+
+      const sortedLabels = matchedPts
+        .slice()
+        .sort((a, b) => (a.hasIau !== b.hasIau ? (a.hasIau ? -1 : 1) : (a.mag || 9) - (b.mag || 9)));
+
+      ctx.font = "600 10.5px Inter, -apple-system, sans-serif";
+      ctx.textBaseline = "middle";
+      const placed = [];
+      const maxLabels = 20;
+      let countLbl = 0;
+
+      for (let i = 0; i < sortedLabels.length && countLbl < maxLabels; i++) {
+        const p = sortedLabels[i];
+        const txt = p.displayName;
+        const tw = ctx.measureText(txt).width;
+        const pw = tw + 10;
+        const ph = 17;
+        let lx = p.sx + 10;
+        let ly = p.sy - ph * 0.5;
+        if (lx + pw > offX + drawW - 6) {
+          lx = p.sx - 10 - pw;
+        }
+        ly = Math.max(offY + 6, Math.min(offY + drawH - ph - 6, ly));
+
+        let collide = false;
+        for (let k = 0; k < placed.length; k++) {
+          const b = placed[k];
+          if (lx < b[2] && lx + pw > b[0] && ly < b[3] && ly + ph > b[1]) {
+            collide = true;
+            break;
+          }
+        }
+        if (collide) continue;
+        placed.push([lx - 3, ly - 2, lx + pw + 3, ly + ph + 2]);
+        countLbl++;
+
+        ctx.fillStyle = "rgba(6, 10, 20, 0.80)";
+        ctx.strokeStyle = p.hasIau ? "rgba(103, 232, 249, 0.34)" : "rgba(148, 163, 184, 0.22)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(lx, ly, pw, ph, 8);
+        } else {
+          ctx.rect(lx, ly, pw, ph);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = p.hasIau ? "#F8FAFC" : "#CBD5E1";
+        ctx.fillText(txt, lx + 5, ly + ph * 0.5 + 0.5);
+      }
+      ctx.restore();
+    }
+
+    // 4. Active hovered or catalog-selected highlight ring
+    const activeTarget =
+      hoveredSensorStar ||
+      (catalogSelectedStarId != null
+        ? matchedPts.find((m) => m.id === catalogSelectedStarId) || null
+        : null);
+
+    if (activeTarget) {
+      ctx.save();
+      ctx.strokeStyle = "#67E8F9";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(103, 232, 249, 0.85)";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(activeTarget.sx, activeTarget.sy, 12.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  if (sensorOverlayCanvas && sensorStageWrap) {
+    sensorOverlayCanvas.addEventListener("pointermove", (ev) => {
+      if (!sensorOverlayPoints.length) return;
+      const rect = sensorOverlayCanvas.getBoundingClientRect();
+      const mx = ev.clientX - rect.left;
+      const my = ev.clientY - rect.top;
+
+      let best = null;
+      let bestDist = 24;
+      for (let i = 0; i < sensorOverlayPoints.length; i++) {
+        const pt = sensorOverlayPoints[i];
+        const d = Math.hypot(pt.sx - mx, pt.sy - my);
+        // Slightly favor identified catalog stars when cursor is near both
+        const effD = pt.isIdentified ? d * 0.85 : d;
+        if (d <= 24 && effD < bestDist) {
+          bestDist = effD;
+          best = pt;
+        }
+      }
+
+      if (best !== hoveredSensorStar) {
+        hoveredSensorStar = best;
+        catalogSelectedStarId = null;
+        drawSensorOverlay();
+        if (best && best.isIdentified) {
+          window.StarTrackerOrbit3D?.highlightStar(best.id);
+        } else {
+          window.StarTrackerOrbit3D?.highlightStar(null);
+        }
+      }
+
+      if (best && sensorStarTooltip) {
+        if (best.isIdentified) {
+          const magStr = Number.isFinite(best.mag) ? (best.mag >= 0 ? `+${best.mag.toFixed(2)}` : best.mag.toFixed(2)) : "—";
+          const codePart = best.hasIau ? ` · ${best.code}` : "";
+          sensorStarTooltip.innerHTML =
+            `<strong>${best.displayName}</strong>` +
+            `<span class="tt-mono">${codePart} · V ${magStr} · (${best.u.toFixed(1)}, ${best.v.toFixed(1)})</span>`;
+        } else {
+          sensorStarTooltip.innerHTML =
+            `<strong>Tâm sáng phát hiện</strong>` +
+            `<span class="tt-mono"> · (${best.u.toFixed(1)}, ${best.v.toFixed(1)}) px</span>`;
+        }
+        sensorStarTooltip.hidden = false;
+        const tw = sensorStarTooltip.offsetWidth || 190;
+        const th = sensorStarTooltip.offsetHeight || 28;
+        let tx = best.sx + 14;
+        let ty = best.sy - th - 10;
+        if (tx + tw > rect.width - 8) tx = Math.max(8, best.sx - tw - 14);
+        if (ty < 46) ty = Math.min(rect.height - th - 8, best.sy + 14);
+        sensorStarTooltip.style.transform = `translate3d(${Math.round(tx)}px, ${Math.round(ty)}px, 0)`;
+      } else if (sensorStarTooltip) {
+        sensorStarTooltip.hidden = true;
+      }
+    });
+
+    sensorOverlayCanvas.addEventListener("pointerleave", () => {
+      if (hoveredSensorStar) {
+        hoveredSensorStar = null;
+        drawSensorOverlay();
+        window.StarTrackerOrbit3D?.highlightStar(null);
+      }
+      if (sensorStarTooltip) sensorStarTooltip.hidden = true;
+    });
+
+    sensorOverlayCanvas.addEventListener("click", () => {
+      if (hoveredSensorStar && hoveredSensorStar.isIdentified) {
+        window.StarTrackerOrbit3D?.highlightStar(hoveredSensorStar.id, { focus: true });
+      }
+    });
+
+    if (typeof ResizeObserver === "function") {
+      const sensorRo = new ResizeObserver(() => drawSensorOverlay());
+      sensorRo.observe(sensorStageWrap);
+    }
+  }
+
+  /* =======================================================================
+     Stage View Modes & Navigation Tabs
+     ======================================================================= */
+  function setStageViewMode(mode, fromUserClick = false) {
     currentViewMode = mode;
+    if (fromUserClick && hasCompletedRun) {
+      userPinnedOrbitFullscreen = mode === "orbit3d";
+    }
     document.querySelectorAll(".view-mode-btn").forEach((b) => {
       b.classList.toggle("active", b.getAttribute("data-mode") === mode);
     });
@@ -232,25 +614,54 @@
     if (viewOutput) viewOutput.hidden = mode !== "output";
     if (viewHud) viewHud.hidden = mode !== "hud";
     if (is3d) {
-      requestAnimationFrame(() => window.StarTrackerOrbit3D?.resize());
+      requestAnimationFrame(() => {
+        window.StarTrackerOrbit3D?.resize();
+        drawSensorOverlay();
+      });
     }
   }
 
   function syncCompare3dImage() {
     if (!compare3dImg) return;
-    const url = compare3dSource === "annotated" ? lastOutUrl : lastInUrl;
-    if (!url) return;
+    if (lastCleanUrl) {
+      usingCleanImage = true;
+      compare3dImg.hidden = false;
+      if (compare3dImg.src !== lastCleanUrl && !compare3dImg.src.endsWith(lastCleanUrl)) {
+        compare3dImg.src = lastCleanUrl;
+      }
+      compare3dImg.alt = "Khung ảnh cảm biến sao thuần khiết";
+      if (slotCompare3d) slotCompare3d.classList.add("hidden");
+      drawSensorOverlay();
+      return;
+    }
+    usingCleanImage = false;
+    const fallbackUrl = compare3dSource === "annotated" ? lastOutUrl : lastInUrl;
+    if (!fallbackUrl) return;
     compare3dImg.hidden = false;
-    compare3dImg.src = url;
+    compare3dImg.src = fallbackUrl;
     compare3dImg.alt =
       compare3dSource === "annotated"
         ? "Ảnh nhận diện sao đối chiếu với bầu trời 3D"
         : "Ảnh gốc cảm biến đối chiếu với bầu trời 3D";
     if (slotCompare3d) slotCompare3d.classList.add("hidden");
+    drawSensorOverlay();
+  }
+
+  if (compare3dImg) {
+    compare3dImg.addEventListener("load", () => {
+      drawSensorOverlay();
+    });
+    compare3dImg.addEventListener("error", () => {
+      if (usingCleanImage && (lastInUrl || lastOutUrl)) {
+        lastCleanUrl = "";
+        usingCleanImage = false;
+        syncCompare3dImage();
+      }
+    });
   }
 
   function setCompare3dSource(srcKind) {
-    compare3dSource = srcKind === "annotated" ? "annotated" : "raw";
+    compare3dSource = srcKind === "raw" ? "raw" : "annotated";
     if (btnCompare3dRaw) btnCompare3dRaw.classList.toggle("active", compare3dSource === "raw");
     if (btnCompare3dAnnotated) btnCompare3dAnnotated.classList.toggle("active", compare3dSource === "annotated");
     syncCompare3dImage();
@@ -262,32 +673,42 @@
   if (btnCompare3dAnnotated) {
     btnCompare3dAnnotated.addEventListener("click", () => setCompare3dSource("annotated"));
   }
+  if (btnPipExpand) {
+    btnPipExpand.addEventListener("click", () => {
+      userPinnedOrbitFullscreen = false;
+      setStageViewMode("compare3d", true);
+    });
+  }
 
   document.querySelectorAll(".view-mode-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const mode = btn.getAttribute("data-mode") || "compare3d";
-      setStageViewMode(mode);
+      setStageViewMode(mode, true);
     });
   });
 
+  function activateTab(tabId) {
+    document.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
+    });
+    document.querySelectorAll(".tab-pane").forEach((p) => {
+      const isMatch = p.id === tabId;
+      p.classList.toggle("active", isMatch);
+      p.hidden = !isMatch;
+      if (isMatch) p.scrollTop = 0;
+    });
+    if (tabId === "tab-imagery" && (currentViewMode === "compare3d" || currentViewMode === "orbit3d")) {
+      requestAnimationFrame(() => {
+        window.StarTrackerOrbit3D?.resize();
+        drawSensorOverlay();
+      });
+    }
+  }
+
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-pane").forEach((p) => {
-        p.classList.remove("active");
-        p.hidden = true;
-      });
-      btn.classList.add("active");
       const tabId = btn.getAttribute("data-tab");
-      const target = document.getElementById(tabId);
-      if (target) {
-        target.hidden = false;
-        target.classList.add("active");
-        target.scrollTop = 0;
-      }
-      if (tabId === "tab-imagery" && (currentViewMode === "compare3d" || currentViewMode === "orbit3d")) {
-        requestAnimationFrame(() => window.StarTrackerOrbit3D?.resize());
-      }
+      if (tabId) activateTab(tabId);
     });
   });
 
@@ -304,7 +725,7 @@
         activePointHr = null;
         document.querySelectorAll(".preset-chip").forEach((c) => c.classList.remove("active"));
         if (presetIndicator) {
-          presetIndicator.textContent = "Chưa chọn ngôi sao mục tiêu";
+          presetIndicator.textContent = "Chọn một ngôi sao để hướng thẳng tâm kính";
           presetIndicator.className = "preset-indicator muted";
         }
       }
@@ -331,6 +752,7 @@
     btnRndSeed.addEventListener("click", () => {
       seedInput.value = Math.floor(Math.random() * 100000);
       setCentroidBackend("classical");
+      closeDrawer();
       postRun(gatherFormData());
     });
   }
@@ -343,15 +765,19 @@
       const name = chip.getAttribute("data-name");
       activePointHr = hr;
       if (presetIndicator) {
-        presetIndicator.textContent = `Đang ngắm tâm kính vào ${name} (HR ${hr})`;
+        presetIndicator.textContent = `Đang hướng tâm kính vào ${name} (HR ${hr})`;
         presetIndicator.className = "preset-indicator active";
       }
       clearRadecFields();
       setCentroidBackend("classical");
+      closeDrawer();
       postRun(gatherFormData());
     });
   });
 
+  /* =======================================================================
+     RA / Dec Sexagesimal & Decimal Input Parsing
+     ======================================================================= */
   if (btnClearRadec) {
     btnClearRadec.addEventListener("click", () => {
       clearRadecFields();
@@ -431,7 +857,7 @@
       const res = await fetch("/api/parse-radec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       if (!data.ok) {
@@ -463,14 +889,17 @@
       if (radecSyncing || (ev && ev.isComposing)) return;
       radecSource = el;
       clearTimeout(radecTimer);
-      radecTimer = setTimeout(syncRadecWithApi, 450);
+      radecTimer = setTimeout(syncRadecWithApi, 420);
     };
     el.addEventListener("input", queue);
     el.addEventListener("compositionend", () => queue(null));
   });
 
+  /* =======================================================================
+     Zoom Lightbox Modal
+     ======================================================================= */
   function openLightbox(src, title) {
-    if (!imageModal || !modalImg) return;
+    if (!imageModal || !modalImg || !src) return;
     modalImg.src = src;
     if (modalTitle) modalTitle.textContent = title || "Chi tiết Khung ảnh Quang học";
     modalZoomLevel = 1.0;
@@ -487,14 +916,15 @@
   const modalBackdrop = document.querySelector(".modal-backdrop");
   if (modalBackdrop) modalBackdrop.addEventListener("click", closeLightbox);
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && imageModal && !imageModal.hidden) {
-      closeLightbox();
+    if (e.key === "Escape") {
+      if (imageModal && !imageModal.hidden) closeLightbox();
+      else if (configDrawer && !configDrawer.hidden) closeDrawer();
     }
   });
 
   if (btnZoomIn) {
     btnZoomIn.addEventListener("click", () => {
-      modalZoomLevel = Math.min(modalZoomLevel + 0.3, 4.0);
+      modalZoomLevel = Math.min(modalZoomLevel + 0.3, 4.5);
       if (modalImg) modalImg.style.transform = `scale(${modalZoomLevel})`;
     });
   }
@@ -511,6 +941,15 @@
     });
   }
 
+  if (btnZoomSensor) {
+    btnZoomSensor.addEventListener("click", () => {
+      const zoomSrc = compare3dSource === "annotated" ? lastOutUrl || lastCleanUrl : lastCleanUrl || lastInUrl;
+      if (zoomSrc) {
+        openLightbox(zoomSrc, "Khung ảnh cảm biến quang học");
+      }
+    });
+  }
+
   document.querySelectorAll(".btn-inspect").forEach((btn) => {
     btn.addEventListener("click", () => {
       const imgId = btn.getAttribute("data-img");
@@ -521,7 +960,7 @@
     });
   });
 
-  [compare3dImg, imgIn, imgOut, imgOutLarge, imgHud].forEach((img) => {
+  [imgIn, imgOut, imgOutLarge, imgHud].forEach((img) => {
     if (!img) return;
     img.addEventListener("click", () => {
       if (img.src && !img.hidden) {
@@ -530,21 +969,28 @@
     });
   });
 
+  /* =======================================================================
+     Form Data Gathering & Star Directory Rendering
+     ======================================================================= */
   function gatherFormData() {
-    const rawData = Object.fromEntries(new FormData(form).entries());
+    const rawData = form ? Object.fromEntries(new FormData(form).entries()) : {};
+    const checkedMode = document.querySelector('input[name="mode"]:checked');
+    const checkedCentroid = document.querySelector('input[name="centroid_backend"]:checked');
+
     const payload = {
-      mode: String(rawData.mode || "fast"),
+      mode: String((checkedMode && checkedMode.value) || rawData.mode || "fast"),
       seed: Number(rawData.seed || 42),
       catalog: String(rawData.catalog || "bsc5"),
       solver: String(rawData.solver || "svd"),
-      centroid_backend: String(rawData.centroid_backend || "classical"),
+      centroid_backend: String((checkedCentroid && checkedCentroid.value) || rawData.centroid_backend || "classical"),
       omega: Number(rawData.omega || 0.06),
       omega_axis: String(rawData.omega_axis || "y"),
       exposure: Number(rawData.exposure || 0.15),
       glare: String(rawData.glare || "none"),
       sky_clutter: String(rawData.sky_clutter || "none"),
-      false_stars: Number(rawData.false_stars || 0),
+      false_stars: Number(rawData.false_stars || 0)
     };
+
     if (String(rawData.optics || "locked") === "custom") {
       const putNum = (key, raw) => {
         const text = String(raw ?? "").trim();
@@ -558,6 +1004,7 @@
       putNum("image_height", rawData.image_height);
       putNum("angular_tol_arcsec", rawData.angular_tol_arcsec);
     }
+
     if (activePointingMode === "target-presets" && activePointHr !== null) {
       payload.point_hr = activePointHr;
     } else if (activePointingMode === "target-radec") {
@@ -602,6 +1049,7 @@
       const tr = document.createElement("tr");
       const name = r.iau_name || (r.designation ? r.designation : "—");
       const hasName = Boolean(r.iau_name);
+      tr.title = "Nhấp để định vị ngôi sao này trên không gian 3D & khung ảnh cảm biến";
       tr.innerHTML = `
         <td><strong>${r.id_scheme || "HR"} ${r.id}</strong></td>
         <td><span class="count-pill">V ${fmt(r.mag, 2)}</span></td>
@@ -609,6 +1057,17 @@
         <td>${fmt(r.u_px, 1)}</td>
         <td>${fmt(r.v_px, 1)}</td>
       `;
+      tr.addEventListener("click", () => {
+        catalogSelectedStarId = Number(r.id);
+        activateTab("tab-imagery");
+        if (currentViewMode !== "compare3d" && currentViewMode !== "orbit3d") {
+          setStageViewMode("compare3d", false);
+        }
+        requestAnimationFrame(() => {
+          drawSensorOverlay();
+          window.StarTrackerOrbit3D?.highlightStar(r.id, { focus: true });
+        });
+      });
       tbody.appendChild(tr);
     }
     if (countBadge) countBadge.textContent = `${filtered.length} sao`;
@@ -622,7 +1081,15 @@
     });
   }
 
+  /* =======================================================================
+     Render Solver Payload across Telemetry, Sensor Overlay & 3D Sky
+     ======================================================================= */
   function renderPayload(payload) {
+    hasCompletedRun = true;
+    lastSensorPayload = payload;
+    hoveredSensorStar = null;
+    catalogSelectedStarId = null;
+
     const metrics = payload.metrics || {};
     const mstats = payload.match_stats || {};
     const status = String(payload.status || metrics.status || mstats.status || (payload.success ? "SOLVED" : "LOST"));
@@ -636,7 +1103,7 @@
     storedFovRows = fov;
     storedIdRows = ident;
 
-    const nDet = metrics.n_detected ?? mstats.n_detected ?? fov.length;
+    const nDet = metrics.n_detected ?? mstats.n_detected ?? (payload.detected_uv ? payload.detected_uv.length : fov.length);
     const nMatched = metrics.n_matched ?? ident.length;
     const nInit = mstats.n_initial_matched ?? metrics.n_initial_matched;
     const nValid = mstats.n_valid_pairs ?? metrics.n_valid_pairs ?? nMatched;
@@ -655,6 +1122,7 @@
     const precTxt = typeof cPrec === "number" && Number.isFinite(cPrec) ? `${(cPrec * 100).toFixed(1)}%` : "—";
     const recTxt = typeof cRec === "number" && Number.isFinite(cRec) ? `${(cRec * 100).toFixed(1)}%` : "—";
 
+    // Bottom Flight Telemetry Ribbon
     if (kpiStatusBadge) {
       kpiStatusBadge.textContent = status;
       kpiStatusBadge.className = `kpi-badge status-pill ${status}`;
@@ -664,49 +1132,41 @@
       const pillLabel =
         status === "LOST"
           ? "Chưa khóa hướng"
-          : pillKey === "PASS" || pillKey === "SOLVED"
+          : pillKey === "PASS" || pillKey === "SOLVED" || pillKey === "SOLVED_NO_GT"
             ? "Đã khóa hướng"
-            : pillKey === "SOLVED_NO_GT"
-              ? "Đã giải tư thế"
-              : pillKey;
+            : pillKey;
       verdictEl.textContent = pillLabel;
       verdictEl.className = `verdict-pill ${pillKey}`;
     }
     if (kpiVerdictSub) {
       if (status === "LOST") {
         const rc = rejectCode || "REJECTED";
-        kpiVerdictSub.textContent = `Từ chối khóa: ${rc}`;
-        kpiVerdictSub.title = `Lý do từ chối: ${rc}`;
+        kpiVerdictSub.textContent = rc;
+        kpiVerdictSub.title = `Từ chối khóa: ${rc}`;
       } else {
-        kpiVerdictSub.textContent = `Phần dư RMS ${rmsTxt} · Cực đại ${maxTxt}`;
-        kpiVerdictSub.title = kpiVerdictSub.textContent;
+        kpiVerdictSub.textContent = `RMS ${rmsTxt}`;
+        kpiVerdictSub.title = `Phần dư khớp góc: RMS ${rmsTxt} · Cực đại ${maxTxt}`;
       }
     }
 
     if (kpiAttErrVal) {
-      kpiAttErrVal.style.color = "";
-      if (kpiAttErrBadge) kpiAttErrBadge.style.color = "";
       if (attOk) {
         kpiAttErrVal.textContent = `${attErr.toFixed(3)}″`;
         const lim = Number(metrics.limit_arcsec);
         const gate = Number.isFinite(lim) ? lim : 10.0;
         const pass = attErr < gate;
-        if (kpiAttErrBadge) {
-          kpiAttErrBadge.textContent = pass ? `< ${gate}″` : `≥ ${gate}″`;
-        }
+        if (kpiAttErrBadge) kpiAttErrBadge.textContent = pass ? `< ${gate}″` : `≥ ${gate}″`;
         if (kpiAttErrSub) {
-          kpiAttErrSub.textContent = hasPrecRec
-            ? `Tâm sao P ${precTxt} · R ${recTxt}`
-            : "So với hướng chuẩn (Ground Truth)";
+          kpiAttErrSub.textContent = hasPrecRec ? `P ${precTxt} · R ${recTxt}` : "So với nhãn chuẩn";
         }
       } else {
         kpiAttErrVal.textContent = "—";
         if (status === "LOST") {
           if (kpiAttErrBadge) kpiAttErrBadge.textContent = "LOST";
-          if (kpiAttErrSub) kpiAttErrSub.textContent = "Không xuất tư thế khi chưa đủ sao khớp";
+          if (kpiAttErrSub) kpiAttErrSub.textContent = "Chưa đủ sao khớp hợp lệ";
         } else {
-          if (kpiAttErrBadge) kpiAttErrBadge.textContent = "Ảnh thực tế";
-          if (kpiAttErrSub) kpiAttErrSub.textContent = `Phần dư khớp sao: RMS ${rmsTxt}`;
+          if (kpiAttErrBadge) kpiAttErrBadge.textContent = "Ảnh thực";
+          if (kpiAttErrSub) kpiAttErrSub.textContent = `RMS ${rmsTxt}`;
         }
       }
     }
@@ -715,7 +1175,8 @@
     if (kpiTimeVal) {
       kpiTimeVal.textContent = `${fmt(t.total_pipeline_ms, 1)} ms`;
       if (kpiTimeBreakdown) {
-        kpiTimeBreakdown.textContent = `Tâm sao ${fmt(t.centroiding_ms, 1)} · Khớp ${fmt(t.identification_ms, 1)} · Wahba ${fmt(t.attitude_ms, 2)} ms`;
+        kpiTimeBreakdown.textContent = `Tâm ${fmt(t.centroiding_ms, 1)} · Khớp ${fmt(t.identification_ms, 1)} ms`;
+        kpiTimeBreakdown.title = `Tâm sao ${fmt(t.centroiding_ms, 2)} ms · Khớp ${fmt(t.identification_ms, 2)} ms · Wahba ${fmt(t.attitude_ms, 2)} ms`;
       }
     }
 
@@ -733,14 +1194,15 @@
       if (boresight) {
         kpiBoresightVal.textContent = `RA ${fmt(boresight.ra_deg, 2)}° · Dec ${fmt(boresight.dec_deg, 2)}°`;
         if (kpiBoresightSub) {
-          kpiBoresightSub.textContent = `${boresight.ra_hms || ""}  ${boresight.dec_dms || ""}`.trim();
+          kpiBoresightSub.textContent = `${boresight.ra_hms || ""} ${boresight.dec_dms || ""}`.trim();
         }
       } else {
         kpiBoresightVal.textContent = "RA -- · Dec --";
-        if (kpiBoresightSub) kpiBoresightSub.textContent = "Chưa xác định được hướng ngắm";
+        if (kpiBoresightSub) kpiBoresightSub.textContent = "Chưa khóa";
       }
     }
 
+    // 16-Byte Packet & Telemetry Tab
     if (downlinkHexDisplay && payload.downlink_hex) {
       const hex = payload.downlink_hex.match(/.{1,2}/g)?.join(" ") || payload.downlink_hex;
       downlinkHexDisplay.textContent = hex.toUpperCase();
@@ -793,27 +1255,30 @@
     const cam = payload.camera || {};
     if (metaDl) {
       const initTxt = nInit != null ? String(nInit) : "—";
-      const prLine = hasPrecRec ? `<dt>Độ chính xác tâm sao</dt><dd>Precision ${precTxt} · Recall ${recTxt}</dd>` : "";
+      const prLine = hasPrecRec ? `<dt>Độ chụm tâm sao</dt><dd>Precision ${precTxt} · Recall ${recTxt}</dd>` : "";
       const fovSpan = Array.isArray(cam.fov_deg) ? cam.fov_deg.map((x) => Number(x).toFixed(2)).join("° × ") + "°" : "—";
       metaDl.innerHTML = `
         <dt>Trạng thái</dt><dd>${status}${rejectCode ? ` (${rejectCode})` : ""}</dd>
-        <dt>Cặp sao hợp lệ</dt><dd>${nValid} hợp lệ / ${nRejected} loại nhiễu (khớp sơ bộ ${initTxt}, yêu cầu tối thiểu ${minReq})</dd>
+        <dt>Cặp sao hợp lệ</dt><dd>${nValid} hợp lệ / ${nRejected} loại nhiễu (sơ bộ ${initTxt}, tối thiểu ${minReq})</dd>
         <dt>Phần dư khớp góc</dt><dd>RMS ${rmsTxt} · Cực đại ${maxTxt}</dd>
         ${prLine}
         <dt>Nguồn dữ liệu</dt><dd>${payload.source === "simulator" ? "Mô phỏng quang học bầu trời sao" : payload.source_image}</dd>
-        <dt>Thông số quang học</dt><dd>f = ${fmt(cam.focal_mm, 3)} mm · điểm ảnh ${fmt(cam.pixel_um, 3)} µm · ${cam.width}×${cam.height} px · ${fmt(cam.ifov_arcsec, 2)}″/px · FOV ${fovSpan}</dd>
+        <dt>Hệ quang học</dt><dd>f = ${fmt(cam.focal_mm, 3)} mm · điểm ảnh ${fmt(cam.pixel_um, 3)} µm · ${cam.width}×${cam.height} px · ${fmt(cam.ifov_arcsec, 2)}″/px · FOV ${fovSpan}</dd>
         <dt>Chỉ mục tra góc</dt><dd>${(payload.angle_table && payload.angle_table.note) || "—"}</dd>
-        <dt>Danh mục tham chiếu</dt><dd>${payload.catalog_source} (${payload.n_catalog} sao J2000, V ≤ 6.0)</dd>
+        <dt>Danh mục sao</dt><dd>${payload.catalog_source} (${payload.n_catalog} sao J2000, V ≤ 6.0)</dd>
         <dt>Gói tin 16-byte</dt><dd><code>${payload.downlink_hex}</code> (${payload.downlink_bytes} byte float32)</dd>
         <dt>Quaternion chuẩn</dt><dd>${payload.q_gt_text}</dd>
         <dt>Quaternion ước lượng</dt><dd>${payload.q_est_text}</dd>
       `;
     }
 
+    // Image URLs (prefer borderless clean_url for primary optical viewer & PiP)
     const tstamp = Date.now();
-    const inUrl = (payload.input_url || "/output/demo_input.png") + `?t=${tstamp}`;
-    const outUrl = (payload.output_url || "/output/demo_output.png") + `?t=${tstamp}`;
-    const hudUrl = (payload.image_url || "/output/demo_result.png") + `?t=${tstamp}`;
+    const cleanUrl = payload.clean_url ? `${payload.clean_url}?t=${tstamp}` : "";
+    const inUrl = `${payload.input_url || "/output/demo_input.png"}?t=${tstamp}`;
+    const outUrl = `${payload.output_url || "/output/demo_output.png"}?t=${tstamp}`;
+    const hudUrl = `${payload.image_url || "/output/demo_result.png"}?t=${tstamp}`;
+    lastCleanUrl = cleanUrl;
     lastInUrl = inUrl;
     lastOutUrl = outUrl;
 
@@ -825,89 +1290,92 @@
       imgOut.hidden = false;
       imgOut.src = outUrl;
     }
-    if (imgOutLarge) {
-      imgOutLarge.src = outUrl;
-    }
-    if (imgHud) {
-      imgHud.src = hudUrl;
-    }
+    if (imgOutLarge) imgOutLarge.src = outUrl;
+    if (imgHud) imgHud.src = hudUrl;
     if (slotIn) slotIn.classList.add("hidden");
     if (slotOut) slotOut.classList.add("hidden");
-
-    syncCompare3dImage();
 
     const st = payload.input_stats || {};
     const sha = st.sha256_12 || "--";
     const dimTxt = st.width && st.height ? `${st.width}×${st.height} px` : "";
+    const usedCent = String(payload.centroid_detector || payload.centroid_backend || "classical");
+    const centTag = usedCent.includes("cnn") ? "CNN" : "CoG";
+
+    if (sensorLiveDot) {
+      sensorLiveDot.className = `sensor-dot ${status === "SOLVED" ? "is-solved" : "is-lost"}`;
+    }
+    if (capCompare3d) {
+      capCompare3d.textContent = `${dimTxt} · Khớp ${nValid}/${nDet} sao · ${centTag}`.replace(/^\s*·\s*/, "");
+    }
     if (capIn) {
       capIn.textContent = `${dimTxt} ${st.dtype || ""} · DN ${st.dn_min ?? "?"}–${st.dn_max ?? "?"}`.trim();
     }
     if (capOut) {
       capOut.textContent = `Khớp ${nValid} sao hợp lệ · Phát hiện ${nDet} tâm sáng`;
     }
-    if (capCompare3d) {
-      capCompare3d.textContent = `${dimTxt} · Khớp ${nValid} sao danh mục`.replace(/^\s*·\s*/, "");
-    }
     if (capOrbit3d) {
-      if (status === "SOLVED") {
-        const fovLbl = Array.isArray(cam.fov_deg)
-          ? `Trường nhìn ${cam.fov_deg.map((x) => Number(x).toFixed(1)).join("° × ")}°`
-          : "Đã khóa hướng ngắm";
-        capOrbit3d.textContent = `${payload.catalog_source || "Yale BSC5"} · ${fovLbl}`;
-      } else {
-        capOrbit3d.textContent = "5.023 sao Yale BSC5 · Thiên cầu thực J2000";
-      }
+      capOrbit3d.textContent =
+        status === "SOLVED" && Array.isArray(cam.fov_deg)
+          ? `${payload.catalog_source || "Yale BSC5"} · FOV ${cam.fov_deg.map((x) => Number(x).toFixed(1)).join("° × ")}°`
+          : "5.023 sao Yale BSC5 · Thiên cầu thực J2000";
     }
     if (shaIntegrityText) {
       shaIntegrityText.textContent = `SHA-256: ${sha}`;
     }
+
+    // Floating Welcome -> Floating PiP Sensor Card transition
+    if (welcomeHudCard) welcomeHudCard.hidden = true;
+    if (pipSensorCard) {
+      pipSensorCard.hidden = false;
+      if (pipSensorImg) pipSensorImg.src = cleanUrl || inUrl;
+      if (pipSensorBadge) {
+        pipSensorBadge.textContent = status === "SOLVED" ? `Khớp ${nValid} sao` : "LOST";
+        pipSensorBadge.classList.toggle("is-lost", status !== "SOLVED");
+      }
+      if (pipSensorMeta) {
+        pipSensorMeta.textContent = dimTxt || "Khung cảm biến";
+      }
+    }
+
+    syncCompare3dImage();
 
     if (window.StarTrackerOrbit3D) {
       window.StarTrackerOrbit3D.updateFromPayload(payload);
     }
 
     if (status === "SOLVED") {
-      setStageViewMode(currentViewMode === "orbit3d" ? "orbit3d" : "compare3d");
+      setStageViewMode(userPinnedOrbitFullscreen ? "orbit3d" : "compare3d", false);
     } else {
-      setStageViewMode("split");
+      setStageViewMode(cleanUrl ? "compare3d" : "split", false);
     }
 
     const currentQ = starSearchInput ? starSearchInput.value : "";
     renderStarTable(fovBody, fovCount, fov, currentQ);
     renderStarTable(idBody, idCount, ident, currentQ);
 
-    const attHtml = attOk ? `${attErr.toFixed(3)}″` : "không có nhãn GT";
-    const ingest = payload.ingest_note ? `<br>${payload.ingest_note}` : "";
+    // Concise, natural human Vietnamese inline status
     const reqCent = String(payload.centroid_backend || "classical");
-    const usedCent = String(payload.centroid_detector || reqCent);
     const fellBack = Boolean(payload.centroid_fallback) || (reqCent !== "classical" && usedCent === "classical");
-    let centNote = "";
+    let centBit = "";
     if (reqCent !== "classical") {
-      if (fellBack) {
-        const why = payload.centroid_error ? ` (${payload.centroid_error})` : "";
-        centNote = `<br>Chuyển tự động về trọng tâm sáng CoG${why}.`;
-      } else {
-        const nRaw = payload.centroid_n_raw;
-        const nGate = payload.centroid_n_after_gate;
-        const gateBit = nRaw != null && nGate != null ? ` (${nRaw} ứng viên → giữ ${nGate} điểm sao)` : "";
-        centNote = `<br>Tách tâm sao bằng mạng <strong>MobileUNet</strong>${gateBit}.`;
-      }
+      centBit = fellBack ? " · Chuyển tự động về CoG" : " · Tách tâm MobileUNet";
     }
 
     if (statusEl) {
       if (payload.success && status === "SOLVED") {
+        const errPart = attOk ? `Sai số ${attErr.toFixed(3)}″ · ` : "";
         statusEl.className = fellBack ? "status-banner err" : "status-banner success";
         statusEl.innerHTML =
-          `<strong>Đã khóa hướng sao (${fmt(t.total_pipeline_ms, 1)} ms):</strong> ` +
-          `Sai số góc <strong>${attHtml}</strong>, khớp hợp lệ <strong>${nValid}/${nDet}</strong> sao ` +
-          `(loại ${nRejected} nhiễu), phần dư RMS ${rmsTxt}.${centNote}${ingest}`;
+          `<strong>Đã khóa hướng (${fmt(t.total_pipeline_ms, 1)} ms):</strong> ` +
+          `${errPart}Khớp <strong>${nValid}/${nDet}</strong> sao, RMS ${rmsTxt}${centBit}.`;
+        statusEl.title = statusEl.textContent || "";
       } else {
         const why = payload.error || metrics.error || "Không đủ sao khớp nhất quán hình học.";
         const rcTag = rejectCode ? ` (${rejectCode})` : "";
         statusEl.className = "status-banner err";
         statusEl.innerHTML =
-          `<strong>Chưa khóa được hướng${rcTag}:</strong> ${why} ` +
-          `Phát hiện ${nDet} điểm sáng, cặp hợp lệ ${nValid}/${minReq}.${centNote}${ingest}`;
+          `<strong>Chưa khóa hướng${rcTag}:</strong> ${why} (hợp lệ ${nValid}/${minReq} sao)${centBit}.`;
+        statusEl.title = statusEl.textContent || "";
       }
     }
 
@@ -917,6 +1385,9 @@
     }
   }
 
+  /* =======================================================================
+     Optics Geometry & Wide-FOV Table Estimator
+     ======================================================================= */
   const ARCSEC_PER_RAD = (180 * 3600) / Math.PI;
   const TOL_PER_PIXEL = 0.88;
   const TABLE_DEG = 30.5;
@@ -991,8 +1462,8 @@
     }
     const tableLine =
       geom.dDeg <= TABLE_DEG
-        ? "Nằm trong phạm vi bảng tra góc 30,5° có sẵn."
-        : `Đường chéo ${geom.dDeg.toFixed(1)}° rộng hơn 30,5° (lần chạy đầu sẽ tạo chỉ mục góc tới ${geom.theta.toFixed(1)}°).`;
+        ? "Thuộc phạm vi bảng góc 30,5° sẵn có."
+        : `Đường chéo ${geom.dDeg.toFixed(1)}° rộng hơn 30,5° (lần chạy đầu tạo bảng góc tới ${geom.theta.toFixed(1)}°).`;
     opticsReadout.className = "radec-status-card";
     opticsReadout.textContent =
       `FOV ${geom.hDeg.toFixed(2)}° × ${geom.vDeg.toFixed(2)}° (chéo ${geom.dDeg.toFixed(2)}°) · ` +
@@ -1063,31 +1534,37 @@
 
   refreshOptics();
 
+  /* =======================================================================
+     Solver Execution & Quick Experience Scenarios
+     ======================================================================= */
+  function highlightActiveScenario(activeBtn) {
+    [btnSeed, btnTetra3Preset, btnMountPreset, btnGlarePreset].forEach((b) => {
+      if (!b) return;
+      b.classList.toggle("is-active", b === activeBtn);
+    });
+  }
+
   async function postRun(body) {
     const isDataset = Boolean(body.image);
     const wide = bodyNeedsWideTable(body);
     const busy = isDataset
-      ? "Đang đọc ảnh bầu trời sao và đối sánh tư thế..."
+      ? "Đang trích xuất tâm sao và giải tư thế trên khung ảnh thực..."
       : body.focal_mm
-        ? "Đang dựng khung ảnh theo thông số quang học tùy chỉnh..."
-        : "Đang mô phỏng bầu trời sao và xác định tư thế vệ tinh...";
-    setBusy(
-      true,
-      wide ? `${busy} Trường nhìn rộng hơn 30,5° nên lần đầu khởi tạo bảng góc có thể mất ít phút.` : busy
-    );
+        ? "Đang dựng khung sao theo hệ quang học tùy chỉnh..."
+        : "Đang mô phỏng bầu trời sao và định hướng vệ tinh J2000...";
+    setBusy(true, wide ? `${busy} (khởi tạo bảng góc rộng > 30,5°)` : busy);
     try {
       const data = await fetchJson(
         "/api/run",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify(body)
         },
         wide ? 600000 : 120000
       );
+      activateTab("tab-imagery");
       renderPayload(data);
-      const imgTab = document.querySelector('.tab-btn[data-tab="tab-imagery"]');
-      if (imgTab && !imgTab.classList.contains("active")) imgTab.click();
     } catch (err) {
       if (statusEl) {
         statusEl.className = "status-banner err";
@@ -1108,70 +1585,70 @@
 
   if (btnRun) {
     btnRun.addEventListener("click", () => {
+      highlightActiveScenario(null);
+      closeDrawer();
       postRun(gatherFormData());
     });
   }
 
+  if (btnDrawerRun) {
+    btnDrawerRun.addEventListener("click", () => {
+      highlightActiveScenario(null);
+      closeDrawer();
+      postRun(gatherFormData());
+    });
+  }
+
+  function resetStandardSimControls(seedVal, glareVal) {
+    const modeFast = document.getElementById("mode-fast");
+    if (modeFast) modeFast.checked = true;
+    const opticsLocked = document.getElementById("optics-locked");
+    if (opticsLocked) opticsLocked.checked = true;
+    if (opticsCustom) opticsCustom.hidden = true;
+    refreshOptics();
+    if (seedInput) seedInput.value = seedVal;
+    const catalogSelect = document.getElementById("catalog-select");
+    if (catalogSelect) catalogSelect.value = "bsc5";
+    const solverSelect = document.getElementById("solver-select");
+    if (solverSelect) solverSelect.value = "svd";
+    setCentroidBackend("classical");
+    if (form) {
+      if (form.omega) form.omega.value = "0.06";
+      if (form.omega_axis) form.omega_axis.value = "y";
+      if (form.exposure) form.exposure.value = "0.15";
+      if (form.glare) form.glare.value = glareVal;
+      if (form.sky_clutter) form.sky_clutter.value = "none";
+    }
+    if (falseStarsSlider) falseStarsSlider.value = "0";
+    if (falseStarsVal) falseStarsVal.textContent = "0";
+    const seedTabBtn = document.querySelector('.sub-tab-btn[data-target="target-seed"]');
+    if (seedTabBtn) seedTabBtn.click();
+    clearRadecFields();
+    setCompare3dSource("annotated");
+  }
+
   if (btnSeed) {
     btnSeed.addEventListener("click", () => {
-      const modeFast = document.getElementById("mode-fast");
-      if (modeFast) modeFast.checked = true;
-      const opticsLocked = document.getElementById("optics-locked");
-      if (opticsLocked) opticsLocked.checked = true;
-      if (opticsCustom) opticsCustom.hidden = true;
-      refreshOptics();
-      if (seedInput) seedInput.value = 42;
-      const catalogSelect = document.getElementById("catalog-select");
-      if (catalogSelect) catalogSelect.value = "bsc5";
-      const solverSelect = document.getElementById("solver-select");
-      if (solverSelect) solverSelect.value = "svd";
-      setCentroidBackend("classical");
-      form.omega.value = "0.06";
-      form.omega_axis.value = "y";
-      form.exposure.value = "0.15";
-      form.glare.value = "none";
-      if (form.sky_clutter) form.sky_clutter.value = "none";
-      if (falseStarsSlider) falseStarsSlider.value = "0";
-      if (falseStarsVal) falseStarsVal.textContent = "0";
-      const seedTabBtn = document.querySelector('.sub-tab-btn[data-target="target-seed"]');
-      if (seedTabBtn) seedTabBtn.click();
-      clearRadecFields();
-      setCompare3dSource("raw");
+      highlightActiveScenario(btnSeed);
+      closeDrawer();
+      resetStandardSimControls(42, "none");
       postRun(gatherFormData());
     });
   }
 
   if (btnGlarePreset) {
     btnGlarePreset.addEventListener("click", () => {
-      const modeFast = document.getElementById("mode-fast");
-      if (modeFast) modeFast.checked = true;
-      const opticsLocked = document.getElementById("optics-locked");
-      if (opticsLocked) opticsLocked.checked = true;
-      if (opticsCustom) opticsCustom.hidden = true;
-      refreshOptics();
-      if (seedInput) seedInput.value = 11;
-      const catalogSelect = document.getElementById("catalog-select");
-      if (catalogSelect) catalogSelect.value = "bsc5";
-      const solverSelect = document.getElementById("solver-select");
-      if (solverSelect) solverSelect.value = "svd";
-      setCentroidBackend("classical");
-      form.omega.value = "0.06";
-      form.omega_axis.value = "y";
-      form.exposure.value = "0.15";
-      form.glare.value = "sun_strong";
-      if (form.sky_clutter) form.sky_clutter.value = "none";
-      if (falseStarsSlider) falseStarsSlider.value = "0";
-      if (falseStarsVal) falseStarsVal.textContent = "0";
-      const seedTabBtn = document.querySelector('.sub-tab-btn[data-target="target-seed"]');
-      if (seedTabBtn) seedTabBtn.click();
-      clearRadecFields();
-      setCompare3dSource("raw");
+      highlightActiveScenario(btnGlarePreset);
+      closeDrawer();
+      resetStandardSimControls(11, "sun_strong");
       postRun(gatherFormData());
     });
   }
 
   if (btnMountPreset) {
     btnMountPreset.addEventListener("click", () => {
+      highlightActiveScenario(btnMountPreset);
+      closeDrawer();
       const opticsLocked = document.getElementById("optics-locked");
       if (opticsLocked) opticsLocked.checked = true;
       if (opticsCustom) opticsCustom.hidden = true;
@@ -1181,11 +1658,12 @@
       const solverSelect = document.getElementById("solver-select");
       if (solverSelect) solverSelect.value = "svd";
       setCentroidBackend("cnn");
-      form.glare.value = "none";
-      if (form.sky_clutter) form.sky_clutter.value = "none";
+      if (form && form.glare) form.glare.value = "none";
+      if (form && form.sky_clutter) form.sky_clutter.value = "none";
       if (falseStarsSlider) falseStarsSlider.value = "0";
       if (falseStarsVal) falseStarsVal.textContent = "0";
       clearRadecFields();
+      setCompare3dSource("annotated");
       const body = gatherFormData();
       body.image = "uploads/mount_st_helens_1.png";
       body.focal_mm = 4.2;
@@ -1195,29 +1673,36 @@
     });
   }
 
+  function runTetra3RealSky() {
+    highlightActiveScenario(btnTetra3Preset);
+    closeDrawer();
+    const opticsLocked = document.getElementById("optics-locked");
+    if (opticsLocked) opticsLocked.checked = true;
+    if (opticsCustom) opticsCustom.hidden = true;
+    refreshOptics();
+    const catalogSelect = document.getElementById("catalog-select");
+    if (catalogSelect) catalogSelect.value = "bsc5";
+    const solverSelect = document.getElementById("solver-select");
+    if (solverSelect) solverSelect.value = "svd";
+    setCentroidBackend("classical");
+    if (form && form.glare) form.glare.value = "none";
+    if (form && form.sky_clutter) form.sky_clutter.value = "none";
+    if (falseStarsSlider) falseStarsSlider.value = "0";
+    if (falseStarsVal) falseStarsVal.textContent = "0";
+    clearRadecFields();
+    setCompare3dSource("annotated");
+    const body = gatherFormData();
+    body.image = "tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff";
+    body.focal_mm = 35.2911;
+    body.pixel_um = 6.9;
+    postRun(body);
+  }
+
   if (btnTetra3Preset) {
-    btnTetra3Preset.addEventListener("click", () => {
-      const opticsLocked = document.getElementById("optics-locked");
-      if (opticsLocked) opticsLocked.checked = true;
-      if (opticsCustom) opticsCustom.hidden = true;
-      refreshOptics();
-      const catalogSelect = document.getElementById("catalog-select");
-      if (catalogSelect) catalogSelect.value = "bsc5";
-      const solverSelect = document.getElementById("solver-select");
-      if (solverSelect) solverSelect.value = "svd";
-      setCentroidBackend("classical");
-      form.glare.value = "none";
-      if (form.sky_clutter) form.sky_clutter.value = "none";
-      if (falseStarsSlider) falseStarsSlider.value = "0";
-      if (falseStarsVal) falseStarsVal.textContent = "0";
-      clearRadecFields();
-      setCompare3dSource("raw");
-      const body = gatherFormData();
-      body.image = "tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff";
-      body.focal_mm = 35.2911;
-      body.pixel_um = 6.9;
-      postRun(body);
-    });
+    btnTetra3Preset.addEventListener("click", runTetra3RealSky);
+  }
+  if (btnWelcomeRun) {
+    btnWelcomeRun.addEventListener("click", runTetra3RealSky);
   }
 
   if (btnRadec) {
@@ -1228,16 +1713,18 @@
       if (!paste && (!ra || !dec)) {
         if (statusEl) {
           statusEl.className = "status-banner err";
-          statusEl.innerHTML = "<strong>Chưa có tọa độ:</strong> Hãy nhập cả RA và Dec trước khi ngắm.";
+          statusEl.innerHTML = "<strong>Thiếu tọa độ:</strong> Hãy nhập đủ cả RA và Dec trước khi ngắm.";
         }
         const radecTabBtn = document.querySelector('.sub-tab-btn[data-target="target-radec"]');
         if (radecTabBtn) radecTabBtn.click();
         return;
       }
-      form.glare.value = "none";
+      if (form && form.glare) form.glare.value = "none";
       if (falseStarsSlider) falseStarsSlider.value = "0";
       if (falseStarsVal) falseStarsVal.textContent = "0";
       setCentroidBackend("classical");
+      highlightActiveScenario(null);
+      closeDrawer();
       postRun(gatherFormData());
     });
   }
@@ -1250,11 +1737,13 @@
       if (opticsLocked) opticsLocked.checked = true;
       if (opticsCustom) opticsCustom.hidden = true;
       refreshOptics();
-      form.glare.value = "none";
-      if (form.sky_clutter) form.sky_clutter.value = "none";
+      if (form && form.glare) form.glare.value = "none";
+      if (form && form.sky_clutter) form.sky_clutter.value = "none";
       if (falseStarsSlider) falseStarsSlider.value = "0";
       if (falseStarsVal) falseStarsVal.textContent = "0";
       setCentroidBackend("classical");
+      highlightActiveScenario(null);
+      closeDrawer();
       postRun({ ...gatherFormData(), image: file });
     });
   }
@@ -1265,12 +1754,12 @@
     const jsName = localSidecar && localSidecar.files && localSidecar.files[0] ? localSidecar.files[0].name : "";
     if (!imgName) {
       localFileHint.textContent =
-        "Khuyên dùng ảnh TIFF/PNG gốc. Với ảnh chụp từ máy ảnh khác, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Hệ quang học.";
+        "Ưu tiên ảnh TIFF/PNG không nén. Với ảnh chụp từ máy ảnh riêng, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Quang học bên dưới.";
       return;
     }
     localFileHint.textContent = jsName
       ? `Đã chọn ảnh: ${imgName} · Nhãn: ${jsName}`
-      : `Đã chọn ảnh: ${imgName} (tự động đối chiếu nhãn nếu trùng tên trong bộ mẫu)`;
+      : `Đã chọn ảnh: ${imgName}`;
   }
 
   if (localImage) localImage.addEventListener("change", refreshLocalHint);
@@ -1282,7 +1771,7 @@
         if (detailsDataset) detailsDataset.open = true;
         if (statusEl) {
           statusEl.className = "status-banner err";
-          statusEl.innerHTML = "<strong>Chưa chọn tệp ảnh:</strong> Hãy chọn một tệp TIFF, PNG hoặc JPEG từ máy tính.";
+          statusEl.innerHTML = "<strong>Chưa chọn tệp ảnh:</strong> Hãy chọn tệp TIFF, PNG hoặc JPEG từ máy tính.";
         }
         return;
       }
@@ -1296,6 +1785,8 @@
         if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
       });
       const customUpload = body.focal_mm != null || body.pixel_um != null || body.image_width != null;
+      highlightActiveScenario(null);
+      closeDrawer();
       setBusy(
         true,
         customUpload
@@ -1304,9 +1795,8 @@
       );
       try {
         const data = await fetchJson("/api/run-upload", { method: "POST", body: fd }, customUpload ? 600000 : 180000);
+        activateTab("tab-imagery");
         renderPayload(data);
-        const imgTab = document.querySelector('.tab-btn[data-tab="tab-imagery"]');
-        if (imgTab && !imgTab.classList.contains("active")) imgTab.click();
       } catch (err) {
         if (statusEl) {
           statusEl.className = "status-banner err";
@@ -1326,5 +1816,6 @@
     });
   }
 
+  // Initialize full-screen 3D Earth-orbit & real 5,023-star J2000 sky immediately
   window.StarTrackerOrbit3D?.init(orbit3dRoot);
 })();

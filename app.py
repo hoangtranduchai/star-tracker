@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 from threading import Lock, Timer
 from webbrowser import open as open_browser
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, Response, jsonify, render_template, request, send_from_directory
 import matplotlib
 BASE = Path(__file__).resolve().parent
 if str(BASE) not in sys.path:
@@ -24,6 +24,14 @@ _SKY_CATALOG_CACHE = {}
 _SKY_CACHE_LOCK = Lock()
 _VALID_BACKENDS = ('classical', 'cnn', 'cnn_zhao2024', 'zhao', 'mobileunet')
 _UPLOAD_EXTS = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.webp')
+_FAVICON_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+    '<rect width="32" height="32" rx="7" fill="#05070B"/>'
+    '<circle cx="16" cy="16" r="9" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.75"/>'
+    '<path d="M16 4v6M16 22v6M4 16h6M22 16h6" stroke="#7DD3FC" stroke-width="1.5" stroke-linecap="round"/>'
+    '<circle cx="16" cy="16" r="2.2" fill="#F8FAFC"/>'
+    '</svg>'
+).encode('utf-8')
 
 class EngineBusy(RuntimeError):
     """Raised when a concurrent `/api/run` request is already executing."""
@@ -76,7 +84,12 @@ def _run_locked(req: object) -> object:
     finally:
         LOCK.release()
     res_dict: object = dict(outcome.payload)
-    res_dict.update(image_url='/output/demo_result.png', input_url='/output/demo_input.png', output_url='/output/demo_output.png')
+    res_dict.update(
+        image_url='/output/demo_result.png',
+        input_url='/output/demo_input.png',
+        output_url='/output/demo_output.png',
+        clean_url='/output/demo_clean.png',
+    )
     return res_dict
 
 @app.after_request
@@ -89,6 +102,14 @@ def _no_cache(resp: object) -> object:
 def index() -> object:
     ds_frames: object = ENGINE.list_dataset_frames()
     return render_template('index.html', hardware=ENGINE.specs, sim_method=SIM_METHOD, frames=ds_frames, n_frames=len(ds_frames), n_iau_names=n_iau_names(), n_named_hr=n_named_hr())
+
+@app.get('/favicon.ico')
+def favicon() -> object:
+    return Response(_FAVICON_SVG, mimetype='image/svg+xml')
+
+@app.get('/api/health')
+def api_health() -> object:
+    return jsonify(dict(ok=True, service='star-tracker'))
 
 @app.get('/api/frames')
 def api_frames() -> object:

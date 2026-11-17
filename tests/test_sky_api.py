@@ -4,11 +4,12 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 from types import SimpleNamespace
+import cv2
 import numpy as np
 import pytest
 
 import app as web_app
-from src.visualize import _draw_starfield, plot_frame, save_input_png, save_output_png
+from src.visualize import _draw_starfield, plot_frame, save_clean_png, save_input_png, save_output_png
 
 
 def test_sky_catalog_default_bsc5_vectors_and_iau_names() -> None:
@@ -184,3 +185,87 @@ def test_visualize_deep_cosmos_omits_unidentified_clutter_labels(tmp_path: Path)
     )
     for p in (in_png, out_png, res_png):
         assert p.is_file() and p.stat().st_size > 1000
+
+
+def test_health_and_favicon_endpoints() -> None:
+    client = web_app.app.test_client()
+
+    health_res = client.get('/api/health')
+    assert health_res.status_code == 200
+    health_json = health_res.get_json()
+    assert health_json == {'ok': True, 'service': 'star-tracker'}
+
+    fav_res = client.get('/favicon.ico')
+    assert fav_res.status_code in (200, 204)
+    if fav_res.status_code == 200:
+        assert 'svg' in fav_res.mimetype
+        assert b'<svg' in fav_res.data
+
+
+def test_save_clean_png_exact_aspect_and_deep_space_black(tmp_path: Path) -> None:
+    rng = np.random.default_rng(7)
+    sky = np.clip(64.0 + rng.normal(0.0, 5.0, size=(1000, 1500)), 0, 4095).astype(np.uint16)
+    sky[250:253, 400:403] = 3200
+    sky[710:712, 1120:1122] = 1800
+
+    clean_p = save_clean_png(sky, tmp_path / 'clean_fast.png')
+    assert clean_p.is_file()
+    decoded = cv2.imread(str(clean_p), cv2.IMREAD_UNCHANGED)
+    assert decoded is not None
+    assert decoded.dtype == np.uint8
+    assert decoded.shape == (1000, 1500)
+    assert int(np.median(decoded)) == 0
+    assert int(decoded.max()) >= 240
+
+    large_sky = np.full((2000, 3000), 64, dtype=np.uint16)
+    large_sky[500:506, 900:906] = 3800
+    decimated_p = save_clean_png(large_sky, tmp_path / 'clean_decimated.png')
+    dec_img = cv2.imread(str(decimated_p), cv2.IMREAD_UNCHANGED)
+    assert dec_img is not None
+    assert dec_img.shape == (1067, 1600)
+
+
+def test_api_run_clean_url_borderless_png_and_detected_uv(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client = web_app.app.test_client()
+
+    run_res = client.post('/api/run', json={'seed': 42, 'mode': 'fast'})
+    assert run_res.status_code == 200
+    payload = run_res.get_json()
+    assert isinstance(payload, dict)
+    assert payload['status'] == 'SOLVED'
+    assert payload['clean_url'] == '/output/demo_clean.png'
+    assert payload['clean_png'] == 'data/outputs/demo_clean.png'
+
+    detected_uv = payload['detected_uv']
+    assert isinstance(detected_uv, list)
+    assert len(detected_uv) >= 30
+    cam_w = float(payload['camera']['width'])
+    cam_h = float(payload['camera']['height'])
+    assert (cam_w, cam_h) == (1500.0, 1000.0)
+    for pair in detected_uv:
+        assert isinstance(pair, list) and len(pair) == 2
+        assert 0.0 <= float(pair[0]) <= cam_w
+        assert 0.0 <= float(pair[1]) <= cam_h
+
+    id_stars = payload['identified_stars']
+    assert len(id_stars) >= 4
+    for s_row in id_stars:
+        assert 'u_px' in s_row and 'v_px' in s_row
+        assert 0 <= int(s_row['obs_idx']) < len(detected_uv)
+
+    png_res = client.get('/output/demo_clean.png')
+    assert png_res.status_code == 200
+    assert png_res.mimetype == 'image/png'
+    buf = np.frombuffer(png_res.data, dtype=np.uint8)
+    clean_img = cv2.imdecode(buf, cv2.IMREAD_UNCHANGED)
+    assert clean_img is not None
+    assert clean_img.dtype == np.uint8
+    h_px, w_px = clean_img.shape[:2]
+    assert (w_px, h_px) == (1500, 1000)
+    assert w_px * 2 == h_px * 3
+    assert int(np.median(clean_img)) == 0
+    assert int(clean_img.max()) >= 220
+

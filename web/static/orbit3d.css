@@ -1,12 +1,12 @@
-/* StarTrackerOrbit3D — Minimalist Deep-Cosmos 3D Attitude & J2000 Sky Viewport */
+/* StarTrackerOrbit3D — Frameless Deep-Cosmos Observatory 3D Stage & HUD */
 
 :where(.orbit3d-root) {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 440px;
-  background: radial-gradient(ellipse 90% 80% at 50% 45%, #090e19 0%, #05070b 72%, #020306 100%);
-  border-radius: 10px;
+  min-height: 360px;
+  background: radial-gradient(ellipse 95% 85% at 50% 46%, #070d1b 0%, #03060d 72%, #010307 100%);
+  border-radius: 14px;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -16,7 +16,7 @@
 .orbit3d-root {
   position: relative;
   overflow: hidden;
-  background-color: #05070b;
+  background-color: #03060d;
   color: #f8fafc;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -71,10 +71,12 @@
   display: inline-flex;
   align-items: baseline;
   gap: 5px;
-  padding: 2px 6px 2px 5px;
-  border-radius: 4px;
-  background: rgba(5, 8, 15, 0.62);
-  border: 1px solid rgba(125, 211, 252, 0.24);
+  padding: 2.5px 7px 2.5px 6px;
+  border-radius: 9999px;
+  background: rgba(6, 10, 20, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(103, 232, 249, 0.24);
   color: #f8fafc;
   font-size: 11px;
   font-weight: 600;
@@ -88,7 +90,36 @@
   height: 5px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.75);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.78);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.o3d-star-label.is-highlighted {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3.5px 9px 3.5px 7px;
+  border-radius: 9999px;
+  background: rgba(9, 18, 34, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(103, 232, 249, 0.72);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.35), 0 4px 14px rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  z-index: 5;
+}
+
+.o3d-star-label.is-highlighted::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #67e8f9;
+  box-shadow: 0 0 9px rgba(103, 232, 249, 0.95);
   align-self: center;
   flex-shrink: 0;
 }
@@ -101,8 +132,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.o3d-star-label.is-highlighted .o3d-star-sub {
+  color: #bae6fd;
+}
+
 .o3d-star-label.is-landmark {
-  color: rgba(203, 213, 225, 0.72);
+  color: rgba(203, 213, 225, 0.68);
   font-size: 10.5px;
   font-weight: 500;
   padding-left: 6px;
@@ -110,7 +145,7 @@
 }
 
 .o3d-star-label.is-landmark.is-pole {
-  color: rgba(125, 211, 252, 0.82);
+  color: rgba(103, 232, 249, 0.82);
 }
 
 /* Container-aware HUD Layer */
@@ -124,9 +159,9 @@
 
 .o3d-hud-top {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -140,13 +175,13 @@
   align-items: center;
   gap: 8px;
   max-width: 100%;
-  padding: 5px 11px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  background: rgba(11, 15, 23, 0.76);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.42);
+  background: rgba(9, 14, 26, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
   font-size: 11.5px;
   line-height: 1.3;
   color: #e2e8f0;
@@ -164,17 +199,17 @@
 
 .o3d-status-dot.is-solved {
   background: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.65);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.72);
 }
 
 .o3d-status-dot.is-lost {
-  background: #fbbf24;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+  background: #f87171;
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.55);
 }
 
 .o3d-status-dot.is-idle {
-  background: #7dd3fc;
-  opacity: 0.75;
+  background: #67e8f9;
+  box-shadow: 0 0 7px rgba(103, 232, 249, 0.45);
 }
 
 .o3d-telemetry-text {
@@ -190,8 +225,8 @@
 .o3d-telemetry-meta {
   font-size: 10.5px;
   color: #94a3b8;
-  padding-left: 7px;
-  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  padding-left: 8px;
+  border-left: 1px solid rgba(148, 163, 184, 0.16);
   white-space: nowrap;
 }
 
@@ -203,10 +238,12 @@
 }
 
 .o3d-hint-pill {
-  padding: 4px 9px;
+  padding: 5px 10px;
   border-radius: 9999px;
-  background: rgba(11, 15, 23, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(9, 14, 26, 0.62);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
   color: #94a3b8;
   font-size: 10.5px;
   letter-spacing: 0.01em;
@@ -214,7 +251,7 @@
 }
 
 .o3d-hint-pill.is-dimmed {
-  opacity: 0.42;
+  opacity: 0.38;
 }
 
 .o3d-pov-zoom {
@@ -224,11 +261,11 @@
   gap: 2px;
   padding: 3px;
   border-radius: 9999px;
-  background: rgba(11, 15, 23, 0.80);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  background: rgba(9, 14, 26, 0.80);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 .o3d-pov-zoom[hidden],
@@ -244,7 +281,7 @@
   font-family: inherit;
   font-size: 10.5px;
   font-weight: 500;
-  padding: 3px 9px;
+  padding: 3.5px 9px;
   border-radius: 9999px;
   cursor: pointer;
   transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
@@ -257,28 +294,28 @@
 
 .o3d-mini-btn.is-active {
   color: #f8fafc;
-  background: rgba(125, 211, 252, 0.14);
-  border-color: rgba(125, 211, 252, 0.32);
+  background: rgba(103, 232, 249, 0.14);
+  border-color: rgba(103, 232, 249, 0.34);
 }
 
 /* Bottom Floating Control Bar */
 .o3d-controls {
   pointer-events: auto;
   position: absolute;
-  bottom: 10px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  max-width: calc(100% - 16px);
+  max-width: calc(100% - 20px);
   display: inline-flex;
   align-items: center;
   gap: 3px;
   padding: 4px;
   border-radius: 9999px;
-  background: rgba(11, 15, 23, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  background: rgba(9, 14, 26, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.58);
 }
 
 .o3d-seg {
@@ -293,7 +330,7 @@
 .o3d-sep {
   width: 1px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(148, 163, 184, 0.16);
   margin: 0 2px;
   flex-shrink: 0;
 }
@@ -311,7 +348,7 @@
   font-size: 11.5px;
   font-weight: 500;
   line-height: 1;
-  padding: 6px 10px;
+  padding: 6px 10.5px;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
@@ -332,37 +369,43 @@
 
 .o3d-btn:focus-visible,
 .o3d-mini-btn:focus-visible {
-  outline: 1px solid rgba(125, 211, 252, 0.65);
+  outline: 1px solid rgba(103, 232, 249, 0.65);
   outline-offset: 1px;
 }
 
 .o3d-btn.is-active {
   color: #f8fafc;
-  background: rgba(125, 211, 252, 0.14);
-  border-color: rgba(125, 211, 252, 0.30);
+  background: rgba(103, 232, 249, 0.15);
+  border-color: rgba(103, 232, 249, 0.34);
 }
 
 .o3d-btn.is-toggle-on {
-  color: #7dd3fc;
-  background: rgba(125, 211, 252, 0.09);
-  border-color: rgba(125, 211, 252, 0.20);
+  color: #67e8f9;
+  background: rgba(103, 232, 249, 0.09);
+  border-color: rgba(103, 232, 249, 0.22);
 }
 
 /* Compact split-pane adaptation via CSS Container Query */
-@container (max-width: 580px) {
-  .o3d-telemetry-meta {
-    display: none;
-  }
+@container (max-width: 780px) {
   .o3d-hint-pill {
     display: none;
   }
-  .o3d-btn {
-    padding: 5px 8px;
-    font-size: 11px;
-    gap: 4px;
-  }
   .o3d-btn.is-compact-icon .o3d-btn-txt {
     display: none;
+  }
+  .o3d-btn.is-compact-icon {
+    padding: 6px 8px;
+  }
+}
+
+@container (max-width: 600px) {
+  .o3d-telemetry-meta {
+    display: none;
+  }
+  .o3d-btn {
+    padding: 5px 8.5px;
+    font-size: 11px;
+    gap: 4px;
   }
 }
 
@@ -386,7 +429,7 @@
   justify-content: center;
   text-align: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 40%, #0b1220 0%, #05070b 80%);
+  background: radial-gradient(circle at 50% 40%, #091122 0%, #03060d 82%);
   color: #94a3b8;
   z-index: 3;
 }
@@ -394,8 +437,8 @@
 .o3d-fallback svg {
   width: 36px;
   height: 36px;
-  color: #7dd3fc;
-  opacity: 0.7;
+  color: #67e8f9;
+  opacity: 0.75;
   margin-bottom: 10px;
 }
 

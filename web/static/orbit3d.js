@@ -12,6 +12,7 @@
   const R_FRAME = 416.5;
   const R_RETICLE = 415.5;
   const R_DUST = 432.0;
+  const R_MILKY = 438.0;
 
   // Built-in J2000 bright navigation stars for instant zero-latency sky & landmark labels
   // [hr, name, raDeg, decDeg, mag]
@@ -56,9 +57,12 @@
     [424, "Polaris", 37.9546, 89.2641, 1.98]
   ];
 
-  // Warm / cool spectral hints for prominent stars (subtle astronomical blackbody tint)
-  const WARM_HRS = new Set([2061, 6134, 1457, 5340, 4763, 2990, 1708]);
-  const COOL_HRS = new Set([2491, 7001, 1713, 5056, 7924, 4730, 4853, 5267, 1903, 1948, 1790]);
+  // Planckian blackbody spectral hints for prominent stars (blue-white O/B/A, warm-gold G/K, amber K5/M)
+  const AMBER_HRS = new Set([2061, 6134, 1457, 4763, 8775, 337, 911, 3748]);
+  const GOLD_HRS = new Set([5340, 1708, 2990, 4301, 5459, 617, 5563, 424]);
+  const BLUE_HRS = new Set([
+    2491, 7001, 1713, 5056, 7924, 4730, 4853, 5267, 1903, 1948, 1852, 1790, 1791, 3982, 6527, 472, 2618, 5191
+  ]);
 
   const ICONS = {
     orbit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4.5"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(-24 12 12)"/></svg>',
@@ -551,6 +555,7 @@
 
     // Scene groups & materials
     skyGroup: null,
+    milkyWayMesh: null,
     starPoints: null,
     starMaterial: null,
     dustPoints: null,
@@ -558,6 +563,10 @@
     skyFovGroup: null,
     reticlePoints: null,
     reticleMaterial: null,
+    highlightStarId: null,
+    highlightStarInfo: null,
+    highlightPoints: null,
+    highlightMaterial: null,
 
     earthGroup: null,
     earthMesh: null,
@@ -733,10 +742,10 @@
       return { btn: b, iconWrap: ic, txtWrap: tx };
     }
 
-    const mOrbit = makeBtn(ICONS.orbit, "Quỹ đạo 3D", "is-active", "Góc nhìn vệ tinh trên quỹ đạo Trái Đất");
+    const mOrbit = makeBtn(ICONS.orbit, "Quỹ đạo Trái Đất", "is-active", "Góc nhìn vệ tinh trên quỹ đạo Trái Đất");
     mOrbit.btn.addEventListener("click", () => setViewMode("orbit"));
 
-    const mPov = makeBtn(ICONS.pov, "Góc nhìn Vệ tinh", "", "Đối chiếu 1:1 từ cảm biến sao trên vệ tinh");
+    const mPov = makeBtn(ICONS.pov, "Góc nhìn Cảm biến 1:1", "", "Đối chiếu 1:1 từ ống kính cảm biến sao trên vệ tinh");
     mPov.btn.addEventListener("click", () => setViewMode("pov"));
 
     seg.append(mOrbit.btn, mPov.btn);
@@ -906,45 +915,155 @@
     return group;
   }
 
+  function getGalacticBasis(THREE) {
+    // True IAU J2000 Galactic coordinate basis (62.87175 deg inclination to ICRS equator):
+    // North Galactic Pole: RA = 192.85948 deg, Dec = +27.12825 deg
+    // Galactic Center (Sagittarius l=0, b=0): RA = 266.4050 deg, Dec = -28.9362 deg
+    const ngpIcrs = raDecToIcrs(192.85948, 27.12825);
+    const gcIcrs = raDecToIcrs(266.4050, -28.9362);
+    const pole = new THREE.Vector3(...icrsToWorldXYZ(ngpIcrs[0], ngpIcrs[1], ngpIcrs[2])).normalize();
+    const rawCenter = new THREE.Vector3(...icrsToWorldXYZ(gcIcrs[0], gcIcrs[1], gcIcrs[2]));
+    const center = rawCenter.addScaledVector(pole, -rawCenter.dot(pole)).normalize();
+    const l90 = new THREE.Vector3().crossVectors(pole, center).normalize(); // l = +90 deg (Cygnus)
+    return { center, l90, pole };
+  }
+
+  function buildMilkyWayBand(THREE) {
+    // Soft, realistic dark-sky Milky Way Galactic band tilted at true 62.87 deg ICRS inclination
+    const { center, l90, pole } = getGalacticBasis(THREE);
+    const geom = new THREE.SphereGeometry(R_MILKY, 72, 48);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uGalCenter: { value: center },
+        uGalL90: { value: l90 },
+        uGalPole: { value: pole }
+      },
+      vertexShader: `
+        varying vec3 vDir;
+        void main() {
+          vDir = normalize(position);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uGalCenter;
+        uniform vec3 uGalL90;
+        uniform vec3 uGalPole;
+        varying vec3 vDir;
+
+        float hash31(vec3 p) {
+          return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
+        }
+
+        float vnoise(vec3 x) {
+          vec3 i = floor(x);
+          vec3 f = fract(x);
+          vec3 u = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(
+              mix(hash31(i + vec3(0.0, 0.0, 0.0)), hash31(i + vec3(1.0, 0.0, 0.0)), u.x),
+              mix(hash31(i + vec3(0.0, 1.0, 0.0)), hash31(i + vec3(1.0, 1.0, 0.0)), u.x),
+              u.y
+            ),
+            mix(
+              mix(hash31(i + vec3(0.0, 0.0, 1.0)), hash31(i + vec3(1.0, 0.0, 1.0)), u.x),
+              mix(hash31(i + vec3(0.0, 1.0, 1.0)), hash31(i + vec3(1.0, 1.0, 1.0)), u.x),
+              u.y
+            ),
+            u.z
+          );
+        }
+
+        float fbmGal(vec3 p) {
+          float v = 0.0;
+          v += 0.52 * vnoise(p);
+          v += 0.28 * vnoise(p * 2.15 + vec3(3.7, 1.9, -2.4));
+          v += 0.14 * vnoise(p * 4.6 - vec3(1.3, 4.2, 2.8));
+          v += 0.06 * vnoise(p * 9.4 + vec3(5.1, -3.1, 1.4));
+          return v;
+        }
+
+        void main() {
+          vec3 d = normalize(vDir);
+          float sinB = dot(d, uGalPole);
+          float xGal = dot(d, uGalCenter);
+          float yGal = dot(d, uGalL90);
+          float lon = atan(yGal, xGal);
+
+          // Broad Galactic star-cloud disk + Sagittarius bulge + Cygnus (l~78d) & Carina (l~-75d) complexes
+          float disk = exp(-pow(sinB / 0.21, 2.0));
+          float core = exp(-pow(lon / 0.72, 2.0)) * exp(-pow(sinB / 0.15, 2.0));
+          float cygnus = exp(-pow((lon - 1.36) / 0.44, 2.0)) * exp(-pow((sinB - 0.02) / 0.13, 2.0));
+          float carina = exp(-pow((lon + 1.31) / 0.46, 2.0)) * exp(-pow((sinB + 0.02) / 0.13, 2.0));
+
+          float cloudFbm = fbmGal(d * 3.8 + vec3(0.4, -0.7, 1.1));
+          float fineFbm = fbmGal(d * 10.5 - vec3(2.2, 1.4, -0.8));
+
+          // Great Rift dark interstellar dust lane along Galactic equator
+          float riftMask = exp(-pow((sinB - 0.008 * sin(lon * 2.0)) / 0.048, 2.0));
+          float dustLane = smoothstep(0.36, 0.72, fineFbm) * riftMask * (0.45 + 0.35 * step(-0.5, xGal));
+
+          float lum = (0.36 * disk + 0.56 * core + 0.30 * cygnus + 0.28 * carina) * (0.58 + 0.72 * cloudFbm);
+          lum *= (1.0 - 0.52 * dustLane);
+          lum = clamp(lum, 0.0, 1.0);
+
+          vec3 coolCloud = vec3(0.38, 0.50, 0.72);
+          vec3 warmBulge = vec3(0.68, 0.62, 0.58);
+          vec3 col = mix(coolCloud, warmBulge, clamp(core * 1.15, 0.0, 0.78));
+          gl_FragColor = vec4(col, lum * 0.135);
+        }
+      `,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.frustumCulled = false;
+    return mesh;
+  }
+
   function buildCosmicDust(THREE) {
-    // Subtle deep-space background dust concentrated near real J2000 Galactic Plane
-    // North Galactic Pole: RA = 192.8595 deg, Dec = +27.1283 deg
-    const ngpIcrs = raDecToIcrs(192.8595, 27.1283);
-    const ngp = new THREE.Vector3(...icrsToWorldXYZ(ngpIcrs[0], ngpIcrs[1], ngpIcrs[2])).normalize();
-    const gBasisU = new THREE.Vector3(1, 0, 0).cross(ngp).normalize();
-    const gBasisV = new THREE.Vector3().crossVectors(ngp, gBasisU).normalize();
+    // Faint unresolved Galactic star-cloud pinpoints modulated along Sagittarius / Cygnus / Carina
+    const { center, l90, pole } = getGalacticBasis(THREE);
 
     const rng = makePrng(4205023);
-    const count = 2200;
+    const count = 3200;
     const pos = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const alphas = new Float32Array(count);
 
     const tmp = new THREE.Vector3();
     for (let i = 0; i < count; i++) {
-      const isBand = i < 1250;
+      const isBand = i < 2200;
       let sinLat;
+      let lon;
       if (isBand) {
-        // Gaussian-like concentration along Milky Way plane
         const g1 = (rng() + rng() + rng()) / 3 - 0.5;
-        sinLat = clamp(g1 * 0.72, -0.98, 0.98);
+        sinLat = clamp(g1 * 0.62, -0.98, 0.98);
+        const pick = rng();
+        if (pick < 0.28) lon = (rng() + rng() - 1.0) * 0.85;
+        else if (pick < 0.44) lon = 1.36 + (rng() + rng() - 1.0) * 0.52;
+        else if (pick < 0.58) lon = -1.31 + (rng() + rng() - 1.0) * 0.52;
+        else lon = rng() * Math.PI * 2 - Math.PI;
       } else {
         sinLat = rng() * 2 - 1;
+        lon = rng() * Math.PI * 2 - Math.PI;
       }
       const cosLat = Math.sqrt(Math.max(0, 1 - sinLat * sinLat));
-      const lon = rng() * Math.PI * 2;
       tmp
         .set(0, 0, 0)
-        .addScaledVector(gBasisU, cosLat * Math.cos(lon))
-        .addScaledVector(gBasisV, cosLat * Math.sin(lon))
-        .addScaledVector(ngp, sinLat)
+        .addScaledVector(center, cosLat * Math.cos(lon))
+        .addScaledVector(l90, cosLat * Math.sin(lon))
+        .addScaledVector(pole, sinLat)
         .normalize();
 
       pos[i * 3] = tmp.x * R_DUST;
       pos[i * 3 + 1] = tmp.y * R_DUST;
       pos[i * 3 + 2] = tmp.z * R_DUST;
-      sizes[i] = 0.95 + rng() * 0.95;
-      alphas[i] = 0.08 + rng() * 0.10;
+      sizes[i] = 0.85 + rng() * 1.05;
+      alphas[i] = 0.07 + rng() * 0.12;
     }
 
     const geom = new THREE.BufferGeometry();
@@ -974,8 +1093,8 @@
           vec2 c = gl_PointCoord - vec2(0.5);
           float r2 = dot(c, c) * 4.0;
           if (r2 > 1.0) discard;
-          float falloff = exp(-r2 * 3.5);
-          gl_FragColor = vec4(vec3(0.76, 0.83, 0.94), vAlpha * falloff);
+          float falloff = exp(-r2 * 3.6);
+          gl_FragColor = vec4(vec3(0.78, 0.85, 0.96), vAlpha * falloff);
         }
       `,
       transparent: true,
@@ -983,7 +1102,9 @@
       blending: THREE.AdditiveBlending
     });
 
-    return new THREE.Points(geom, mat);
+    const pts = new THREE.Points(geom, mat);
+    pts.frustumCulled = false;
+    return pts;
   }
 
   function createStarMaterial(THREE) {
@@ -1000,25 +1121,31 @@
         uniform float uZoomBoost;
         varying float vAlpha;
         varying vec3 vColor;
+        varying float vBright;
         void main() {
           vAlpha = aAlpha;
           vColor = aColor;
+          vBright = clamp((aSize - 7.5) / 5.0, 0.0, 1.0);
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = clamp(aSize * uZoomBoost * uPixelRatio, 1.2, 42.0);
+          gl_PointSize = clamp(aSize * uZoomBoost * uPixelRatio, 1.25, 44.0);
         }
       `,
       fragmentShader: `
         varying float vAlpha;
         varying vec3 vColor;
+        varying float vBright;
         void main() {
           vec2 uv = gl_PointCoord - vec2(0.5);
           float r = length(uv) * 2.0;
           if (r > 1.0) discard;
-          float core = exp(-r * r * 9.0);
-          float halo = 0.36 * exp(-r * 3.1) * (1.0 - r);
-          float intensity = clamp(core + halo, 0.0, 1.0);
-          vec3 col = mix(vColor, vec3(1.0), core * 0.55);
+          float core = exp(-r * r * 10.5);
+          float halo = 0.38 * exp(-r * 3.2) * (1.0 - r);
+          float spikeX = exp(-abs(uv.y) * 34.0) * exp(-abs(uv.x) * 4.5);
+          float spikeY = exp(-abs(uv.x) * 34.0) * exp(-abs(uv.y) * 4.5);
+          float spikes = vBright * 0.28 * (spikeX + spikeY) * (1.0 - r);
+          float intensity = clamp(core + halo + spikes, 0.0, 1.0);
+          vec3 col = mix(vColor, vec3(1.0), clamp(core * 0.65, 0.0, 1.0));
           gl_FragColor = vec4(col, intensity * vAlpha);
         }
       `,
@@ -1030,14 +1157,16 @@
 
   function starTintFor(id, mag, scheme) {
     if (scheme === "HR") {
-      if (WARM_HRS.has(id)) return [1.0, 0.87, 0.74];
-      if (COOL_HRS.has(id)) return [0.84, 0.92, 1.0];
+      if (AMBER_HRS.has(id)) return [1.0, 0.77, 0.55];
+      if (GOLD_HRS.has(id)) return [1.0, 0.91, 0.74];
+      if (BLUE_HRS.has(id)) return [0.80, 0.90, 1.0];
     }
     const h = ((id * 2654435761) >>> 0) % 100;
-    if (h < 18) return [1.0, 0.92, 0.84];       // Subtle warm F/G/K
-    if (h < 52) return [0.88, 0.94, 1.0];       // Subtle cool B/A
+    if (h < 9) return [1.0, 0.82, 0.64];        // K/M warm orange-amber
+    if (h < 25) return [1.0, 0.93, 0.82];       // G/K warm gold-ivory
+    if (h < 62) return [0.84, 0.92, 1.0];       // O/B/A cool ice-blue
     if (mag < 2.2) return [0.95, 0.97, 1.0];    // Crisp luminous white
-    return [0.93, 0.95, 0.99];
+    return [0.92, 0.95, 0.99];
   }
 
   function populateCatalogStars(data) {
@@ -1640,6 +1769,154 @@
     state.skyFovGroup.add(new THREE.LineSegments(accentGeom, accentMat));
   }
 
+  function createHighlightMaterial(THREE) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uPixelRatio: { value: 1.0 },
+        uTime: { value: 0.0 }
+      },
+      vertexShader: `
+        uniform float uPixelRatio;
+        uniform float uTime;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          float pulse = 1.0 + 0.16 * sin(uTime * 5.2);
+          gl_PointSize = 36.0 * pulse * uPixelRatio;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        void main() {
+          vec2 uv = (gl_PointCoord - vec2(0.5)) * 2.0;
+          float r = length(uv);
+          if (r > 1.0) discard;
+          float inner = smoothstep(0.085, 0.015, abs(r - 0.44));
+          float outer = smoothstep(0.09, 0.018, abs(r - (0.76 + 0.12 * sin(uTime * 4.2))));
+          float diag = min(abs(uv.x - uv.y), abs(uv.x + uv.y));
+          float ticks = smoothstep(0.065, 0.012, diag) * step(0.52, r) * step(r, 0.94);
+          float glow = 0.24 * exp(-r * r * 3.8);
+          float alpha = clamp(inner * 0.98 + outer * 0.72 + ticks * 0.55 + glow, 0.0, 1.0);
+          if (alpha < 0.015) discard;
+          vec3 col = mix(vec3(0.404, 0.910, 0.976), vec3(1.0), inner * 0.45);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+  }
+
+  function resolveStarInfo(starId) {
+    const idNum = Number(starId);
+    if (!Number.isFinite(idNum)) return null;
+
+    for (let i = 0; i < state.matchedStars.length; i++) {
+      const m = state.matchedStars[i];
+      if (m.id === idNum) {
+        return {
+          id: idNum,
+          name: m.name,
+          sub: `${state.catalogScheme} ${idNum} · V ${m.mag.toFixed(2)}`,
+          wx: m.wx,
+          wy: m.wy,
+          wz: m.wz,
+          mag: m.mag
+        };
+      }
+    }
+
+    const catHit = state.catalogById.get(idNum);
+    if (catHit) {
+      const [wx, wy, wz] = icrsToWorldXYZ(catHit.vx, catHit.vy, catHit.vz);
+      return {
+        id: idNum,
+        name: catHit.name || `${state.catalogScheme} ${idNum}`,
+        sub: catHit.name ? `${state.catalogScheme} ${idNum} · V ${catHit.mag.toFixed(2)}` : `V ${catHit.mag.toFixed(2)}`,
+        wx,
+        wy,
+        wz,
+        mag: catHit.mag
+      };
+    }
+
+    const payload = state.lastPayload;
+    if (payload) {
+      const pools = [payload.identified_stars, payload.stars_in_fov];
+      for (const arr of pools) {
+        if (!Array.isArray(arr)) continue;
+        for (let i = 0; i < arr.length; i++) {
+          const r = arr[i];
+          if (r && Number(r.id) === idNum && Number.isFinite(Number(r.ra_deg)) && Number.isFinite(Number(r.dec_deg))) {
+            const [ix, iy, iz] = raDecToIcrs(Number(r.ra_deg), Number(r.dec_deg));
+            const [wx, wy, wz] = icrsToWorldXYZ(ix, iy, iz);
+            const scheme = String(r.id_scheme || state.catalogScheme || "HR").toUpperCase();
+            const magVal = Number.isFinite(Number(r.mag)) ? Number(r.mag) : 5.0;
+            return {
+              id: idNum,
+              name: r.iau_name || `${scheme} ${idNum}`,
+              sub: r.iau_name ? `${scheme} ${idNum} · V ${magVal.toFixed(2)}` : `V ${magVal.toFixed(2)}`,
+              wx,
+              wy,
+              wz,
+              mag: magVal
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function highlightStar(starId, opts) {
+    const THREE = window.THREE;
+    if (starId === null || starId === undefined || starId === "") {
+      state.highlightStarId = null;
+      state.highlightStarInfo = null;
+      if (state.highlightPoints) state.highlightPoints.visible = false;
+      return;
+    }
+
+    const info = resolveStarInfo(starId);
+    if (!info) {
+      state.highlightStarId = null;
+      state.highlightStarInfo = null;
+      if (state.highlightPoints) state.highlightPoints.visible = false;
+      return;
+    }
+
+    state.highlightStarId = info.id;
+    state.highlightStarInfo = info;
+
+    if (THREE && state.skyGroup && state.highlightMaterial) {
+      const pos = new Float32Array([info.wx * R_RETICLE, info.wy * R_RETICLE, info.wz * R_RETICLE]);
+      if (!state.highlightPoints) {
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        state.highlightPoints = new THREE.Points(geom, state.highlightMaterial);
+        state.highlightPoints.frustumCulled = false;
+        state.skyGroup.add(state.highlightPoints);
+      } else {
+        state.highlightPoints.geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        state.highlightPoints.geometry.attributes.position.needsUpdate = true;
+      }
+      state.highlightPoints.visible = true;
+    }
+
+    if (opts && opts.focus && THREE && state.webglOk) {
+      // Slew camera cleanly so the highlighted star is clearly visible
+      if (state.solveState === "solved") {
+        setViewMode("pov");
+      } else {
+        const dir = new THREE.Vector3(info.wx, info.wy, info.wz).normalize();
+        const backDir = dir.clone().negate();
+        state.targetPhi = clamp(Math.acos(clamp(backDir.y, -1, 1)) - 0.12, 0.22, Math.PI - 0.22);
+        state.targetTheta = Math.atan2(backDir.x, backDir.z) + 0.36;
+        state.targetLookAt.copy(dir).multiplyScalar(0.55);
+      }
+    }
+  }
   function createReticleMaterial(THREE) {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -2005,10 +2282,17 @@
       return true;
     }
 
+    // 0. Actively hovered / highlighted star (top priority)
+    const hl = state.highlightStarInfo;
+    if (hl) {
+      tryPlace(hl.wx, hl.wy, hl.wz, hl.name, hl.sub, "is-highlighted");
+    }
+
     // 1. Matched catalog stars (highest priority)
     let matchedPlaced = 0;
     for (let i = 0; i < state.matchedStars.length && matchedPlaced < maxMatched; i++) {
       const st = state.matchedStars[i];
+      if (hl && st.id === hl.id) continue;
       const showSub = isPov ? st.sub : st.hasIau ? "" : "";
       if (tryPlace(st.wx, st.wy, st.wz, st.name, showSub, "is-matched")) {
         matchedPlaced++;
@@ -2017,6 +2301,7 @@
 
     // 2. Major celestial landmarks (skipping any star already shown in matchedStars)
     const matchedIds = new Set(state.matchedStars.map((s) => s.id));
+    if (hl) matchedIds.add(hl.id);
     for (let i = 0; i < state.landmarkItems.length; i++) {
       const lm = state.landmarkItems[i];
       if (state.catalogScheme === "HR" && matchedIds.has(lm.hr)) continue;
@@ -2260,6 +2545,9 @@
     if (state.starMaterial) {
       state.starMaterial.uniforms.uZoomBoost.value = clamp(Math.pow(44.0 / activeVfov, 0.36), 0.92, 1.95);
     }
+    if (state.highlightMaterial) {
+      state.highlightMaterial.uniforms.uTime.value = nowMs * 0.001;
+    }
 
     state.renderer.render(state.scene, state.camera);
     updateProjectedLabels(width, height);
@@ -2325,7 +2613,7 @@
     state.webglOk = true;
     const dpr = clamp(typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1, 1, 2);
     renderer.setPixelRatio(dpr);
-    renderer.setClearColor(0x05070b, 1.0);
+    renderer.setClearColor(0x03060d, 1.0);
     if (THREE.SRGBColorSpace) {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
     }
@@ -2351,10 +2639,14 @@
     sunLight.position.set(6, 3.5, 5);
     scene.add(ambient, hemi, sunLight);
 
-    // 1. Celestial Sky Group (J2000 stars, cosmic dust, RA/Dec grid, FOV footprint, matched reticles)
+    // 1. Celestial Sky Group (Milky Way Galactic band, J2000 stars, cosmic dust, RA/Dec grid, FOV footprint, reticles)
     const skyGroup = new THREE.Group();
     state.skyGroup = skyGroup;
     scene.add(skyGroup);
+
+    const milkyWay = buildMilkyWayBand(THREE);
+    state.milkyWayMesh = milkyWay;
+    skyGroup.add(milkyWay);
 
     const dust = buildCosmicDust(THREE);
     dust.material.uniforms.uPixelRatio.value = dpr;
@@ -2366,6 +2658,9 @@
 
     state.reticleMaterial = createReticleMaterial(THREE);
     state.reticleMaterial.uniforms.uPixelRatio.value = dpr;
+
+    state.highlightMaterial = createHighlightMaterial(THREE);
+    state.highlightMaterial.uniforms.uPixelRatio.value = dpr;
 
     const gridGroup = buildCelestialGrid(THREE);
     gridGroup.visible = state.showGrid;
@@ -2429,6 +2724,7 @@
   }
 
   function updateFromPayload(payload) {
+    highlightStar(null);
     state.lastPayload = payload || null;
     if (!payload || typeof payload !== "object") {
       state.solveState = "idle";
@@ -2565,6 +2861,7 @@
     state.renderer.setSize(w, h, false);
     if (state.starMaterial) state.starMaterial.uniforms.uPixelRatio.value = dpr;
     if (state.reticleMaterial) state.reticleMaterial.uniforms.uPixelRatio.value = dpr;
+    if (state.highlightMaterial) state.highlightMaterial.uniforms.uPixelRatio.value = dpr;
     if (state.dustPoints) state.dustPoints.material.uniforms.uPixelRatio.value = dpr;
     state.camera.aspect = w / h;
     state.camera.updateProjectionMatrix();
@@ -2573,6 +2870,7 @@
   const api = {
     init,
     updateFromPayload,
+    highlightStar,
     setViewMode,
     togglePlay,
     resetView,

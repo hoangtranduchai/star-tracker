@@ -13,7 +13,7 @@
 | Thành viên thực hiện | Hoàng Trần Đức Hải (Đội trưởng) · Nguyễn Tiến · Mai Tạ Trúc Vy |
 | Đơn vị đào tạo | Khoa Công nghệ thông tin — Trường Đại học Bách khoa, Đại học Đà Nẵng |
 | Nhánh mã nguồn cải tiến | https://github.com/hoangtranduchai/star-tracker (nhánh feat/national-round-stage1) |
-| Môi trường đo kiểm chuẩn | PC Laptop · NVIDIA GeForce RTX 5070 Laptop GPU · PyTorch CUDA · pytest (123 passed, 2 skipped) |
+| Môi trường đo kiểm chuẩn | PC Laptop · NVIDIA GeForce RTX 5070 Laptop GPU · PyTorch CUDA · pytest (127 passed, 2 skipped) |
 
 ### 1.1. Tóm tắt bằng chứng sai sót trước cải tiến & Ma trận khắc phục 3 yêu cầu
 
@@ -57,7 +57,7 @@ Kiểm tra lại mã nguồn gốc `HEAD:src/pipeline.py` và `HEAD:src/attitude
 
 ### 2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng
 
-- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **123 passed, 2 skipped** (0 lỗi).
+- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **127 passed, 2 skipped** (0 lỗi).
 - Chạy đối kháng 100 thử nghiệm (`data/outputs/benchmark_rejection_stress.json`): hệ thống **sau cải tiến đạt 0/100 (0,0% False Lock)**, 100/100 ca trả về `LOST` và 16 byte `0x00`, trong khi **logic cũ trước sửa bị 41/100 (41,0% False Lock)**:
 
 | Nhóm thử nghiệm (25 ca/nhóm) | Số ca | Legacy False Lock | Sai số giả Legacy | Sau cải tiến False Lock | Downlink 16B | Phân bố reject_code |
@@ -193,7 +193,7 @@ Kiểm tra độ nhạy tham số góc trên `hd1024` (`custom_088ifov_tol_frac_
 
 | Khía cạnh | Đã kiểm chứng trên PC Demo (Laptop RTX 5070 / CPU) | Kỳ vọng hướng phát triển (Chưa kiểm chứng bay) |
 | --- | --- | --- |
-| Ngăn trả tư thế từ khớp sai (0% False Lock) | Đã kiểm chứng bằng 123 pytest & 100 ca stress đối kháng (0% vs 41% legacy) trên PC. | Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay. |
+| Ngăn trả tư thế từ khớp sai (0% False Lock) | Đã kiểm chứng bằng 127 pytest & 100 ca stress đối kháng (0% vs 41% legacy) trên PC. | Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay. |
 | Độ chính xác 3-DOF Quaternion | Đã kiểm chứng trên 500 khung hd1024 (CoG tv 2,00″ / CNN 7,94″), 40 khung lóa và 4 ảnh thật hiệu chuẩn có GT. | Chưa đo kiểm trên cảm biến sao bay vật lý ngoài trời của nhóm hay buồng mô phỏng phần cứng (HIL). |
 | Tốc độ suy luận & Độ trễ | Đo thực tế trên Laptop RTX 5070 CUDA + CPU (CoG ~87,2 ms, CNN ~123,9 ms trên 1024×683). | Chưa đo trên chip nhúng chịu bức xạ (ví dụ LEON3/RTG4/Coral TPU); số ~20 ms / ~266 ms chỉ trích dẫn Zhao et al. |
 | Độ bền môi trường quang học & bức xạ | Đã xử lý ảnh 8-bit/12-bit/16-bit thật (ESA tetra3, Zhao, UW LOST) và từ chối an toàn méo góc rộng (0006.png). | Chưa thử nghiệm bức xạ ion hóa (TID/SEE), sốc nhiệt, chân không, rung động cơ học phóng hoặc điều khiển ADCS vòng kín. |
@@ -208,7 +208,7 @@ Ban Giám khảo và Hội đồng thẩm định có thể tái lập 100% kế
 ```powershell
 # 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai
 pytest -v
-# Kỳ vọng: 123 passed, 2 skipped (test cache tùy chọn không có sẵn)
+# Kỳ vọng: 127 passed, 2 skipped (test cache tùy chọn không có sẵn)
 
 # 2. Chạy benchmark End-to-End đầy đủ (ảnh thật hiệu chuẩn + 500 hd1024 + 40 lóa + Seed 42 + 100 ca stress + sinh 8 hình)
 python scripts/benchmark_end_to_end.py --suites all
@@ -225,7 +225,7 @@ python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show
 python app.py
 ```
 
-Trên giao diện Web tối giản (`http://127.0.0.1:8765/`, hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser`), hệ thống cung cấp endpoint `GET /api/sky-catalog` nạp 5.023 sao thực Yale BSC5 (hệ J2000) để hiển thị **không gian 3D quỹ đạo Trái Đất & thiên cầu thực**, cho phép đối chiếu trực quan tư thế vệ tinh 3D (`Quỹ đạo 3D` / `Góc nhìn Vệ tinh` 1:1) ngay cạnh khung ảnh gốc (lưu ý: mô phỏng trực quan trên PC cá nhân, không phải phần cứng bay/ADCS). Người dùng có thể bấm trực tiếp các kịch bản nhanh:
+Trên giao diện Web (`http://127.0.0.1:8765/`, hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser`, hoặc truy cập trực tuyến 24/7 tại `https://startracker.agentlens.dpdns.org`), hệ thống cung cấp endpoint `GET /api/sky-catalog` nạp 5.023 sao thực Yale BSC5 (hệ J2000) để hiển thị **không gian 3D quỹ đạo Trái Đất & thiên cầu thực**, cho phép đối chiếu trực quan tư thế vệ tinh 3D (`Quỹ đạo Trái Đất` / `Góc nhìn Cảm biến 1:1`) ngay cạnh ảnh sao gốc không viền (lưu ý: mô phỏng trực quan trên máy tính, không phải phần cứng bay/ADCS). Người dùng có thể bấm trực tiếp các kịch bản nhanh:
 - **`Mẫu chuẩn Seed 42`**: minh họa CoG giải nhanh `0,446″` với `36/36` sao khớp (`SOLVED`) và đối chiếu 3D trực tiếp.
 - **`Bầu trời thật ESA`**: nạp ảnh 16-bit thật `Alt60` (`f=35,2911 mm`, `6,9 µm`), minh họa cả CoG và CNN giải `SOLVED` ở sai số vài giây cung.
 - **`Núi St. Helens`**: minh họa preset CNN giải `54/79` sao (`Δ = 0,034°` vs UW LOST), và khi chuyển sang `Centroid cổ điển` hệ thống hiển thị trạng thái `LOST [INSUFFICIENT_INLIER_PAIRS]` kèm 16 byte `0x00`.

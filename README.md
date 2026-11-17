@@ -6,6 +6,8 @@ Tùy chọn: centroid CNN theo trọng số công khai MobileUNet của Zhao và
 
 Camera trong demo là một **máy ảnh tĩnh phổ thông**: cảm biến cỡ APS-C khoảng 24 megapixel và ống kính tiêu cự **50 mm**. Không ghi tên cảm biến và không ghi tên ống kính.
 
+- **Demo Web trực tuyến 24/7:** https://startracker.agentlens.dpdns.org (giao diện không gian vũ trụ 3D J2000 5.023 sao thực Yale BSC5 & đối chiếu tâm sao trực tiếp).
+
 ## Camera demo
 
 | Hạng mục | Giá trị |
@@ -66,7 +68,7 @@ third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt
 
 Nguồn: https://github.com/HongruiZhao/CNNStarDetectCentroid — bài arXiv:2404.19108.
 
-`app.py` mở giao diện Web tối giản tại `http://127.0.0.1:8765/` (hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser` và `STAR_TRACKER_PORT`) với thanh kịch bản nhanh (**`Mẫu chuẩn Seed 42`**, **`Bầu trời thật ESA`**, **`Núi St. Helens`**, **`Ngược nắng lóa mạnh`**), hiển thị trực tiếp trạng thái `SOLVED` / `LOST`, `reject_code`, số cặp inlier, dư góc RMS/Max và gói 16 byte. Giao diện tích hợp endpoint `GET /api/sky-catalog` dựng không gian 3D quỹ đạo Trái Đất và thiên cầu thực J2000 (**5.023 sao Yale BSC5**, cấp sáng V ≤ 6) ở hai góc nhìn (`Quỹ đạo 3D` và `Góc nhìn Vệ tinh` 1:1 theo ma trận DCM từ quaternion `q_est`), cho phép **đối chiếu trực quan tư thế vệ tinh 3D trên nền sao thực với khung ảnh gốc** (lưu ý: đây là mô phỏng trực quan chạy trên PC cá nhân, không phải phần cứng bay hay vòng điều khiển ADCS thực tế).
+`app.py` mở giao diện Web tại `http://127.0.0.1:8765/` (hoặc truy cập bản trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org; hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser` và `STAR_TRACKER_PORT`) với thanh kịch bản nhanh (**`Bầu trời chuẩn`**, **`Trời thực ESA`**, **`Núi St. Helens`**, **`Ngược nắng`**), hiển thị trực tiếp trạng thái `SOLVED` / `LOST`, `reject_code`, số cặp inlier, dư góc RMS/Max và gói 16 byte. Giao diện tích hợp endpoint `GET /api/sky-catalog` dựng không gian 3D quỹ đạo Trái Đất, dải Ngân Hà và thiên cầu thực J2000 (**5.023 sao Yale BSC5**, cấp sáng V ≤ 6) ở hai góc nhìn (`Quỹ đạo Trái Đất` và `Góc nhìn Cảm biến 1:1` theo ma trận DCM từ quaternion `q_est`), cho phép **đối chiếu trực quan tư thế vệ tinh 3D trên nền sao thực với ảnh sao không viền** (lưu ý: đây là mô phỏng trực quan chạy trên máy tính, không phải phần cứng bay hay vòng điều khiển ADCS thực tế).
 
 Một khung đã lưu:
 

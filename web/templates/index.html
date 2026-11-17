@@ -4,91 +4,834 @@
   <meta charset="utf-8" />
   <meta http-equiv="Cache-Control" content="no-store" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Star Tracker — Định hướng vệ tinh từ bầu trời sao</title>
+  <title>Star Tracker — Định hướng vệ tinh J2000</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=24" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=30" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=30" />
 </head>
 <body>
-  <!-- Top Header & Quick Scenarios -->
-  <header class="top-nav">
-    <div class="nav-brand">
-      <div class="satellite-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3.2" />
-          <circle cx="12" cy="12" r="8.5" stroke-dasharray="2.5 2.5" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+  <!-- ROW 1: Minimalist Top Command Header (~52px) -->
+  <header class="cmd-header">
+    <div class="brand-cluster">
+      <div class="brand-reticle" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <circle cx="12" cy="12" r="8.2" stroke-dasharray="2.4 2.4" />
+          <path d="M12 2v3.2M12 18.8V22M2 12h3.2M18.8 12H22" />
         </svg>
       </div>
-      <div class="brand-copy">
-        <span class="mission-tag">STAR TRACKER · HỆ QUY CHIẾU J2000</span>
-        <h1 class="nav-title">Định hướng Vệ tinh từ Bầu trời Sao</h1>
+      <div class="brand-titles">
+        <h1 class="brand-name">Star Tracker</h1>
+        <span class="brand-sep" aria-hidden="true"></span>
+        <span class="brand-sub">Định hướng vệ tinh J2000</span>
       </div>
     </div>
 
-    <div class="quick-scenario-bar" role="group" aria-label="Kịch bản thử nhanh">
-      <span class="quick-bar-label">Thử nhanh</span>
-      <button type="button" id="btn-seed42" class="scenario-pill" title="Mô phỏng bầu trời tiêu chuẩn (Seed 42)">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Instant 1-Click Experience Scenarios -->
+    <div class="scenario-strip" role="group" aria-label="Kịch bản trải nghiệm nhanh">
+      <button type="button" id="btn-seed42" class="exp-pill" title="Mô phỏng bầu trời sao chuẩn (Seed 42)">
+        <svg viewBox="0 0 24 24" width="13.5" height="13.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3l1.9 5.8h6.1l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8-4.9-3.6h6.1z" />
         </svg>
-        <span>Mẫu chuẩn Seed 42</span>
+        <span>Bầu trời chuẩn</span>
       </button>
-      <button type="button" id="btn-tetra3-preset" class="scenario-pill scenario-featured" title="Ảnh chụp bầu trời đêm thực tế từ bộ dữ liệu ESA tetra3">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" id="btn-tetra3-preset" class="exp-pill is-featured" title="Ảnh chụp bầu trời đêm thực tế từ bộ dữ liệu ESA tetra3">
+        <svg viewBox="0 0 24 24" width="13.5" height="13.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="9" />
           <path d="M3.6 9h16.8M3.6 15h16.8M12 3a14.5 14.5 0 0 0 0 18M12 3a14.5 14.5 0 0 1 0 18" />
         </svg>
-        <span>Bầu trời thật ESA</span>
+        <span>Trời thực ESA</span>
       </button>
-      <button type="button" id="btn-mount-preset" class="scenario-pill" title="Ảnh chụp thực tế có tiền cảnh núi St. Helens (kiểm tra lọc nhiễu địa hình)">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" id="btn-mount-preset" class="exp-pill" title="Ảnh bầu trời thực có sườn núi St. Helens (tách tâm sao bằng mạng CNN)">
+        <svg viewBox="0 0 24 24" width="13.5" height="13.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 20l6.5-11 4.5 7.5 3-4.5 4 8H3z" />
         </svg>
         <span>Núi St. Helens</span>
       </button>
-      <button type="button" id="btn-glare-preset" class="scenario-pill" title="Mô phỏng trường nhìn bị ánh nắng chiếu xiên gây lóa mạnh">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" id="btn-glare-preset" class="exp-pill" title="Mô phỏng trường nhìn bị chói nắng mạnh chiếu xiên">
+        <svg viewBox="0 0 24 24" width="13.5" height="13.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
         </svg>
-        <span>Ngược nắng lóa mạnh</span>
+        <span>Ngược nắng</span>
+      </button>
+    </div>
+
+    <!-- Quick Inline Mode Switchers + Drawer Trigger + Primary Solve CTA -->
+    <div class="cmd-actions">
+      <div class="inline-seg" role="radiogroup" aria-label="Độ phân giải xử lý" title="Chuyển nhanh độ phân giải xử lý">
+        <label class="inline-seg-opt">
+          <input type="radio" name="mode" value="fast" checked id="mode-fast" form="run-form" />
+          <span>Nhanh</span>
+        </label>
+        <label class="inline-seg-opt">
+          <input type="radio" name="mode" value="full" id="mode-full" form="run-form" />
+          <span>24 MP</span>
+        </label>
+      </div>
+
+      <div class="inline-seg" id="centroid-mode-toggle" role="radiogroup" aria-label="Thuật toán tách tâm sao" title="Phương pháp trích xuất tâm sao">
+        <label class="inline-seg-opt">
+          <input type="radio" name="centroid_backend" value="classical" checked id="centroid-classical" form="run-form" />
+          <span>CoG</span>
+        </label>
+        <label class="inline-seg-opt">
+          <input type="radio" name="centroid_backend" value="cnn" id="centroid-cnn" form="run-form" />
+          <span>CNN</span>
+        </label>
+      </div>
+
+      <button type="button" id="btn-open-drawer" class="cmd-drawer-btn" title="Mở bảng tùy chỉnh hướng ngắm, quang học và tải ảnh riêng">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+          <circle cx="9" cy="6" r="2" fill="#060a14" />
+          <circle cx="15" cy="12" r="2" fill="#060a14" />
+          <circle cx="10" cy="18" r="2" fill="#060a14" />
+        </svg>
+        <span>Tùy chỉnh &amp; Tải ảnh</span>
+      </button>
+
+      <button type="button" id="btn-run" class="cmd-solve-btn">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />
+        </svg>
+        <span>Giải tư thế</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Workspace Layout -->
-  <div class="app-layout">
-    <!-- Left Control Sidebar -->
-    <aside class="sidebar">
-      <form id="run-form" class="sidebar-form">
-        <div class="sidebar-scroll">
-          <!-- Primary Card 1: Resolution & Solver -->
-          <div class="control-card">
-            <div class="card-header">
-              <span class="card-num">01</span>
-              <h3>Chế độ xử lý &amp; Thuật toán</h3>
+  <!-- ROW 2: Sleek Workspace Mode Strip (~40px) + Compact Inline Status -->
+  <div class="workspace-bar">
+    <nav class="tab-nav" role="tablist" aria-label="Chế độ làm việc">
+      <button type="button" class="tab-btn active" data-tab="tab-imagery">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(-22 12 12)" />
+          <circle cx="12" cy="12" r="2.2" />
+        </svg>
+        <span>Không gian &amp; Đối chiếu</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-telemetry">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        <span>Thông số Tư thế &amp; Gói tin 16-Byte</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-catalog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 14.9 8.6 22 9.3 16.6 14 18.2 21 12 17.3 5.8 21 7.4 14 2 9.3 9.1 8.6 12 2" />
+        </svg>
+        <span>Danh mục Sao trong Khung</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-specs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="12" cy="12" r="3.5" />
+        </svg>
+        <span>Cấu hình Quang học &amp; Thuật toán</span>
+      </button>
+    </nav>
+
+    <div id="status" class="status-banner" title="Trạng thái xử lý định hướng sao">
+      Sẵn sàng quan sát · Chọn một kịch bản phía trên hoặc bấm <strong>Giải tư thế</strong> để khóa hướng vệ tinh.
+    </div>
+  </div>
+
+  <!-- ROW 3: Full-Bleed Observatory Stage (~82% of viewport height) -->
+  <main class="cosmos-main">
+    <!-- TAB 1: Immersive 3D Cosmos & Pure Sensor Cross-Check -->
+    <section id="tab-imagery" class="tab-pane active">
+      <div class="stage-subbar">
+        <div class="stage-legend">
+          <span class="legend-item-inline"><span class="legend-ring is-cyan"></span> Tâm sáng phát hiện</span>
+          <span class="legend-item-inline"><span class="legend-ring is-emerald"></span> Sao khớp J2000</span>
+          <span class="legend-item-inline is-muted-note">Rê chuột lên sao trên ảnh để đồng bộ vị trí trên thiên cầu 3D</span>
+          <span class="sha-pill" id="integrity-badge">
+            <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span id="sha-integrity-text">SHA-256: --</span>
+          </span>
+        </div>
+
+        <div class="view-mode-selector" role="tablist" aria-label="Chế độ hiển thị không gian">
+          <button type="button" class="view-mode-btn active" data-mode="orbit3d">Vũ trụ 3D Toàn màn hình</button>
+          <button type="button" class="view-mode-btn" data-mode="compare3d">Đối chiếu Song song</button>
+          <button type="button" class="view-mode-btn" data-mode="split">So sánh Ảnh Tĩnh</button>
+          <button type="button" class="view-mode-btn" data-mode="output">Khung Nhận diện</button>
+          <button type="button" class="view-mode-btn" data-mode="hud">Báo cáo Tổng hợp</button>
+        </div>
+      </div>
+
+      <!-- Primary 3D & Pure Sensor Stage (Single persistent #orbit3d-root) -->
+      <div id="view-stage3d" class="stage-grid is-orbit3d">
+        <!-- Left Pane (visible in compare3d): Frameless Pure Interactive Sensor Viewer -->
+        <div id="compare3d-ref-card" class="sensor-card compare3d-pane">
+          <div id="optical-viewer" class="optical-viewer">
+            <!-- Floating Top Glass HUD inside Optical Viewer -->
+            <div class="sensor-hud-top">
+              <div class="sensor-meta-pill">
+                <span class="sensor-dot" id="sensor-live-dot"></span>
+                <span id="cap-compare3d">Cảm biến quang học · Chưa nạp khung ảnh</span>
+              </div>
+
+              <div class="sensor-layer-pills" role="group" aria-label="Lớp hiển thị cảm biến">
+                <button type="button" id="btn-compare3d-raw" class="sensor-pill-btn">Ảnh thô</button>
+                <button type="button" id="btn-compare3d-annotated" class="sensor-pill-btn active">Lớp nhận diện</button>
+                <button type="button" id="btn-zoom-sensor" class="sensor-pill-btn" title="Phóng to khung ảnh quang học">
+                  <svg viewBox="0 0 24 24" width="11.5" height="11.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9" />
+                    <polyline points="9 21 3 21 3 15" />
+                    <line x1="21" y1="3" x2="14" y2="10" />
+                    <line x1="3" y1="21" x2="10" y2="14" />
+                  </svg>
+                  <span>Phóng to</span>
+                </button>
+              </div>
             </div>
 
-            <div class="mode-toggle" role="radiogroup" aria-label="Độ phân giải xử lý">
+            <!-- Pure Borderless Starfield Image + 1:1 Vector Reticle Canvas -->
+            <div class="sensor-stage-wrap" id="sensor-stage-wrap">
+              <div class="frame-placeholder" id="slot-compare3d">
+                <div class="placeholder-content">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="2.5" />
+                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+                  </svg>
+                  <p>Chọn <strong>Bầu trời chuẩn</strong> hoặc <strong>Trời thực ESA</strong> trên thanh đầu trang để đối chiếu trực tiếp ảnh cảm biến với bầu trời 3D.</p>
+                </div>
+              </div>
+              <img id="compare3d-img" alt="Khung ảnh sao thuần khiết từ cảm biến" hidden />
+              <canvas id="sensor-overlay-canvas" class="sensor-overlay-canvas"></canvas>
+              <div id="sensor-star-tooltip" class="sensor-star-tooltip" hidden></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right / Fullscreen Pane: Animated 3D Earth-Orbit Satellite & 5,023-Star J2000 Sky -->
+        <div class="cosmos3d-card orbit3d-pane">
+          <span id="cap-orbit3d" class="sr-only">5.023 sao Yale BSC5 · Thiên cầu thực J2000</span>
+          <div id="orbit3d-root" class="orbit3d-root"></div>
+
+          <!-- Floating Idle Welcome Prompt (visible only in full-screen orbit3d before first run) -->
+          <div id="welcome-hud-card" class="floating-welcome-card">
+            <div class="welcome-eyebrow">
+              <span class="welcome-pulse"></span>
+              <span>ĐÀI QUAN SÁT ĐỊNH HƯỚNG SAO J2000</span>
+            </div>
+            <p class="welcome-text">Chọn một kịch bản trên thanh đầu trang hoặc bấm <strong>Giải tư thế</strong> để định hướng vệ tinh từ bầu trời sao thực.</p>
+            <button type="button" id="btn-welcome-run" class="welcome-cta-btn">
+              <span>Thử ngay bầu trời thực ESA</span>
+              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Floating Picture-in-Picture Sensor Card (visible in full-screen orbit3d after run) -->
+          <div id="pip-sensor-card" class="floating-pip-card" hidden>
+            <div class="pip-thumb-wrap">
+              <img id="pip-sensor-img" alt="Ảnh cảm biến thu nhỏ" />
+              <span id="pip-sensor-badge" class="pip-badge">SOLVED</span>
+            </div>
+            <div class="pip-footer">
+              <span id="pip-sensor-meta" class="pip-meta">Ảnh cảm biến</span>
+              <button type="button" id="btn-pip-expand" class="pip-expand-btn">Mở đối chiếu 50/50</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Static Inspection Mode: Split Input / Annotated Output -->
+      <div id="view-split" class="static-stage split-mode" hidden>
+        <div class="static-frame-card">
+          <div class="static-frame-bar">
+            <span class="frame-tag">ẢNH ĐẦU VÀO CẢM BIẾN</span>
+            <span id="cap-in" class="frame-meta">Chưa có dữ liệu</span>
+            <button type="button" class="btn-inspect" data-img="input-img" title="Mở ảnh kích thước đầy đủ">Phóng to</button>
+          </div>
+          <div class="static-frame-viewport">
+            <div class="frame-placeholder" id="slot-in">
+              <div class="placeholder-content"><p>Chưa có ảnh đầu vào.</p></div>
+            </div>
+            <img id="input-img" alt="Ảnh gốc đầu vào cảm biến" hidden />
+          </div>
+        </div>
+
+        <div class="static-frame-card">
+          <div class="static-frame-bar">
+            <span class="frame-tag highlight">LỚP NHẬN DIỆN TĨNH</span>
+            <span id="cap-out" class="frame-meta">Tâm sao &amp; Nhãn danh mục</span>
+            <button type="button" class="btn-inspect" data-img="output-img" title="Mở ảnh kích thước đầy đủ">Phóng to</button>
+          </div>
+          <div class="static-frame-viewport">
+            <div class="frame-placeholder" id="slot-out">
+              <div class="placeholder-content"><p>Chưa có ảnh nhận diện.</p></div>
+            </div>
+            <img id="output-img" alt="Ảnh kết quả nhận diện sao" hidden />
+          </div>
+        </div>
+      </div>
+
+      <!-- Static Inspection Mode: Large Annotated Output -->
+      <div id="view-output" class="static-stage single-mode" hidden>
+        <div class="static-frame-card">
+          <div class="static-frame-bar">
+            <span class="frame-tag highlight">KHUNG NHẬN DIỆN CHI TIẾT</span>
+            <span class="frame-meta">Nhấp vào ảnh để phóng to 1:1</span>
+            <button type="button" class="btn-inspect" data-img="output-img-large" title="Mở ảnh kích thước đầy đủ">Phóng to</button>
+          </div>
+          <div class="static-frame-viewport is-large">
+            <img id="output-img-large" alt="Ảnh nhận diện sao kích thước lớn" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Static Inspection Mode: Composite Summary Report -->
+      <div id="view-hud" class="static-stage hud-mode" hidden>
+        <div class="static-frame-card">
+          <div class="static-frame-bar">
+            <span class="frame-tag">BÁO CÁO TỔNG HỢP KHUNG HÌNH</span>
+            <span class="frame-meta">Ảnh đầu vào, lớp nhận diện và thông số tư thế</span>
+            <button type="button" class="btn-inspect" data-img="hud-img" title="Mở ảnh kích thước đầy đủ">Phóng to</button>
+          </div>
+          <div class="static-frame-viewport is-large">
+            <img id="hud-img" alt="Bản tổng hợp kết quả định hướng sao" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Attitude Telemetry & 16-Byte Packet -->
+    <section id="tab-telemetry" class="tab-pane editorial-pane" hidden>
+      <div class="editorial-container telemetry-editorial-grid">
+        <div class="editorial-col">
+          <div class="glass-card">
+            <div class="card-head">
+              <h3>Gói tin Tư thế Quaternion 16-Byte</h3>
+              <span class="glass-chip">IEEE 754 Float32 · J2000</span>
+            </div>
+            <p class="card-desc">Tư thế vệ tinh được đóng gói thành 4 số thực 32-bit chuẩn hóa <code>[q0, q1, q2, q3]</code> (16 byte; tự động xuất toàn bộ byte <code>00</code> khi từ chối khóa sai).</p>
+            <div class="hex-dump-box">
+              <div class="hex-title">DÒNG BYTE HEX (16 BYTE)</div>
+              <div class="hex-bytes" id="downlink-hex-display">-- -- -- --  -- -- -- --  -- -- -- --  -- -- -- --</div>
+            </div>
+            <div class="packet-decode-grid">
+              <div class="decode-col">
+                <span class="byte-range">Byte 00–03</span>
+                <span class="component-name">q0 (Vô hướng w)</span>
+                <span class="component-val" id="decode-q0">--</span>
+              </div>
+              <div class="decode-col">
+                <span class="byte-range">Byte 04–07</span>
+                <span class="component-name">q1 (Trục x)</span>
+                <span class="component-val" id="decode-q1">--</span>
+              </div>
+              <div class="decode-col">
+                <span class="byte-range">Byte 08–11</span>
+                <span class="component-name">q2 (Trục y)</span>
+                <span class="component-val" id="decode-q2">--</span>
+              </div>
+              <div class="decode-col">
+                <span class="byte-range">Byte 12–15</span>
+                <span class="component-name">q3 (Trục z)</span>
+                <span class="component-val" id="decode-q3">--</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="card-head">
+              <h3>Phân bổ Thời gian Xử lý</h3>
+              <span class="glass-chip">Đo trực tiếp trên CPU</span>
+            </div>
+            <div class="timing-meter" id="timing-meter">
+              <div class="meter-bar centroid" id="bar-centroid" style="width: 34%;" title="Tách tâm sao"></div>
+              <div class="meter-bar id" id="bar-id" style="width: 22%;" title="Nhận diện sao"></div>
+              <div class="meter-bar wahba" id="bar-wahba" style="width: 8%;" title="Giải tư thế Wahba"></div>
+            </div>
+            <div class="timing-legend">
+              <span class="legend-item"><span class="dot-color centroid"></span> Tách tâm sao: <strong id="t-centroid">-- ms</strong></span>
+              <span class="legend-item"><span class="dot-color id"></span> Nhận diện Pyramid: <strong id="t-id">-- ms</strong></span>
+              <span class="legend-item"><span class="dot-color wahba"></span> Giải tư thế Wahba: <strong id="t-wahba">-- ms</strong></span>
+              <span class="legend-item"><span class="dot-color total"></span> Tổng cộng: <strong id="t-total">-- ms</strong></span>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="card-head">
+              <h3>Thông tin Khung hình &amp; Quang học</h3>
+            </div>
+            <dl class="meta-grid" id="meta-dl">
+              <dt>Nguồn dữ liệu</dt><dd>--</dd>
+              <dt>Hệ quang học</dt><dd>--</dd>
+              <dt>Danh mục sao</dt><dd>--</dd>
+              <dt>Gói tin 16-byte</dt><dd>--</dd>
+              <dt>Quaternion chuẩn</dt><dd>--</dd>
+              <dt>Quaternion ước lượng</dt><dd>--</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="editorial-col">
+          <div class="glass-card is-full-height">
+            <div class="card-head">
+              <h3>Đối chiếu Tư thế Chuẩn &amp; Ước lượng</h3>
+              <span class="glass-chip">SO(3) · ICRS J2000</span>
+            </div>
+            <div class="table-responsive">
+              <table id="compare-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Thông số</th>
+                    <th>Giá trị chuẩn (q<sub>GT</sub>)</th>
+                    <th>Ước lượng (q<sub>est</sub>)</th>
+                    <th>Độ lệch (Δ)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="4" class="empty">Chưa có dữ liệu. Hãy chọn kịch bản hoặc bấm Giải tư thế.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Star Catalog & Identifications in Frame -->
+    <section id="tab-catalog" class="tab-pane editorial-pane" hidden>
+      <div class="editorial-container">
+        <div class="glass-card">
+          <div class="catalog-toolbar">
+            <div>
+              <h2 class="editorial-title">Danh mục Sao trong Trường nhìn &amp; Kết quả Khớp</h2>
+              <p class="card-desc">Tra cứu trên <strong>5.023</strong> ngôi sao sáng (V ≤ 6.0) thuộc danh mục Yale BSC5 (J2000) với {{ n_iau_names }} tên quốc tế IAU. Nhấp vào một dòng sao để định vị ngay trên bầu trời 3D.</p>
+            </div>
+            <div class="search-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input type="text" id="star-search-input" placeholder="Tìm theo tên sao IAU hoặc mã HR..." />
+            </div>
+          </div>
+
+          <div class="star-tables-grid">
+            <div class="star-table-box">
+              <div class="sub-header">
+                <h3 id="fov-title">Sao trong trường nhìn (Ground Truth)</h3>
+                <span class="count-pill" id="fov-count">0 sao</span>
+              </div>
+              <div class="table-scroll-wrap">
+                <table id="fov-table" class="data-table is-interactive-rows">
+                  <thead>
+                    <tr>
+                      <th>Mã sao</th>
+                      <th>Cấp sáng</th>
+                      <th>Tên quốc tế IAU</th>
+                      <th>u (px)</th>
+                      <th>v (px)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="5" class="empty">Chưa có dữ liệu sao trong khung</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="star-table-box">
+              <div class="sub-header">
+                <h3 id="id-title">Sao khớp danh mục hợp lệ</h3>
+                <span class="count-pill highlight" id="id-count">0 sao</span>
+              </div>
+              <div class="table-scroll-wrap">
+                <table id="id-table" class="data-table is-interactive-rows">
+                  <thead>
+                    <tr>
+                      <th>Mã sao</th>
+                      <th>Cấp sáng</th>
+                      <th>Tên quốc tế IAU</th>
+                      <th>u (px)</th>
+                      <th>v (px)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="5" class="empty">Chưa có sao được nhận diện</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Optical Configuration & Algorithm Pipeline -->
+    <section id="tab-specs" class="tab-pane editorial-pane" hidden>
+      <div class="editorial-container specs-editorial">
+        <div class="glass-card">
+          <div class="card-head">
+            <h3>Chuỗi Thuật toán Định hướng Không cần Tư thế Đầu (Lost-in-Space)</h3>
+            <span class="glass-chip">CoG / CNN → Pyramid K-vector → Wahba</span>
+          </div>
+          <div class="steps-flow">
+            <div class="step-card">
+              <div class="step-badge">GIAI ĐOẠN 01</div>
+              <h4>Tách tâm sao dưới mức điểm ảnh</h4>
+              <p>Khử nền sáng cục bộ, lọc mặt nạ chói sáng và nội suy tọa độ tâm sao bằng trọng tâm cường độ (CoG) hoặc mạng học sâu MobileUNet khi khung hình vướng địa hình, mây mỏng.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-badge">GIAI ĐOẠN 02</div>
+              <h4>Nhận diện bất biến góc Pyramid</h4>
+              <p>Tra cứu khoảng cách góc cos(θ<sub>ij</sub>) giữa các cặp tia ngắm qua chỉ mục K-vector độ phức tạp O(1), kiểm chứng hình học tứ giác 4 sao độc lập trên thiên cầu J2000.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-badge">GIAI ĐOẠN 03</div>
+              <h4>Giải tư thế tối ưu &amp; Kiểm định an toàn</h4>
+              <p>Giải bài toán Wahba bằng phân rã SVD hoặc QUEST, cắt bỏ phần tử ngoại lai lặp theo phần dư góc và chủ động từ chối khóa sai khi chưa đủ ngưỡng tin cậy.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="specs-two-col">
+          <div class="glass-card">
+            <div class="card-head">
+              <h3>Cấu hình Quang học Mặc định</h3>
+            </div>
+            <table class="specs-table">
+              <tr>
+                <td>Cảm biến tham chiếu</td>
+                <td><strong>APS-C 24 MP (6000 × 4000 px)</strong></td>
+              </tr>
+              <tr>
+                <td>Tiêu cự vật lý</td>
+                <td><strong>50 mm · Trường nhìn 25,16° × 16,93° (chéo 30,03°)</strong></td>
+              </tr>
+              <tr>
+                <td>Cỡ điểm ảnh &amp; Thước góc</td>
+                <td><strong>3,72 µm (15,35″/px) · Gộp 4×4: 14,88 µm (61,40″/px)</strong></td>
+              </tr>
+              <tr>
+                <td>Danh mục thiên văn</td>
+                <td><strong>Yale BSC5 &amp; Hipparcos (Hệ quy chiếu J2000, V ≤ 6.0)</strong></td>
+              </tr>
+              <tr>
+                <td>Định dạng xuất tư thế</td>
+                <td><strong>Quaternion chuẩn hóa 16-byte IEEE 754 Float32</strong></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="glass-card">
+            <div class="card-head">
+              <h3>Hướng dẫn Khai thác Nhanh</h3>
+            </div>
+            <ul class="guideline-list">
+              <li><strong>Đối chiếu song song 2D &amp; 3D:</strong> Rê chuột lên bất kỳ ngôi sao nào trên khung ảnh cảm biến để xem thông số cấp sáng và làm sáng đồng thời ngôi sao đó trên thiên cầu 3D.</li>
+              <li><strong>Góc nhìn Cảm biến 1:1:</strong> Nhấn nút <em>Góc nhìn Cảm biến 1:1</em> bên dưới khung 3D để đặt camera ngay trong ống kính vệ tinh, so khớp từng ngôi sao với ảnh chụp thực tế.</li>
+              <li><strong>Thử nghiệm ảnh chụp riêng:</strong> Bấm <em>Tùy chỉnh &amp; Tải ảnh</em> ở góc trên bên phải để tải lên ảnh TIFF/PNG/JPEG và khai báo tiêu cự thực (mm) cùng cỡ điểm ảnh (µm).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ROW 4: Sleek Compact Bottom Flight Telemetry Ribbon (~42px) -->
+  <footer class="telemetry-ribbon" aria-label="Băng thông số định hướng trực tiếp">
+    <div class="tele-cell is-status">
+      <span class="tele-label">Trạng thái</span>
+      <span class="kpi-badge status-pill IDLE" id="kpi-status-badge">IDLE</span>
+      <span class="verdict-pill IDLE" id="verdict">Sẵn sàng</span>
+      <span class="tele-sub" id="kpi-verdict-sub">Chưa chạy khung hình</span>
+    </div>
+
+    <span class="tele-div" aria-hidden="true"></span>
+
+    <div class="tele-cell">
+      <span class="tele-label">Hướng ngắm J2000</span>
+      <span class="tele-val" id="kpi-boresight-val">RA -- · Dec --</span>
+      <span class="tele-sub" id="kpi-boresight-sub">ICRS</span>
+    </div>
+
+    <span class="tele-div" aria-hidden="true"></span>
+
+    <div class="tele-cell" id="kpi-att-err-card">
+      <span class="tele-label">Sai số Δθ</span>
+      <span class="tele-val" id="kpi-att-err-val">--</span>
+      <span class="kpi-badge" id="kpi-att-err-badge">&lt; 10″</span>
+      <span class="sr-only" id="kpi-att-err-sub">Độ lệch góc 3 trục</span>
+    </div>
+
+    <span class="tele-div" aria-hidden="true"></span>
+
+    <div class="tele-cell">
+      <span class="tele-label">Sao hợp lệ</span>
+      <span class="tele-val" id="kpi-stars-val">-- / --</span>
+      <span class="kpi-badge" id="kpi-star-pct">--</span>
+      <span class="sr-only" id="kpi-stars-sub">Hợp lệ: -- · Loại nhiễu: --</span>
+    </div>
+
+    <span class="tele-div" aria-hidden="true"></span>
+
+    <div class="tele-cell">
+      <span class="tele-label">Thời gian</span>
+      <span class="tele-val" id="kpi-time-val">--</span>
+      <span class="tele-sub" id="kpi-time-breakdown">CPU</span>
+    </div>
+
+    <div class="tele-credit">
+      <span>Khoa CNTT · ĐH Bách khoa – ĐH Đà Nẵng</span>
+    </div>
+  </footer>
+
+  <!-- Slide-Over Frosted-Glass Configuration & Upload Drawer -->
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="config-drawer" class="config-drawer" aria-label="Bảng tùy chỉnh mô phỏng và tải ảnh" hidden>
+    <div class="drawer-header">
+      <div>
+        <span class="drawer-eyebrow">CẤU HÌNH QUANG HỌC &amp; DỮ LIỆU</span>
+        <h2 class="drawer-title">Tùy chỉnh &amp; Tải ảnh Sao</h2>
+      </div>
+      <button type="button" id="btn-close-drawer" class="drawer-close-btn" title="Đóng bảng tùy chỉnh (Esc)">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form id="run-form" class="drawer-form">
+      <div class="drawer-scroll">
+        <!-- Section 1: Pointing Direction -->
+        <section class="drawer-section">
+          <h3 class="drawer-sec-title">Hướng ngắm Bầu trời</h3>
+          <div class="sub-tabs" role="tablist">
+            <button type="button" class="sub-tab-btn active" data-target="target-seed">Ngẫu nhiên</button>
+            <button type="button" class="sub-tab-btn" data-target="target-presets">Sao sáng</button>
+            <button type="button" class="sub-tab-btn" data-target="target-radec">Tọa độ RA-Dec</button>
+          </div>
+
+          <div id="target-seed" class="sub-tab-pane active">
+            <div class="field-group">
+              <label>Mã hướng ngẫu nhiên (Seed)</label>
+              <div class="seed-input-wrap">
+                <input name="seed" id="seed-input" type="number" value="42" min="0" />
+                <button type="button" id="btn-rnd-seed" class="icon-btn" title="Quay sang một hướng ngẫu nhiên mới trên thiên cầu">
+                  <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8" />
+                    <line x1="4" y1="20" x2="21" y2="3" />
+                    <polyline points="21 16 21 21 16 21" />
+                    <line x1="15" y1="15" x2="21" y2="21" />
+                    <line x1="4" y1="4" x2="9" y2="9" />
+                  </svg>
+                  <span>Đổi góc</span>
+                </button>
+              </div>
+              <p class="field-hint">Mỗi mã số sinh một tư thế quay phân bố đều trên toàn thiên cầu J2000.</p>
+            </div>
+          </div>
+
+          <div id="target-presets" class="sub-tab-pane">
+            <div class="preset-grid">
+              <button type="button" class="preset-chip" data-hr="2491" data-name="Sirius">
+                <strong>Sirius</strong>
+                <small>HR 2491 · V −1.46</small>
+              </button>
+              <button type="button" class="preset-chip" data-hr="2326" data-name="Canopus">
+                <strong>Canopus</strong>
+                <small>HR 2326 · V −0.74</small>
+              </button>
+              <button type="button" class="preset-chip" data-hr="7001" data-name="Vega">
+                <strong>Vega</strong>
+                <small>HR 7001 · V +0.03</small>
+              </button>
+              <button type="button" class="preset-chip" data-hr="1713" data-name="Rigel">
+                <strong>Rigel</strong>
+                <small>HR 1713 · V +0.13</small>
+              </button>
+              <button type="button" class="preset-chip" data-hr="424" data-name="Polaris">
+                <strong>Polaris</strong>
+                <small>HR 424 · Bắc Cực</small>
+              </button>
+              <button type="button" class="preset-chip" data-hr="2061" data-name="Betelgeuse">
+                <strong>Betelgeuse</strong>
+                <small>HR 2061 · V +0.50</small>
+              </button>
+            </div>
+            <div id="preset-active-indicator" class="preset-indicator muted">Chọn một ngôi sao để hướng thẳng tâm kính</div>
+          </div>
+
+          <div id="target-radec" class="sub-tab-pane">
+            <div class="field-group">
+              <label>Dán nhanh tọa độ (Stellarium hoặc độ thập phân)
+                <div class="input-with-clear">
+                  <input name="radec_paste" id="radec-paste" type="text" autocomplete="off" spellcheck="false" placeholder="VD: 18h 37m 51.2s  +38° 48' 46.2&quot;" />
+                  <button type="button" id="btn-clear-radec" class="clear-btn" title="Xóa tọa độ" aria-label="Xóa tọa độ">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </label>
+            </div>
+            <div class="input-row-2">
+              <div class="field-group">
+                <label>Xích kinh (RA)
+                  <input name="ra_hms" id="ra-hms" type="text" autocomplete="off" spellcheck="false" placeholder="18h 37m 51.2s" />
+                </label>
+              </div>
+              <div class="field-group">
+                <label>Xích vĩ (Dec)
+                  <input name="dec_dms" id="dec-dms" type="text" autocomplete="off" spellcheck="false" placeholder="+38d 48m 46.2s" />
+                </label>
+              </div>
+            </div>
+            <input name="ra_decimal" id="ra-decimal" type="hidden" />
+            <input name="dec_decimal" id="dec-decimal" type="hidden" />
+            <div id="radec-converted" class="radec-status-card muted">
+              <div class="radec-status-row">
+                <span class="coord-label">RA</span>
+                <span id="radec-line-ra" class="coord-val">Chưa nhập</span>
+              </div>
+              <div class="radec-status-row">
+                <span class="coord-label">Dec</span>
+                <span id="radec-line-dec" class="coord-val">Chưa nhập</span>
+              </div>
+            </div>
+            <button type="button" id="btn-radec" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;">
+              <span>Ngắm theo tọa độ đã nhập</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section 2: Dataset & Local Image Upload -->
+        <details class="drawer-accordion" id="details-dataset" open>
+          <summary class="drawer-acc-summary">
+            <span>Khung ảnh Mẫu &amp; Tải ảnh Riêng</span>
+            <svg class="summary-chevron" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </summary>
+          <div class="drawer-acc-body">
+            <div class="field-group">
+              <label>Chọn khung ảnh kiểm chuẩn có sẵn
+                <select id="frame-select">
+                  {% if frames %}
+                    {% for f in frames %}
+                      <option value="{{ f.file }}">{{ f.id }} · {{ f.n_stars }} sao</option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="">(Chưa có dữ liệu mẫu)</option>
+                  {% endif %}
+                </select>
+              </label>
+            </div>
+            <button type="button" id="btn-load" class="btn btn-secondary btn-block" {% if not frames %}disabled{% endif %}>
+              <span>Mở khung ảnh mẫu</span>
+            </button>
+
+            <div class="group-divider"></div>
+
+            <div class="upload-row">
+              <label class="file-btn">Tệp ảnh bầu trời
+                <input type="file" id="local-image" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,image/tiff,image/png,image/jpeg,image/webp" />
+              </label>
+              <label class="file-btn">Nhãn JSON (tùy chọn)
+                <input type="file" id="local-sidecar" accept=".json,application/json" />
+              </label>
+            </div>
+            <p id="local-file-hint" class="field-hint">Ưu tiên ảnh TIFF/PNG không nén. Với ảnh chụp từ máy ảnh riêng, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Quang học bên dưới.</p>
+            <button type="button" id="btn-upload" class="btn btn-secondary btn-block" style="margin-top: 0.45rem;">
+              <span>Tải ảnh lên &amp; Giải tư thế</span>
+            </button>
+          </div>
+        </details>
+
+        <!-- Section 3: Optics & Camera Intrinsics -->
+        <details class="drawer-accordion" id="details-optics">
+          <summary class="drawer-acc-summary">
+            <span>Hệ Quang học &amp; Cảm biến</span>
+            <svg class="summary-chevron" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </summary>
+          <div class="drawer-acc-body">
+            <div class="mode-toggle" role="radiogroup" aria-label="Cấu hình quang học">
               <label class="mode-btn">
-                <input type="radio" name="mode" value="fast" checked id="mode-fast" />
+                <input type="radio" name="optics" value="locked" checked id="optics-locked" />
                 <span class="mode-pill">
-                  <strong>Chế độ Nhanh</strong>
-                  <small>1500 × 1000 · 61″/px</small>
+                  <strong>Ống kính mặc định</strong>
+                  <small>50 mm · 3,72 µm</small>
                 </span>
               </label>
               <label class="mode-btn">
-                <input type="radio" name="mode" value="full" id="mode-full" />
+                <input type="radio" name="optics" value="custom" id="optics-custom-radio" />
                 <span class="mode-pill">
-                  <strong>Độ phân giải gốc</strong>
-                  <small>6000 × 4000 · 15″/px</small>
+                  <strong>Thiết bị tùy chỉnh</strong>
+                  <small>Nhập tiêu cự &amp; điểm ảnh</small>
                 </span>
               </label>
             </div>
 
+            <div id="optics-custom" hidden>
+              <div class="field-group">
+                <label>Cấu hình tham khảo nhanh
+                  <select id="optics-preset">
+                    <option value="">Tự nhập thông số</option>
+                    <option value="full">APS-C 24 MP · 50 mm · 3,72 µm · 6000×4000</option>
+                    <option value="fast">Gộp điểm 4×4 · 50 mm · 14,88 µm · 1500×1000</option>
+                    <option value="tetra3_alt60">Trời thực ESA · 35,2911 mm · 6,9 µm · 1024×768</option>
+                    <option value="mount_lost">Góc rộng St. Helens · 4,2 mm · 4,1 µm · 1024×1024</option>
+                  </select>
+                </label>
+              </div>
+              <div class="input-row-2">
+                <div class="field-group">
+                  <label>Tiêu cự thực (mm)
+                    <input name="focal_mm" id="focal-mm" type="number" step="any" min="0.1" value="50" />
+                  </label>
+                </div>
+                <div class="field-group">
+                  <label>Cỡ điểm ảnh (µm)
+                    <input name="pixel_um" id="pixel-um" type="number" step="any" min="0.1" value="3.72" />
+                  </label>
+                </div>
+              </div>
+              <div class="input-row-2">
+                <div class="field-group">
+                  <label>Chiều rộng ảnh (px)
+                    <input name="image_width" id="image-width" type="number" step="1" min="16" placeholder="Theo chế độ" />
+                  </label>
+                </div>
+                <div class="field-group">
+                  <label>Chiều cao ảnh (px)
+                    <input name="image_height" id="image-height" type="number" step="1" min="16" placeholder="Theo chế độ" />
+                  </label>
+                </div>
+              </div>
+              <div class="field-group">
+                <label>Dung sai khớp góc (arcsec)
+                  <input name="angular_tol_arcsec" id="angular-tol" type="number" step="any" min="0.01" placeholder="Tự động (~0,88 px)" />
+                </label>
+              </div>
+            </div>
+
+            <div id="optics-readout" class="radec-status-card muted">Ống kính 50 mm · Trường nhìn 25,16° × 16,93°.</div>
+          </div>
+        </details>
+
+        <!-- Section 4: Catalog, Solver & Environmental Conditions -->
+        <details class="drawer-accordion" id="details-dynamics">
+          <summary class="drawer-acc-summary">
+            <span>Danh mục, Thuật toán &amp; Nhiễu Môi trường</span>
+            <svg class="summary-chevron" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </summary>
+          <div class="drawer-acc-body">
             <div class="input-row-2">
               <div class="field-group">
                 <label>Danh mục sao
@@ -108,876 +851,88 @@
               </div>
             </div>
 
-            <div class="field-group" style="margin-top: 0.65rem;">
-              <label>Phương pháp tách tâm sao</label>
-              <div class="mode-toggle" id="centroid-mode-toggle" role="radiogroup" aria-label="Phương pháp tách tâm sao">
-                <label class="mode-btn">
-                  <input type="radio" name="centroid_backend" value="classical" checked id="centroid-classical" />
-                  <span class="mode-pill">
-                    <strong>Trọng tâm sáng (CoG)</strong>
-                    <small>Chính xác cao · Mặc định</small>
-                  </span>
-                </label>
-                <label class="mode-btn">
-                  <input type="radio" name="centroid_backend" value="cnn" id="centroid-cnn" />
-                  <span class="mode-pill">
-                    <strong>Mạng MobileUNet</strong>
-                    <small>Lọc tiền cảnh &amp; địa hình</small>
-                  </span>
-                </label>
-              </div>
-              <p class="field-hint" id="centroid-hybrid-note">CoG đạt độ chụm tối ưu trên bầu trời sao quang đãng; MobileUNet hữu ích khi khung ảnh lẫn sườn núi hoặc mây sáng.</p>
-            </div>
-          </div>
-
-          <!-- Primary Card 2: Sky Pointing -->
-          <div class="control-card">
-            <div class="card-header">
-              <span class="card-num">02</span>
-              <h3>Hướng ngắm bầu trời</h3>
-            </div>
-
-            <div class="sub-tabs" role="tablist">
-              <button type="button" class="sub-tab-btn active" data-target="target-seed">Ngẫu nhiên</button>
-              <button type="button" class="sub-tab-btn" data-target="target-presets">Sao sáng</button>
-              <button type="button" class="sub-tab-btn" data-target="target-radec">Tọa độ RA/Dec</button>
-            </div>
-
-            <!-- Sub-tab: Seed -->
-            <div id="target-seed" class="sub-tab-pane active">
-              <div class="field-group seed-group">
-                <label>Mã hướng ngẫu nhiên (Seed)</label>
-                <div class="seed-input-wrap">
-                  <input name="seed" id="seed-input" type="number" value="42" min="0" />
-                  <button type="button" id="btn-rnd-seed" class="icon-btn" title="Chọn một hướng ngẫu nhiên khác trên thiên cầu">
-                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="16 3 21 3 21 8" />
-                      <line x1="4" y1="20" x2="21" y2="3" />
-                      <polyline points="21 16 21 21 16 21" />
-                      <line x1="15" y1="15" x2="21" y2="21" />
-                      <line x1="4" y1="4" x2="9" y2="9" />
-                    </svg>
-                    <span>Đổi góc</span>
-                  </button>
-                </div>
-                <p class="field-hint">Mỗi mã số tạo một hướng quay ngẫu nhiên phân bố đều trên toàn thiên cầu.</p>
-              </div>
-            </div>
-
-            <!-- Sub-tab: Star Presets -->
-            <div id="target-presets" class="sub-tab-pane">
-              <p class="field-hint" style="margin-top: 0; margin-bottom: 0.45rem;">Chọn ngôi sao sáng để hướng thẳng tâm ống kính vào đó:</p>
-              <div class="preset-grid">
-                <button type="button" class="preset-chip" data-hr="2491" data-name="Sirius">
-                  <strong>Sirius</strong>
-                  <small>HR 2491 · V −1.46</small>
-                </button>
-                <button type="button" class="preset-chip" data-hr="2326" data-name="Canopus">
-                  <strong>Canopus</strong>
-                  <small>HR 2326 · V −0.74</small>
-                </button>
-                <button type="button" class="preset-chip" data-hr="7001" data-name="Vega">
-                  <strong>Vega</strong>
-                  <small>HR 7001 · V +0.03</small>
-                </button>
-                <button type="button" class="preset-chip" data-hr="1713" data-name="Rigel">
-                  <strong>Rigel</strong>
-                  <small>HR 1713 · V +0.13</small>
-                </button>
-                <button type="button" class="preset-chip" data-hr="424" data-name="Polaris">
-                  <strong>Polaris</strong>
-                  <small>HR 424 · Sao Bắc Cực</small>
-                </button>
-                <button type="button" class="preset-chip" data-hr="2061" data-name="Betelgeuse">
-                  <strong>Betelgeuse</strong>
-                  <small>HR 2061 · V +0.50</small>
-                </button>
-              </div>
-              <div id="preset-active-indicator" class="preset-indicator muted">Chưa chọn ngôi sao mục tiêu</div>
-            </div>
-
-            <!-- Sub-tab: RA / Dec -->
-            <div id="target-radec" class="sub-tab-pane">
+            <div class="input-row-2">
               <div class="field-group">
-                <label>Dán nhanh tọa độ (Stellarium hoặc độ thập phân)
-                  <div class="input-with-clear">
-                    <input name="radec_paste" id="radec-paste" type="text" autocomplete="off" spellcheck="false" placeholder="VD: 18h 37m 51.2s  +38° 48' 46.2&quot;" />
-                    <button type="button" id="btn-clear-radec" class="clear-btn" title="Xóa tọa độ" aria-label="Xóa tọa độ">
-                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
+                <label>Vận tốc quay ω (°/s)
+                  <input name="omega" type="number" step="0.01" value="0.06" />
                 </label>
               </div>
-              <div class="input-row-2">
-                <div class="field-group">
-                  <label>Xích kinh (RA)
-                    <input name="ra_hms" id="ra-hms" type="text" autocomplete="off" spellcheck="false" placeholder="18h 37m 51.2s" />
-                  </label>
-                </div>
-                <div class="field-group">
-                  <label>Xích vĩ (Dec)
-                    <input name="dec_dms" id="dec-dms" type="text" autocomplete="off" spellcheck="false" placeholder="+38d 48m 46.2s" />
-                  </label>
-                </div>
-              </div>
-              <input name="ra_decimal" id="ra-decimal" type="hidden" />
-              <input name="dec_decimal" id="dec-decimal" type="hidden" />
-              <div id="radec-converted" class="radec-status-card muted">
-                <div class="radec-status-row">
-                  <span class="coord-label">RA</span>
-                  <span id="radec-line-ra" class="coord-val">Chưa nhập</span>
-                </div>
-                <div class="radec-status-row">
-                  <span class="coord-label">Dec</span>
-                  <span id="radec-line-dec" class="coord-val">Chưa nhập</span>
-                </div>
-              </div>
-              <button type="button" id="btn-radec" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9" />
-                  <circle cx="12" cy="12" r="2" />
-                  <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-                </svg>
-                <span>Ngắm theo tọa độ đã nhập</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Accordion 3: Optics -->
-          <details class="control-group" id="details-optics">
-            <summary class="control-summary">
-              <span class="summary-left">
-                <span class="card-num">03</span>
-                <span>Hệ quang học &amp; Cảm biến</span>
-              </span>
-              <svg class="summary-chevron" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </summary>
-            <div class="control-group-body">
-              <div class="mode-toggle" role="radiogroup" aria-label="Cấu hình quang học">
-                <label class="mode-btn">
-                  <input type="radio" name="optics" value="locked" checked id="optics-locked" />
-                  <span class="mode-pill">
-                    <strong>Ống kính mặc định</strong>
-                    <small>50 mm · 3,72 µm</small>
-                  </span>
-                </label>
-                <label class="mode-btn">
-                  <input type="radio" name="optics" value="custom" id="optics-custom-radio" />
-                  <span class="mode-pill">
-                    <strong>Thiết bị tùy chỉnh</strong>
-                    <small>Nhập tiêu cự &amp; điểm ảnh</small>
-                  </span>
-                </label>
-              </div>
-
-              <div id="optics-custom" hidden>
-                <div class="field-group">
-                  <label>Cấu hình tham khảo
-                    <select id="optics-preset">
-                      <option value="">Tự nhập thông số</option>
-                      <option value="full">APS-C 24 MP · 50 mm · 3,72 µm · 6000×4000</option>
-                      <option value="fast">Gộp điểm 4×4 · 50 mm · 14,88 µm · 1500×1000</option>
-                      <option value="tetra3_alt60">Bầu trời thật ESA · 35,2911 mm · 6,9 µm · 1024×768</option>
-                      <option value="mount_lost">Góc rộng St. Helens · 4,2 mm · 4,1 µm · 1024×1024</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="input-row-2">
-                  <div class="field-group">
-                    <label>Tiêu cự thực (mm)
-                      <input name="focal_mm" id="focal-mm" type="number" step="any" min="0.1" value="50" />
-                    </label>
-                  </div>
-                  <div class="field-group">
-                    <label>Cỡ điểm ảnh (µm)
-                      <input name="pixel_um" id="pixel-um" type="number" step="any" min="0.1" value="3.72" />
-                    </label>
-                  </div>
-                </div>
-                <div class="input-row-2">
-                  <div class="field-group">
-                    <label>Chiều rộng ảnh (px)
-                      <input name="image_width" id="image-width" type="number" step="1" min="16" placeholder="Mặc định theo chế độ" />
-                    </label>
-                  </div>
-                  <div class="field-group">
-                    <label>Chiều cao ảnh (px)
-                      <input name="image_height" id="image-height" type="number" step="1" min="16" placeholder="Mặc định theo chế độ" />
-                    </label>
-                  </div>
-                </div>
-                <div class="field-group">
-                  <label>Dung sai khớp góc (arcsec)
-                    <input name="angular_tol_arcsec" id="angular-tol" type="number" step="any" min="0.01" placeholder="Tự động (~0,88 px)" />
-                  </label>
-                </div>
-                <p class="field-hint">Nhập tiêu cự vật lý của ống kính (không dùng tiêu cự quy đổi full-frame). Khi mở tệp ảnh, độ phân giải lấy trực tiếp từ tệp.</p>
-              </div>
-
-              <div id="optics-readout" class="radec-status-card muted">Ống kính 50 mm · Trường nhìn 25,16° × 16,93°.</div>
-            </div>
-          </details>
-
-          <!-- Accordion 4: Exposure & Environment -->
-          <details class="control-group" id="details-dynamics">
-            <summary class="control-summary">
-              <span class="summary-left">
-                <span class="card-num">04</span>
-                <span>Phơi sáng &amp; Nhiễu môi trường</span>
-              </span>
-              <svg class="summary-chevron" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </summary>
-            <div class="control-group-body">
-              <div class="input-row-2">
-                <div class="field-group">
-                  <label>Vận tốc quay ω (°/s)
-                    <input name="omega" type="number" step="0.01" value="0.06" title="Vận tốc góc của vệ tinh trong lúc mở màn trập" />
-                  </label>
-                </div>
-                <div class="field-group">
-                  <label>Trục quay
-                    <select name="omega_axis">
-                      <option value="y" selected>Trục ngang Y</option>
-                      <option value="x">Trục dọc X</option>
-                      <option value="z">Trục ngắm Z</option>
-                      <option value="random">Ngẫu nhiên</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-
-              <div class="input-row-2">
-                <div class="field-group">
-                  <label>Phơi sáng (giây)
-                    <input name="exposure" type="number" step="0.01" value="0.15" min="0.01" max="1.0" />
-                  </label>
-                </div>
-                <div class="field-group">
-                  <label>Ánh sáng chói
-                    <select name="glare" id="glare-select">
-                      <option value="none" selected>Không có</option>
-                      <option value="earth">Rìa khí quyển Trái Đất</option>
-                      <option value="sun">Ánh nắng chiếu nhẹ</option>
-                      <option value="sun_strong">Ngược nắng lóa mạnh</option>
-                      <option value="moon">Ánh Trăng trong khung</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-
               <div class="field-group">
-                <label>Nền sáng thiên văn
-                  <select name="sky_clutter">
-                    <option value="none" selected>Bầu trời tối tiêu chuẩn</option>
-                    <option value="galactic">Dải sáng Ngân Hà</option>
-                    <option value="galaxy">Thiên hà lân cận</option>
-                    <option value="nebula">Mây tinh vân khuếch tán</option>
-                    <option value="cloud">Đám sao mờ nền sau</option>
-                    <option value="typical">Kết hợp nhiều lớp nền</option>
+                <label>Trục quay
+                  <select name="omega_axis">
+                    <option value="y" selected>Trục ngang Y</option>
+                    <option value="x">Trục dọc X</option>
+                    <option value="z">Trục ngắm Z</option>
+                    <option value="random">Ngẫu nhiên</option>
                   </select>
                 </label>
               </div>
+            </div>
 
+            <div class="input-row-2">
               <div class="field-group">
-                <label>Điểm sáng nhiễu (tia vũ trụ / bụi sáng): <span id="false-stars-val">0</span>
-                  <input name="false_stars" id="false-stars-slider" type="range" min="0" max="20" value="0" />
+                <label>Phơi sáng (giây)
+                  <input name="exposure" type="number" step="0.01" value="0.15" min="0.01" max="1.0" />
                 </label>
               </div>
-            </div>
-          </details>
-
-          <!-- Accordion 5: Dataset & Local File Upload -->
-          <details class="control-group" id="details-dataset">
-            <summary class="control-summary">
-              <span class="summary-left">
-                <span class="card-num">05</span>
-                <span>Bộ ảnh mẫu &amp; Tải ảnh riêng</span>
-              </span>
-              <svg class="summary-chevron" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </summary>
-            <div class="control-group-body">
               <div class="field-group">
-                <label>Chọn khung ảnh có sẵn
-                  <select id="frame-select">
-                    {% if frames %}
-                      {% for f in frames %}
-                        <option value="{{ f.file }}">{{ f.id }} · {{ f.n_stars }} sao</option>
-                      {% endfor %}
-                    {% else %}
-                      <option value="">(Chưa có dữ liệu mẫu)</option>
-                    {% endif %}
+                <label>Ánh sáng chói
+                  <select name="glare" id="glare-select">
+                    <option value="none" selected>Không có</option>
+                    <option value="earth">Rìa khí quyển Trái Đất</option>
+                    <option value="sun">Ánh nắng chiếu nhẹ</option>
+                    <option value="sun_strong">Ngược nắng lóa mạnh</option>
+                    <option value="moon">Ánh Trăng trong khung</option>
                   </select>
                 </label>
               </div>
-              <button type="button" id="btn-load" class="btn btn-secondary btn-block" {% if not frames %}disabled{% endif %}>
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>Mở khung ảnh mẫu</span>
-              </button>
-
-              <div class="group-divider"></div>
-
-              <div class="upload-row">
-                <label class="file-btn">Tệp ảnh sao
-                  <input type="file" id="local-image" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,image/tiff,image/png,image/jpeg,image/webp" />
-                </label>
-                <label class="file-btn">Nhãn JSON (tùy chọn)
-                  <input type="file" id="local-sidecar" accept=".json,application/json" />
-                </label>
-              </div>
-              <p id="local-file-hint" class="field-hint">Khuyên dùng ảnh TIFF/PNG gốc. Với ảnh chụp từ máy ảnh khác, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Hệ quang học.</p>
-              <button type="button" id="btn-upload" class="btn btn-secondary btn-block" style="margin-top: 0.45rem;">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span>Tải ảnh lên &amp; Giải tư thế</span>
-              </button>
             </div>
-          </details>
-        </div>
 
-        <!-- Sticky Bottom Primary CTA & Status -->
-        <div class="sidebar-dock">
-          <button type="button" id="btn-run" class="btn btn-primary btn-hero">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-            <span class="btn-text">Mô phỏng &amp; Giải tư thế</span>
-          </button>
-          <div id="status" class="status-banner">
-            Sẵn sàng. Chọn một kịch bản ở thanh trên hoặc nhấn <strong>Mô phỏng &amp; Giải tư thế</strong> để bắt đầu.
+            <div class="field-group">
+              <label>Nền sáng thiên văn
+                <select name="sky_clutter">
+                  <option value="none" selected>Bầu trời tối tiêu chuẩn</option>
+                  <option value="galactic">Dải sáng Ngân Hà</option>
+                  <option value="galaxy">Thiên hà lân cận</option>
+                  <option value="nebula">Mây tinh vân khuếch tán</option>
+                  <option value="cloud">Đám sao mờ nền sau</option>
+                  <option value="typical">Kết hợp nhiều lớp nền</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="field-group">
+              <label>Điểm sáng nhiễu (tia vũ trụ / điểm nóng): <span id="false-stars-val">0</span>
+                <input name="false_stars" id="false-stars-slider" type="range" min="0" max="20" value="0" />
+              </label>
+            </div>
+            <p class="field-hint" id="centroid-hybrid-note">CoG cho độ chụm tối ưu trên bầu trời quang đãng; mạng CNN phát huy hiệu quả khi ảnh vướng tiền cảnh địa hình hoặc mây sáng.</p>
           </div>
-        </div>
-      </form>
-    </aside>
+        </details>
+      </div>
 
-    <!-- Right Main Workspace -->
-    <main class="workspace">
-      <!-- 5-Metric Telemetry Strip -->
-      <section class="kpi-grid" aria-label="Thông số kết quả chính">
-        <div class="kpi-card" id="kpi-att-err-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Sai số tư thế</span>
-            <span class="kpi-badge" id="kpi-att-err-badge">Ngưỡng &lt; 10″</span>
-          </div>
-          <div class="kpi-val" id="kpi-att-err-val">--</div>
-          <div class="kpi-sub" id="kpi-att-err-sub">Độ lệch góc 3 trục</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Trạng thái</span>
-            <span class="kpi-badge status-pill IDLE" id="kpi-status-badge">IDLE</span>
-          </div>
-          <div class="kpi-val"><span class="verdict-pill IDLE" id="verdict">Sẵn sàng</span></div>
-          <div class="kpi-sub" id="kpi-verdict-sub">Chưa chạy khung hình</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Thời gian xử lý</span>
-            <span class="kpi-badge">CPU</span>
-          </div>
-          <div class="kpi-val" id="kpi-time-val">--</div>
-          <div class="kpi-sub" id="kpi-time-breakdown">Tâm sao: -- · Khớp: -- · Tư thế: --</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Sao khớp hợp lệ</span>
-            <span class="kpi-badge" id="kpi-star-pct">--</span>
-          </div>
-          <div class="kpi-val" id="kpi-stars-val">-- / --</div>
-          <div class="kpi-sub" id="kpi-stars-sub">Hợp lệ: -- · Loại nhiễu: --</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <span class="kpi-label">Hướng ngắm (J2000)</span>
-            <span class="kpi-badge">ICRS</span>
-          </div>
-          <div class="kpi-val-small" id="kpi-boresight-val">RA -- · Dec --</div>
-          <div class="kpi-sub" id="kpi-boresight-sub">Tâm trường nhìn cảm biến</div>
-        </div>
-      </section>
-
-      <!-- Workspace Navigation Tabs -->
-      <nav class="tab-nav" role="tablist">
-        <button type="button" class="tab-btn active" data-tab="tab-imagery">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 3v2M12 19v2M3 12h2M19 12h2" />
+      <div class="drawer-footer">
+        <button type="button" id="btn-drawer-run" class="cmd-solve-btn is-full">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />
           </svg>
-          <span>Không gian 3D &amp; Quang học</span>
+          <span>Áp dụng &amp; Giải tư thế</span>
         </button>
-        <button type="button" class="tab-btn" data-tab="tab-telemetry">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-          <span>Chi tiết Tư thế &amp; Gói tin</span>
-        </button>
-        <button type="button" class="tab-btn" data-tab="tab-catalog">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 14.9 8.6 22 9.3 16.6 14 18.2 21 12 17.3 5.8 21 7.4 14 2 9.3 9.1 8.6 12 2" />
-          </svg>
-          <span>Danh sách Sao trong Khung</span>
-        </button>
-        <button type="button" class="tab-btn" data-tab="tab-specs">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="16" rx="2" />
-            <circle cx="12" cy="12" r="3.5" />
-          </svg>
-          <span>Thông số Hệ thống</span>
-        </button>
-      </nav>
+      </div>
+    </form>
+  </aside>
 
-      <!-- TAB 1: 3D Orbit & Optical Starfield Cross-Check -->
-      <section id="tab-imagery" class="tab-pane active">
-        <div class="panel stage-panel">
-          <div class="panel-header-toolbar">
-            <div>
-              <h2>Đối chiếu Khung ảnh Cảm biến &amp; Bầu trời Sao 3D</h2>
-              <p class="panel-desc">So sánh trực tiếp ảnh chụp với vị trí sao thực trên thiên cầu J2000 và hướng ngắm của vệ tinh trên quỹ đạo.</p>
-            </div>
-            <div class="view-mode-selector" role="tablist" aria-label="Chế độ quan sát">
-              <button type="button" class="view-mode-btn active" data-mode="compare3d">Đối chiếu 3D &amp; Ảnh gốc</button>
-              <button type="button" class="view-mode-btn" data-mode="orbit3d">Không gian 3D rộng</button>
-              <button type="button" class="view-mode-btn" data-mode="split">Ảnh gốc &amp; Nhận diện</button>
-              <button type="button" class="view-mode-btn" data-mode="output">Ảnh nhận diện lớn</button>
-              <button type="button" class="view-mode-btn" data-mode="hud">Bản tổng hợp</button>
-            </div>
-          </div>
-
-          <!-- View Modes 1 & 2: 3D Cross-Check & Full 3D Space (Single #orbit3d-root) -->
-          <div id="view-stage3d" class="stage-grid is-compare3d">
-            <div id="compare3d-ref-card" class="image-frame-box compare3d-pane">
-              <div class="frame-bar compare3d-bar">
-                <div class="compare3d-switch" role="group" aria-label="Chuyển đổi ảnh đối chiếu">
-                  <button type="button" id="btn-compare3d-raw" class="seg-mini-btn active">Ảnh gốc</button>
-                  <button type="button" id="btn-compare3d-annotated" class="seg-mini-btn">Ảnh nhận diện</button>
-                </div>
-                <span id="cap-compare3d" class="frame-meta">Chưa nạp khung hình</span>
-                <button type="button" class="btn-inspect" data-img="compare3d-img" title="Mở ảnh kích thước đầy đủ">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </svg>
-                  <span>Phóng to</span>
-                </button>
-              </div>
-              <div class="frame-viewport compare3d-viewport">
-                <div class="frame-placeholder" id="slot-compare3d">
-                  <div class="placeholder-content">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M12 8v8M8 12h8" />
-                    </svg>
-                    <p>Chọn kịch bản <strong>Mẫu chuẩn Seed 42</strong> hoặc <strong>Bầu trời thật ESA</strong> để đặt ảnh chụp cạnh bầu trời 3D.</p>
-                  </div>
-                </div>
-                <img id="compare3d-img" alt="Khung hình quang học đối chiếu 3D" hidden />
-              </div>
-            </div>
-
-            <div class="image-frame-box orbit3d-pane">
-              <div class="frame-bar">
-                <span class="frame-tag">QUỸ ĐẠO VỆ TINH &amp; THIÊN CẦU J2000</span>
-                <span id="cap-orbit3d" class="frame-meta">5.023 sao Yale BSC5 · Thiên cầu thực J2000</span>
-                <span class="frame-spacer"></span>
-              </div>
-              <div id="orbit3d-root" class="orbit3d-root"></div>
-            </div>
-          </div>
-
-          <!-- View Mode 3: Split Input / Annotated Output -->
-          <div id="view-split" class="image-view-container split-mode" hidden>
-            <div class="image-frame-box">
-              <div class="frame-bar">
-                <span class="frame-tag">ẢNH GỐC CẢM BIẾN</span>
-                <span id="cap-in" class="frame-meta">Chưa có dữ liệu</span>
-                <button type="button" class="btn-inspect" data-img="input-img" title="Mở ảnh kích thước đầy đủ">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </svg>
-                  <span>Phóng to</span>
-                </button>
-              </div>
-              <div class="frame-viewport">
-                <div class="frame-placeholder" id="slot-in">
-                  <div class="placeholder-content">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M12 8v8M8 12h8" />
-                    </svg>
-                    <p>Chưa có ảnh đầu vào.</p>
-                  </div>
-                </div>
-                <img id="input-img" alt="Ảnh gốc đầu vào cảm biến" hidden />
-              </div>
-            </div>
-
-            <div class="image-frame-box">
-              <div class="frame-bar">
-                <span class="frame-tag highlight">KẾT QUẢ NHẬN DIỆN SAO</span>
-                <span id="cap-out" class="frame-meta">Tâm sao &amp; Nhãn danh mục</span>
-                <button type="button" class="btn-inspect" data-img="output-img" title="Mở ảnh kích thước đầy đủ">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </svg>
-                  <span>Phóng to</span>
-                </button>
-              </div>
-              <div class="frame-viewport">
-                <div class="frame-placeholder" id="slot-out">
-                  <div class="placeholder-content">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <polygon points="12 2 14.9 8.6 22 9.3 16.6 14 18.2 21 12 17.3 5.8 21 7.4 14 2 9.3 9.1 8.6 12 2" />
-                    </svg>
-                    <p>Chưa có lớp nhận diện sao.</p>
-                  </div>
-                </div>
-                <img id="output-img" alt="Ảnh kết quả nhận diện sao" hidden />
-              </div>
-            </div>
-          </div>
-
-          <!-- View Mode 4: Large Annotated Output -->
-          <div id="view-output" class="image-view-container single-mode" hidden>
-            <div class="image-frame-box">
-              <div class="frame-bar">
-                <span class="frame-tag highlight">KHUNG NHẬN DIỆN CHI TIẾT</span>
-                <span class="frame-meta">Nhấn vào ảnh để phóng to 1:1</span>
-                <button type="button" class="btn-inspect" data-img="output-img-large" title="Mở ảnh kích thước đầy đủ">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </svg>
-                  <span>Phóng to</span>
-                </button>
-              </div>
-              <div class="frame-viewport large-viewport">
-                <img id="output-img-large" alt="Ảnh nhận diện sao kích thước lớn" />
-              </div>
-            </div>
-          </div>
-
-          <!-- View Mode 5: Composite Summary Report -->
-          <div id="view-hud" class="image-view-container hud-mode" hidden>
-            <div class="image-frame-box">
-              <div class="frame-bar">
-                <span class="frame-tag">BẢN TỔNG HỢP PHÂN TÍCH</span>
-                <span class="frame-meta">Ảnh đầu vào, lớp nhận diện và thông số tư thế</span>
-                <button type="button" class="btn-inspect" data-img="hud-img" title="Mở ảnh kích thước đầy đủ">
-                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </svg>
-                  <span>Phóng to</span>
-                </button>
-              </div>
-              <div class="frame-viewport large-viewport">
-                <img id="hud-img" alt="Bản tổng hợp kết quả định hướng sao" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Minimalist Legend & SHA Integrity -->
-          <div class="legend-bar">
-            <div class="legend-items">
-              <span class="legend-chip"><span class="chip-circle cyan"></span> Tâm sao phát hiện</span>
-              <span class="legend-chip"><span class="chip-circle green"></span> Sao khớp danh mục J2000</span>
-              <span class="legend-chip"><span class="chip-arrow yellow">→</span> Hướng vệt sao khi quay</span>
-              <span class="legend-chip"><span class="chip-square red"></span> Vùng loại trừ chói sáng</span>
-            </div>
-            <div class="integrity-badge" id="integrity-badge">
-              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <span id="sha-integrity-text">SHA-256: --</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: Attitude Comparison & 16-Byte Packet -->
-      <section id="tab-telemetry" class="tab-pane" hidden>
-        <div class="telemetry-grid">
-          <div class="panel downlink-panel">
-            <div class="panel-header">
-              <h3>Gói dữ liệu Tư thế (Quaternion 16-byte)</h3>
-              <span class="panel-chip">IEEE 754 Float32 · J2000</span>
-            </div>
-            <p class="panel-desc">Tư thế được đóng gói gọn thành 4 số thực 32-bit chuẩn hóa <code>[q0, q1, q2, q3]</code> (tổng cộng 16 byte; xuất toàn bộ byte <code>00</code> khi không đủ điều kiện khóa hướng).</p>
-            <div class="packet-inspector">
-              <div class="hex-dump-box">
-                <div class="hex-title">MÃ HEX (16 BYTE)</div>
-                <div class="hex-bytes" id="downlink-hex-display">-- -- -- --  -- -- -- --  -- -- -- --  -- -- -- --</div>
-              </div>
-              <div class="packet-decode-grid">
-                <div class="decode-col">
-                  <span class="byte-range">Byte 00–03</span>
-                  <span class="component-name">q0 (Vô hướng w)</span>
-                  <span class="component-val" id="decode-q0">--</span>
-                </div>
-                <div class="decode-col">
-                  <span class="byte-range">Byte 04–07</span>
-                  <span class="component-name">q1 (Trục x)</span>
-                  <span class="component-val" id="decode-q1">--</span>
-                </div>
-                <div class="decode-col">
-                  <span class="byte-range">Byte 08–11</span>
-                  <span class="component-name">q2 (Trục y)</span>
-                  <span class="component-val" id="decode-q2">--</span>
-                </div>
-                <div class="decode-col">
-                  <span class="byte-range">Byte 12–15</span>
-                  <span class="component-name">q3 (Trục z)</span>
-                  <span class="component-val" id="decode-q3">--</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Đối chiếu Tư thế Chuẩn &amp; Ước lượng</h3>
-            </div>
-            <div class="table-responsive">
-              <table id="compare-table" class="data-table">
-                <thead>
-                  <tr>
-                    <th>Thông số</th>
-                    <th>Giá trị chuẩn (q<sub>GT</sub>)</th>
-                    <th>Ước lượng (q<sub>est</sub>)</th>
-                    <th>Độ lệch (Δ)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td colspan="4" class="empty">Chưa có dữ liệu. Hãy chọn kịch bản hoặc chạy mô phỏng.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Phân bổ Thời gian Xử lý</h3>
-              <span class="panel-chip">Đo trực tiếp trên CPU</span>
-            </div>
-            <div class="timing-meter" id="timing-meter">
-              <div class="meter-bar centroid" id="bar-centroid" style="width: 34%;" title="Tách tâm sao"></div>
-              <div class="meter-bar id" id="bar-id" style="width: 22%;" title="Nhận diện sao"></div>
-              <div class="meter-bar wahba" id="bar-wahba" style="width: 8%;" title="Giải tư thế Wahba"></div>
-            </div>
-            <div class="timing-legend">
-              <span class="legend-item"><span class="dot-color centroid"></span> Tách tâm sao: <strong id="t-centroid">-- ms</strong></span>
-              <span class="legend-item"><span class="dot-color id"></span> Nhận diện Pyramid: <strong id="t-id">-- ms</strong></span>
-              <span class="legend-item"><span class="dot-color wahba"></span> Giải tư thế Wahba: <strong id="t-wahba">-- ms</strong></span>
-              <span class="legend-item"><span class="dot-color total"></span> Tổng thời gian: <strong id="t-total">-- ms</strong></span>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Thông tin Chi tiết Khung hình</h3>
-            </div>
-            <dl class="meta-grid" id="meta-dl">
-              <dt>Nguồn dữ liệu</dt><dd>--</dd>
-              <dt>Hệ quang học</dt><dd>--</dd>
-              <dt>Danh mục sao</dt><dd>--</dd>
-              <dt>Gói đầu ra</dt><dd>--</dd>
-              <dt>Quaternion chuẩn</dt><dd>--</dd>
-              <dt>Quaternion ước lượng</dt><dd>--</dd>
-            </dl>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: Star Catalog & Identifications -->
-      <section id="tab-catalog" class="tab-pane" hidden>
-        <div class="panel">
-          <div class="panel-header-toolbar">
-            <div>
-              <h2>Danh sách Sao trong Trường nhìn &amp; Kết quả Khớp</h2>
-              <p class="panel-desc">Tra cứu trên <strong>5.023</strong> ngôi sao sáng (V ≤ 6.0) thuộc danh mục Yale BSC5 (J2000), kèm {{ n_iau_names }} tên gọi quốc tế theo chuẩn IAU.</p>
-            </div>
-            <div class="search-wrap">
-              <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input type="text" id="star-search-input" placeholder="Tìm theo tên sao hoặc mã HR..." />
-            </div>
-          </div>
-
-          <div class="star-tables-grid">
-            <div class="star-table-box">
-              <div class="sub-header">
-                <h3 id="fov-title">Sao trong trường nhìn (Ground Truth)</h3>
-                <span class="count-pill" id="fov-count">0 sao</span>
-              </div>
-              <div class="table-scroll-wrap">
-                <table id="fov-table" class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Mã sao</th>
-                      <th>Cấp sáng</th>
-                      <th>Tên quốc tế IAU</th>
-                      <th>Tọa độ u (px)</th>
-                      <th>Tọa độ v (px)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colspan="5" class="empty">Chưa có dữ liệu sao trong khung</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="star-table-box">
-              <div class="sub-header">
-                <h3 id="id-title">Sao khớp thành công</h3>
-                <span class="count-pill highlight" id="id-count">0 sao</span>
-              </div>
-              <div class="table-scroll-wrap">
-                <table id="id-table" class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Mã sao</th>
-                      <th>Cấp sáng</th>
-                      <th>Tên quốc tế IAU</th>
-                      <th>Tọa độ u (px)</th>
-                      <th>Tọa độ v (px)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colspan="5" class="empty">Chưa có sao được nhận diện</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: System Specs & Pipeline Overview -->
-      <section id="tab-specs" class="tab-pane" hidden>
-        <div class="specs-grid">
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Thông số Quang học Mặc định</h3>
-            </div>
-            <table class="specs-table">
-              <tr>
-                <td>Cảm biến tham chiếu</td>
-                <td><strong>APS-C 24 MP (6000 × 4000 px)</strong></td>
-                <td>Ống kính</td>
-                <td><strong>Tiêu cự thực 50 mm</strong></td>
-              </tr>
-              <tr>
-                <td>Kích thước điểm ảnh</td>
-                <td><strong>3,72 µm (gốc) · 14,88 µm (gộp 4×4)</strong></td>
-                <td>Thước góc điểm ảnh</td>
-                <td><strong>15,35″ / px (gốc) · 61,40″ / px (nhanh)</strong></td>
-              </tr>
-              <tr>
-                <td>Trường nhìn (FOV)</td>
-                <td><strong>25,16° × 16,93° (chéo 30,03°)</strong></td>
-                <td>Danh mục thiên văn</td>
-                <td><strong>Yale BSC5 &amp; Hipparcos (J2000, V ≤ 6.0)</strong></td>
-              </tr>
-              <tr>
-                <td>Gói dữ liệu đầu ra</td>
-                <td><strong>Quaternion 16-byte IEEE 754</strong></td>
-                <td>Cơ chế kiểm chứng</td>
-                <td><strong>Lọc ngoại lai lặp &amp; kiểm tra hình học</strong></td>
-              </tr>
-            </table>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Quy trình Định hướng Không cần Tư thế Đầu (Lost-in-Space)</h3>
-            </div>
-            <div class="steps-flow">
-              <div class="step-card">
-                <div class="step-badge">BƯỚC 01</div>
-                <h4>Tách tâm sao dưới mức điểm ảnh</h4>
-                <p>Khử nền sáng cục bộ, tách các cụm điểm sáng và nội suy tọa độ tâm sao bằng trọng tâm cường độ (CoG) hoặc mạng MobileUNet khi có địa hình che khuất.</p>
-              </div>
-              <div class="step-card">
-                <div class="step-badge">BƯỚC 02</div>
-                <h4>Nhận diện bất biến góc (Pyramid)</h4>
-                <p>Đối sánh khoảng cách góc cos(θ<sub>ij</sub>) giữa các cặp sao qua bảng tra K-vector O(1), xác thực cấu hình tứ giác 4 sao độc lập trên thiên cầu J2000.</p>
-              </div>
-              <div class="step-card">
-                <div class="step-badge">BƯỚC 03</div>
-                <h4>Giải tư thế tối ưu &amp; Kiểm định (Wahba)</h4>
-                <p>Ước lượng ma trận quay bằng SVD hoặc QUEST, loại trừ điểm khớp sai theo phần dư góc và chỉ xuất tư thế khi thỏa mãn ngưỡng nhất quán hình học.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">
-              <h3>Lưu ý khi Trải nghiệm</h3>
-            </div>
-            <ul class="guideline-list">
-              <li><strong>Đối chiếu bầu trời 3D:</strong> Khi giải tư thế thành công, vệ tinh 3D khóa hướng ngắm trực tiếp vào vùng sao tương ứng trên thiên cầu J2000; bạn có thể chuyển sang góc nhìn từ ống kính vệ tinh để so khớp từng ngôi sao với ảnh gốc.</li>
-              <li><strong>Kiểm tra độ tin cậy:</strong> Với những khung ảnh bị mây mù, nhiễu nặng hoặc không đủ 4 ngôi sao nhất quán hình học, hệ thống chủ động từ chối khóa sai và chuyển về trạng thái <code>LOST</code>.</li>
-              <li><strong>Thử nghiệm ảnh riêng:</strong> Khi tải lên ảnh chụp bầu trời từ thiết bị khác, hãy mở mục <em>Hệ quang học &amp; Cảm biến</em> để nhập tiêu cự vật lý (mm) và kích thước điểm ảnh (µm) của máy ảnh đó.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Fullscreen Lightbox Modal -->
+  <!-- Clean Fullscreen Zoom Lightbox Modal -->
   <div id="image-modal" class="image-modal" hidden>
     <div class="modal-backdrop"></div>
     <div class="modal-container">
       <div class="modal-header">
         <h3 id="modal-title">Chi tiết Khung ảnh Quang học</h3>
         <div class="modal-tools">
-          <button type="button" id="btn-zoom-in" class="modal-btn" title="Phóng to">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-            <span>Phóng to</span>
-          </button>
-          <button type="button" id="btn-zoom-out" class="modal-btn" title="Thu nhỏ">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M5 12h14" /></svg>
-            <span>Thu nhỏ</span>
-          </button>
+          <button type="button" id="btn-zoom-in" class="modal-btn" title="Phóng to">Phóng to +</button>
+          <button type="button" id="btn-zoom-out" class="modal-btn" title="Thu nhỏ">Thu nhỏ −</button>
           <button type="button" id="btn-zoom-reset" class="modal-btn" title="Tỷ lệ 1:1">1:1</button>
-          <button type="button" id="btn-close-modal" class="modal-btn close-btn" title="Đóng cửa sổ">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            <span>Đóng</span>
-          </button>
+          <button type="button" id="btn-close-modal" class="modal-btn close-btn" title="Đóng cửa sổ">Đóng</button>
         </div>
       </div>
       <div class="modal-body" id="modal-body">
@@ -986,14 +941,8 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bottom-bar">
-    <span>Mô phỏng &amp; định hướng sao trên máy tính · Khoa CNTT, ĐH Bách khoa – ĐH Đà Nẵng</span>
-    <span class="footer-meta">Hệ quy chiếu J2000 · Danh mục sao chuẩn Yale BSC5</span>
-  </footer>
-
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=1"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=24"></script>
+  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=30"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=30"></script>
 </body>
 </html>
