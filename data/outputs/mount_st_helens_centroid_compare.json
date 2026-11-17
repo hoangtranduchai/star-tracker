@@ -18,14 +18,32 @@
     "n_total": 111,
     "n_on_terrain": 25,
     "n_on_sky": 86,
-    "time_ms": 47.8105999991385
+    "time_ms": 40.32370000004448
   },
   "cnn": {
     "n_total": 79,
     "n_on_terrain": 1,
     "n_on_sky": 78,
-    "time_ms": 216.05169999929785,
+    "time_ms": 111.93169999933161,
     "error": null
+  },
+  "pipeline_vs_standalone_diff": {
+    "standalone_bg_block": 31,
+    "standalone_mask": null,
+    "standalone_n_detected": 111,
+    "standalone_time_ms": 40.32370000004448,
+    "pipeline_cfg_bg_block": 32,
+    "pipeline_effective_odd_bg_block": 33,
+    "pipeline_bg32_nomask_n_detected": 106,
+    "pipeline_bg32_nomask_time_ms": 36.14390000075218,
+    "pipeline_glare_mask_px": 0,
+    "pipeline_glare_mask_frac": 0.0,
+    "pipeline_mask_ms": 18.88619999954244,
+    "pipeline_centroiding_ms": 36.99320000032458,
+    "pipeline_total_detection_ms": 55.87939999986702,
+    "pipeline_n_detected": 106,
+    "delta_n_detected": 5,
+    "explanation_vi": "CentroidDetector độc lập dùng bg_block=31 và không chạy GlareMasker nên tách được 111 điểm (40.3 ms). Trong StarTrackerPipeline (chế độ fast), GlareMasker chạy thêm (18.9 ms; phủ 0 px trên ảnh 8-bit vì mask_full_scale=4095.0) và CentroidDetector nhận bg_block=32 (được làm lẻ thành 33 via bg_block|1), làm giảm 5 đốm sát ngưỡng xuống còn 106 điểm (37.0 ms đo hiện tại; 97.5 ms ở lần web log trước đó)."
   },
   "terrain_mask": {
     "n_px": 520241,

@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MOUNTAIN = ROOT / 'data' / 'uploads' / 'mount_st_helens_1.png'
 HD1024_TIF = ROOT / 'data' / 'sim_dataset' / 'hd1024' / '0000.tif'
 HD1024_JSON = HD1024_TIF.with_suffix('.json')
+TETRA3_ALT60 = ROOT / 'data' / 'tetra3' / '2019-07-29T204726_Alt60_Azi-135_Try1.tiff'
 MIN_ID = 20
 
 def _need_cnn() -> None:
@@ -123,3 +124,34 @@ def test_hd1024_frame_cnn_solves(engine: object, tmp_path: object) -> object:
     assert p['success'], p['error']
     assert p['metrics']['n_matched'] >= MIN_ID
     assert p['metrics']['attitude_error_arcsec'] < 40.0
+
+@pytest.mark.skipif(not TETRA3_ALT60.is_file(), reason='tetra3 Alt60 frame not present')
+def test_tetra3_16bit_real_frame_cnn_solves(engine: object, tmp_path: object) -> object:
+    from src.camera import CameraModel
+    from src.centroid_cnn import CNNCentroidDetector
+    from src.demo_session import load_frame
+    from src.quaternion import angular_error_arcsec
+    img: object = load_frame(TETRA3_ALT60)
+    assert img.dtype == np.uint16 and int(img.max()) > 4095
+    cam_16: object = CameraModel(width=img.shape[1], height=img.shape[0], pixel_um=6.9, focal_mm=35.2911)
+    det_cnn: object = CNNCentroidDetector(cam_16)
+    cents: object = det_cnn.detect(img)
+    assert det_cnn.last_backend == 'cnn_zhao2024'
+    assert not det_cnn.last_fallback
+    assert det_cnn.last_seed_policy == 'contrast_snr_16bit'
+    assert len(cents.uv) >= 15
+    out: object = _run(engine, tmp_path, image=TETRA3_ALT60, focal_mm=35.2911, pixel_um=6.9)
+    p: object = out.payload
+    assert p['centroid_detector'] == 'cnn_zhao2024', p.get('centroid_error')
+    assert not p['centroid_fallback']
+    assert p['success'], p['error']
+    assert p['metrics']['n_matched'] >= 6
+    bore: object = p['boresight_est']
+    assert 240.3 <= bore['ra_deg'] <= 240.6, bore
+    assert 28.8 <= bore['dec_deg'] <= 29.1, bore
+    manifest_p: object = ROOT / 'data' / 'real_calibrated' / 'manifest_real_calibrated.json'
+    if manifest_p.is_file():
+        frames: object = json.loads(manifest_p.read_text(encoding='utf-8')).get('frames', [])
+        alt60_ref: object = next((f for f in frames if 'Alt60' in str(f.get('path', ''))), None)
+        if alt60_ref and alt60_ref.get('q_gt') is not None:
+            assert angular_error_arcsec(out.result.q, np.asarray(alt60_ref['q_gt'], dtype=np.float64)) < 30.0

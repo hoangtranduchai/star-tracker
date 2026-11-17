@@ -23,15 +23,21 @@ ENV/
 third_party/cnn_star_centroid/saved_models/
 
 # Large Datasets, Catalogs & Images
+third_party/tetra3_ref/
 data/catalogs/*.tsv
+data/catalogs/*.npz
+data/catalogs/starcat.tsv
 data/sim_dataset/
 data/tetra3/
+data/real_calibrated/**/*.npy
+data/real_calibrated/**/*.png
 data/uploads/**/*.tif
 data/uploads/**/*.tiff
 data/uploads/**/*.png
 data/uploads/**/*.jpeg
 data/uploads/**/*.jpg
 data/uploads/**/*.tar.gz
+AI2026_Mẫu-hồ-sơ*.docx
 *.tif
 *.tiff
 *.tar.gz

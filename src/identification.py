@@ -147,6 +147,8 @@ class StarIdentifier:
     def _triangle_matches(self, b: object, ang: object, i: object, j: object, k: object) -> object:
         if self._false_gate(b[i], b[j], b[k], float(ang[i, j])) is None:
             return None
+        if abs(float(dot(b[i], cross(b[j], b[k])))) <= 1e-12:
+            return None
         obs_hand: object = _chirality(b[i], b[j], b[k])
         if obs_hand == 0:
             return None
@@ -162,18 +164,20 @@ class StarIdentifier:
             if not ik_set:
                 continue
             for cj in js:
+                if cj == ci:
+                    continue
                 jk_set: object = m_jk.get(cj)
                 if not jk_set:
                     continue
                 for ck in ik_set & jk_set:
                     if ck != ci and ck != cj:
-                        if _chirality(cat_vecs[ci], cat_vecs[cj], cat_vecs[ck]) == obs_hand:
+                        if abs(float(dot(cat_vecs[ci], cross(cat_vecs[cj], cat_vecs[ck])))) > 1e-12 and _chirality(cat_vecs[ci], cat_vecs[cj], cat_vecs[ck]) == obs_hand:
                             triplets.append((ci, cj, ck))
         return triplets
 
     def _try_triangle(self, b: object, ang: object, i: object, j: object, k: object) -> object:
         triplets: object = self._triangle_matches(b, ang, i, j, k)
-        if not triplets or len({tuple(sorted(t)) for t in triplets}) != 1:
+        if not triplets or len(triplets) != 1:
             return None
         ci, cj, ck = triplets[0]
         return (ci, cj, ck, self._false_gate(b[i], b[j], b[k], float(ang[i, j])))
@@ -185,18 +189,15 @@ class StarIdentifier:
         triplets: object = self._triangle_matches(b, ang, i, j, k)
         if not triplets:
             return None
-        dedup_tris: object = {}
-        for tri in triplets:
-            dedup_tris.setdefault(tuple(sorted(tri)), tri)
         m_ir: object = self._query_adj(ang[i, r]) or {}
         m_jr: object = self._query_adj(ang[j, r]) or {}
         m_kr: object = self._query_adj(ang[k, r]) or {}
         confirmed: object = []
-        for ci, cj, ck in dedup_tris.values():
+        for ci, cj, ck in triplets:
             common_r: object = (m_ir.get(ci, set()) & m_jr.get(cj, set()) & m_kr.get(ck, set())) - {ci, cj, ck}
             if len(common_r) == 1:
                 confirmed.append((ci, cj, ck, next(iter(common_r))))
-        if len({tuple(sorted(q)) for q in confirmed}) != 1:
+        if len(confirmed) != 1:
             return None
         ci, cj, ck, cr = confirmed[0]
         return (ci, cj, ck, cr, efalse)

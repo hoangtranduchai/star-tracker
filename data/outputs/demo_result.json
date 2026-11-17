@@ -18,6 +18,20 @@
   "sky_clutter": "none",
   "have_gt": true,
   "success": true,
+  "status": "SOLVED",
+  "reject_code": null,
+  "match_stats": {
+    "status": "SOLVED",
+    "reject_code": null,
+    "n_detected": 36,
+    "n_initial_matched": 12,
+    "n_rejected_outliers": 0,
+    "n_valid_pairs": 36,
+    "min_pairs_required": 4,
+    "rms_residual_arcsec": 3.2857177675243108,
+    "max_residual_arcsec": 7.037012582422705,
+    "fov_expected_stars": 36
+  },
   "error": null,
   "q_gt": [
     0.18817375576319426,
@@ -38,7 +52,7 @@
     "dec_deg": -14.740789469297264,
     "ra_hms": "10h 48m 32.82s",
     "dec_dms": "-14d 44m 26.8s",
-    "frame": "J2000 camera +Z (not satellite lat/lon)"
+    "frame": "Tr\u1ee5c quang h\u1ecdc +Z trong h\u1ec7 quy chi\u1ebfu J2000"
   },
   "boresight_gt": {
     "ra_deg": 162.13672910957476,
@@ -54,6 +68,11 @@
       0.17678265125672474
     ],
     "centroid_rms_px": 0.05540859063726525,
+    "centroid_rms_5px": 0.05540859063726525,
+    "centroid_precision": 1.0,
+    "centroid_recall": 1.0,
+    "centroid_f1": 1.0,
+    "centroid_n_false_pos": 0,
     "boresight_gt_ra_deg": 162.13672910957476,
     "boresight_gt_dec_deg": -14.740902592171135,
     "boresight_est_ra_deg": 162.13674238457557,
@@ -62,27 +81,37 @@
     "boresight_gt_dec_dms": "-14d 44m 27.2s",
     "boresight_est_ra_hms": "10h 48m 32.82s",
     "boresight_est_dec_dms": "-14d 44m 26.8s",
+    "n_initial_matched": 12,
+    "n_rejected_outliers": 0,
+    "n_valid_pairs": 36,
+    "min_pairs_required": 4,
+    "rms_residual_arcsec": 3.2857177675243108,
+    "max_residual_arcsec": 7.037012582422705,
+    "fov_expected_stars": 36,
     "success": true,
+    "status": "SOLVED",
+    "reject_code": null,
     "n_truth": 36,
     "n_detected": 36,
     "n_matched": 36,
     "verdict": "PASS",
+    "e2e_outcome": "SOLVED_CORRECT",
     "limit_arcsec": 40.0,
     "timing_ms": {
-      "mask_ms": 45.50679999999829,
-      "centroiding_ms": 35.330799999997,
-      "identification_ms": 13.80159999996522,
-      "attitude_ms": 0.8226000001059219,
-      "total_pipeline_ms": 95.46180000006643
+      "mask_ms": 43.50939999994807,
+      "centroiding_ms": 34.67769999997472,
+      "identification_ms": 11.984700000084558,
+      "attitude_ms": 0.9989999998651911,
+      "total_pipeline_ms": 91.17079999987254
     },
     "error": null
   },
   "timing_ms": {
-    "mask_ms": 45.50679999999829,
-    "centroiding_ms": 35.330799999997,
-    "identification_ms": 13.80159999996522,
-    "attitude_ms": 0.8226000001059219,
-    "total_pipeline_ms": 95.46180000006643
+    "mask_ms": 43.50939999994807,
+    "centroiding_ms": 34.67769999997472,
+    "identification_ms": 11.984700000084558,
+    "attitude_ms": 0.9989999998651911,
+    "total_pipeline_ms": 91.17079999987254
   },
   "downlink_hex": "a4b0403e036924bfb046ed3e7eb1143f",
   "downlink_bytes": 16,
@@ -111,7 +140,7 @@
     "n_pairs": 946284,
     "fov_diagonal_deg": 30.032480826186355,
     "built_now": false,
-    "note": "Chéo trường nhìn nằm trong bảng 30.5° có sẵn, không dựng lại. Bảng góc 0,02°–30.5° có 946,284 cặp. Mỗi góc được tra bằng tìm nhị phân trên mảng đã sắp. Phần phải duyệt thêm chỉ là các cặp nằm trong dung sai, không phải cả bảng."
+    "note": "Tr\u01b0\u1eddng nh\u00ecn ch\u00e9o 30.03\u00b0 d\u00f9ng s\u1eb5n b\u1ea3ng g\u00f3c m\u1eb7c \u0111\u1ecbnh 30.5\u00b0. B\u1ea3ng g\u00f3c 0,02\u00b0\u201330.5\u00b0 (946.284 c\u1eb7p sao)."
   },
   "ingest_note": null,
   "hardware": {
@@ -1103,12 +1132,12 @@
   "n_unidentified": 0,
   "compare": [
     {
-      "param": "q0 (scalar)",
+      "param": "q0 (v\u00f4 h\u01b0\u1edbng)",
       "gt": 0.18817375576319426,
       "est": 0.18817383222486353,
       "delta": 7.64616692738862e-08,
       "unit": "",
-      "note": "scalar-first; q and -q same attitude"
+      "note": "th\u00e0nh ph\u1ea7n v\u00f4 h\u01b0\u1edbng \u0111\u1ee9ng \u0111\u1ea7u (q v\u00e0 -q c\u00f9ng ch\u1ec9 m\u1ed9t h\u01b0\u1edbng)"
     },
     {
       "param": "q1",
@@ -1135,55 +1164,89 @@
       "note": ""
     },
     {
-      "param": "Boresight RA (camera +Z)",
-      "gt": "162.13673°  (10h 48m 32.81s)",
-      "est": "162.13674°  (10h 48m 32.82s)",
+      "param": "Tr\u1ea1ng th\u00e1i \u0111\u1ecbnh h\u01b0\u1edbng",
+      "gt": "SOLVED",
+      "est": "SOLVED",
+      "delta": "PASS",
+      "unit": "",
+      "note": "ki\u1ec3m tra \u0111\u1ed9 tin c\u1eady h\u00ecnh h\u1ecdc tr\u01b0\u1edbc khi kh\u00f3a h\u01b0\u1edbng"
+    },
+    {
+      "param": "H\u01b0\u1edbng ng\u1eafm RA (J2000)",
+      "gt": "162.13673\u00b0  (10h 48m 32.81s)",
+      "est": "162.13674\u00b0  (10h 48m 32.82s)",
       "delta": 1.3275000810608617e-05,
       "unit": "deg",
       "gt_deg": 162.13672910957476,
       "est_deg": 162.13674238457557,
-      "note": "not lat/lon; độ và h/m/s (Stellarium)"
+      "note": "t\u1ecda \u0111\u1ed9 x\u00edch \u0111\u1ea1o thi\u00ean c\u1ea7u c\u1ee7a t\u00e2m khung \u1ea3nh"
     },
     {
-      "param": "Boresight Dec (camera +Z)",
-      "gt": "-14.74090°  (-14° 44' 27.2\")",
-      "est": "-14.74079°  (-14° 44' 26.8\")",
+      "param": "H\u01b0\u1edbng ng\u1eafm Dec (J2000)",
+      "gt": "-14.74090\u00b0  (-14\u00b0 44' 27.2\")",
+      "est": "-14.74079\u00b0  (-14\u00b0 44' 26.8\")",
       "delta": 0.00011312287387177378,
       "unit": "deg",
       "gt_deg": -14.740902592171135,
       "est_deg": -14.740789469297264,
-      "note": "not lat/lon; độ và h/m/s (Stellarium)"
+      "note": "t\u1ecda \u0111\u1ed9 x\u00edch \u0111\u1ea1o thi\u00ean c\u1ea7u c\u1ee7a t\u00e2m khung \u1ea3nh"
     },
     {
-      "param": "Attitude error",
-      "gt": "0 (ideal)",
+      "param": "Sai s\u1ed1 t\u01b0 th\u1ebf 3 tr\u1ee5c",
+      "gt": "0\u2033 (l\u00fd t\u01b0\u1edfng)",
       "est": 0.4463370537767079,
       "delta": 0.4463370537767079,
       "unit": "arcsec",
       "limit_arcsec": 40.0,
-      "note": "limit 40 arcsec  (PASS)"
+      "note": "ng\u01b0\u1ee1ng \u0111\u1ea1t 40\u2033 (PASS)"
     },
     {
-      "param": "Stars FOV / detected / matched",
-      "gt": "36 FOV",
-      "est": "36 detect",
-      "delta": "36 ID",
+      "param": "S\u1ed1 sao (Khung nh\u00ecn / Ph\u00e1t hi\u1ec7n / Kh\u1edbp)",
+      "gt": "36 trong khung",
+      "est": "36 ph\u00e1t hi\u1ec7n",
+      "delta": "36 kh\u1edbp",
       "unit": "",
-      "note": "cột Δ = số sao Pyramid khớp, không phải sai số góc"
+      "note": "t\u1ed5ng sao th\u1ef1c t\u1ebf, sao t\u00ecm th\u1ea5y v\u00e0 sao nh\u1eadn di\u1ec7n \u0111\u01b0\u1ee3c"
     },
     {
-      "param": "Centroid RMS",
+      "param": "C\u1eb7p h\u1ee3p l\u1ec7 / Lo\u1ea1i ngo\u1ea1i lai",
+      "gt": "12 ban \u0111\u1ea7u",
+      "est": "36 h\u1ee3p l\u1ec7",
+      "delta": "-0 ngo\u1ea1i lai",
+      "unit": "",
+      "note": "s\u1ed1 sao gi\u1eef l\u1ea1i sau b\u01b0\u1edbc l\u1ecdc sai s\u1ed1 g\u00f3c"
+    },
+    {
+      "param": "Ph\u1ea7n d\u01b0 kh\u1edbp sao (RMS / Max)",
+      "gt": "\u2264 40\u2033",
+      "est": 3.2857177675243108,
+      "delta": 7.037012582422705,
+      "unit": "arcsec",
+      "limit_arcsec": 40.0,
+      "note": "sai s\u1ed1 g\u00f3c trung b\u00ecnh v\u00e0 l\u1edbn nh\u1ea5t c\u1ee7a c\u00e1c sao kh\u1edbp"
+    },
+    {
+      "param": "\u0110\u1ed9 l\u1ec7ch t\u00e2m sao (RMS)",
       "gt": null,
       "est": 0.05540859063726525,
       "delta": null,
       "unit": "px",
-      "note": "vs sim GT centroids"
+      "note": "\u0111\u1ed9 l\u1ec7ch v\u1ecb tr\u00ed t\u00e2m sao so v\u1edbi nh\u00e3n chu\u1ea9n (pixel)"
+    },
+    {
+      "param": "\u0110\u1ed9 ch\u00ednh x\u00e1c / \u0110\u1ed9 ph\u1ee7 t\u00e2m sao",
+      "gt": "100.0% / 100.0%",
+      "est": "100.0%",
+      "delta": "\u0110\u1ed9 ph\u1ee7 100.0%",
+      "unit": "",
+      "note": "t\u1ef7 l\u1ec7 \u0111i\u1ec3m s\u00e1ng \u0111\u00fang l\u00e0 sao v\u00e0 t\u1ef7 l\u1ec7 sao t\u00ecm th\u1ea5y (\u2264 5 px)"
     }
   ],
   "sim_method": {
     "generated_by_code": true,
     "module": "src.simulator.SkySimulator.render",
     "not_iso_ccsds": true,
+    "evaluation_scope": "PC/laptop software demo (not flight-qualified spacecraft hardware)",
     "practice_class": "catalog + pinhole + PSF + detector noise + quaternion GT",
     "same_class_as": [
       "UW LOST --generate",
@@ -1193,12 +1256,12 @@
     "demo_optics": "APS-C 6000x4000, 3.72 um, 50 mm lens",
     "radiometry": "assumption=true, not a camera datasheet",
     "steps": [
-      "q_GT: 4 Gaussian numbers, normalize (uniform on SO(3)); seed makes it repeatable",
-      "Catalog Yale BSC5 V<=6: unit vectors r in J2000",
-      "b = A(q_GT) r, pinhole project onto the locked camera (FAST scale 4 or FULL)",
-      "Gaussian PSF stamp, optional streak from omega * exposure",
-      "Poisson/read/dark/hot/cosmic (radiometry assumptions) -> uint16 12-bit DN",
-      "Pipeline does not see q_GT; it recovers q_est from the pixels"
+      "Sinh quaternion chu\u1ea9n q_GT ph\u00e2n b\u1ed1 \u0111\u1ec1u tr\u00ean SO(3) t\u1eeb seed c\u1ed1 \u0111\u1ecbnh",
+      "Tr\u00edch xu\u1ea5t vector \u0111\u01a1n v\u1ecb J2000 t\u1eeb danh m\u1ee5c sao s\u00e1ng Yale BSC5 (V<=6.0)",
+      "Chi\u1ebfu t\u00e2m l\u1ed7 kim c\u00e1c tia sao b = A(q_GT)*r l\u00ean m\u1eb7t ph\u1eb3ng c\u1ea3m bi\u1ebfn APS-C",
+      "M\u00f4 ph\u1ecfng h\u00e0m truy\u1ec1n \u0111i\u1ec3m PSF Gauss v\u00e0 v\u1ec7t d\u1ecbch chuy\u1ec3n theo v\u1eadn t\u1ed1c g\u00f3c",
+      "C\u1ed9ng nhi\u1ec5u h\u1ea1t photon, nhi\u1ec5u \u0111\u1ecdc v\u00e0 l\u01b0\u1ee3ng t\u1eed h\u00f3a v\u1ec1 \u1ea3nh s\u1ed1 12-bit (uint16)",
+      "Thu\u1eadt to\u00e1n gi\u1ea3i m\u00f9 t\u1eeb m\u1ea3ng \u0111i\u1ec3m \u1ea3nh \u0111\u1ec3 kh\u00f4i ph\u1ee5c t\u01b0 th\u1ebf q_est (demo tr\u00ean m\u00e1y t\u00ednh c\u00e1 nh\u00e2n)"
     ]
   },
   "point_hr": null,
@@ -1206,9 +1269,9 @@
   "point_dec_deg": null,
   "n_iau_hr_names": 472,
   "n_iau_names": 640,
-  "png": "data/outputs/demo_result.png",
-  "input_png": "data/outputs/demo_input.png",
-  "output_png": "data/outputs/demo_output.png",
+  "png": null,
+  "input_png": null,
+  "output_png": null,
   "input_stats": {
     "width": 1500,
     "height": 1000,

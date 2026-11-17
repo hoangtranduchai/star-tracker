@@ -10,7 +10,7 @@
 
 ## 1. Đội thi (một dòng)
 
-Trường Đại học Bách khoa, Đại học Đà Nẵng, Khoa Công nghệ thông tin — GVHD TS. Nguyễn Năng Hùng Vân — 3 sinh viên đã ghi trong hồ sơ: Hoàng Trần Đức Hải (đội trưởng), Nguyễn Tiến, Mai Tạ Trúc Vy.
+Trường Đại học Bách khoa, Đại học Đà Nẵng, Khoa Công nghệ thông tin — 3 sinh viên đã ghi trong hồ sơ: Hoàng Trần Đức Hải (đội trưởng), Nguyễn Tiến, Mai Tạ Trúc Vy.
 
 *(Không nhắc số điện thoại hay địa chỉ nhà trong video / slide / kê khai công khai ngoài mẫu bắt buộc của BTC.)*
 
@@ -88,7 +88,7 @@ Chi tiết thêm: `README.md`.
 
 Đối chiếu trước khi mang nộp:
 
-- [ ] **Danh sách thành viên** (3 SV + GVHD) khớp hồ sơ — không thêm người lạ.
+- [ ] **Danh sách thành viên** (3 sinh viên) khớp hồ sơ — không thêm người lạ.
 - [ ] **Hồ sơ dự án** Bang C: `AI2026_Ho-so-du-an_StarTracker.docx` (và giữ `.md` nếu cần đồng bộ).
 - [ ] **Video thuyết trình** (mp4) — theo `KICH_BAN_THUYET_TRINH.md`.
 - [ ] **Video trình diễn sản phẩm** (mp4) — theo `KICH_BAN_QUAY_DEMO.md`.

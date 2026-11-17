@@ -1,0 +1,20 @@
+{
+  "mode": "fast",
+  "trials": 100,
+  "usable_fov": 100,
+  "successes_within_limit": 100,
+  "solve_rate_pct": 100.0,
+  "limit_arcsec": 40.0,
+  "mean_error_arcsec": 1.9078725880452176,
+  "median_error_arcsec": 1.5856766434067597,
+  "p95_error_arcsec": 4.585835836669161,
+  "max_error_arcsec": 9.520343476836398,
+  "rms_error_arcsec": 2.3973134104545983,
+  "mean_latency_ms": 81.79199799998969,
+  "median_centroid_ms": 33.830350000243925,
+  "median_id_ms": 5.966000000171334,
+  "median_wahba_ms": 0.7611000000906643,
+  "n_fov_mean": 35.79,
+  "catalog": "SYNTHETIC",
+  "n_catalog": 3500
+}

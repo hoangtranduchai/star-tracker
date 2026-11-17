@@ -2,6 +2,8 @@
 from __future__ import annotations
 import time
 import numpy as np
+from numpy import arccos, clip
+from src.camera import demo_camera
 from src.catalog import StarCatalog
 from src.identification import StarIdentifier, _chirality
 from src.kvector import KVectorTable
@@ -74,3 +76,48 @@ def test_milky_way_capped_runtime() -> object:
     solver.identify(cluster[:120], np.linspace(20.0, 1.0, 120))
     elapsed_ms: object = (time.perf_counter() - t_start) * 1000.0
     _must(elapsed_ms < 25.0)
+
+
+def test_identify_and_wide_emit_unique_indices() -> object:
+    catalog, count_fov = _make_clustered_catalog(n_in_fov=10, rng_seed=7)
+    kv_index: object = KVectorTable.build(catalog, theta_min_deg=0.02, theta_max_deg=19.5)
+    solver: object = StarIdentifier(catalog, kv_index, tol_rad=float(np.deg2rad(0.02)), max_stars=12)
+    cam: object = demo_camera().downscaled(4)
+    obs_vecs: object = catalog.vectors[:count_fov].copy()
+    obs_flux: object = np.power(10.0, -0.4 * catalog.mags[:count_fov])
+
+    sol_pyr: object = solver.identify(obs_vecs, obs_flux)
+    _must(bool(sol_pyr.success))
+    _must(len(set(sol_pyr.obs_idx.tolist())) == len(sol_pyr.obs_idx))
+    _must(len(set(sol_pyr.cat_idx.tolist())) == len(sol_pyr.cat_idx))
+
+    sol_wide: object = solver.identify_wide(obs_vecs, obs_flux, cam)
+    _must(bool(sol_wide.success))
+    _must(len(set(sol_wide.obs_idx.tolist())) == len(sol_wide.obs_idx))
+    _must(len(set(sol_wide.cat_idx.tolist())) == len(sol_wide.cat_idx))
+
+
+def test_collinear_and_ambiguous_equilateral_rejected() -> object:
+    # Exact equilateral triangle of 3 stars + background
+    r: float = 0.08
+    angles: object = np.asarray([0.0, 2.0 * np.pi / 3.0, 4.0 * np.pi / 3.0])
+    eq_xy: object = np.column_stack([r * np.cos(angles), r * np.sin(angles), np.ones(3)])
+    eq_vecs: object = eq_xy / np.linalg.norm(eq_xy, axis=1, keepdims=True)
+    # Collinear 3 stars on y=0 great circle
+    col_xy: object = np.asarray([[-0.08, 0.0, 1.0], [0.0, 0.0, 1.0], [0.08, 0.0, 1.0]], dtype=np.float64)
+    col_vecs: object = col_xy / np.linalg.norm(col_xy, axis=1, keepdims=True)
+
+    catalog: object = StarCatalog(
+        ids=np.arange(3, dtype=np.int32),
+        vectors=eq_vecs,
+        mags=np.asarray([2.0, 2.1, 2.2], dtype=np.float32),
+        source='SYNTHETIC',
+    )
+    kv_index: object = KVectorTable.build(catalog, theta_min_deg=0.02, theta_max_deg=25.0)
+    solver: object = StarIdentifier(catalog, kv_index, tol_rad=float(np.deg2rad(0.05)), max_stars=12, p_max=1.0)
+
+    ang_col: object = arccos(clip(col_vecs @ col_vecs.T, -1.0, 1.0))
+    _must(solver._triangle_matches(col_vecs, ang_col, 0, 1, 2) is None)
+
+    ang_eq: object = arccos(clip(eq_vecs @ eq_vecs.T, -1.0, 1.0))
+    _must(solver._try_triangle(eq_vecs, ang_eq, 0, 1, 2) is None)

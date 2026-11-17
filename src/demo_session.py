@@ -1,9 +1,9 @@
 """Shared execution session for CLI and Web UI: synthetic sky generation and lost-in-space solving."""
 from json import dumps as json_dumps, loads as json_loads
-from math import ceil as math_ceil
+from math import ceil as math_ceil, isfinite as math_isfinite
 from pathlib import Path
 from cv2 import COLOR_BGR2GRAY, IMREAD_UNCHANGED, cvtColor, imread, imwrite
-from numpy import asarray, clip, column_stack, degrees, float32, float64, floating, full, integer, ndarray, where, zeros, zeros_like
+from numpy import asarray, clip, column_stack, degrees, float32, float64, floating, full, integer, mean, ndarray, sqrt, where, zeros, zeros_like
 from numpy.linalg import norm
 from numpy.random import default_rng
 from .camera import CameraModel, demo_camera
@@ -141,7 +141,10 @@ def camera_for_image(img: object, cam_full: object) -> object:
     if (w_px, h_px) == (1024, 1024):
         mnt_cam: object = CameraModel(width=1024, height=1024, pixel_um=4.1, focal_mm=4.2)
         return (mnt_cam, 1, 'custom')
-    raise ValueError(f'Ảnh {w_px}×{h_px} không phải khung demo {cam_full.width}×{cam_full.height} (FULL) hay {fast_cam.width}×{fast_cam.height} (FAST). Nhập tiêu cự thật (mm) và cạnh pixel của đúng file (µm).')
+    if (w_px, h_px) == (1024, 768):
+        tetra_cam: object = CameraModel(width=1024, height=768, pixel_um=6.9, focal_mm=35.2911)
+        return (tetra_cam, 1, 'custom')
+    raise ValueError(f'Ảnh {w_px}×{h_px} không khớp kích thước mẫu {cam_full.width}×{cam_full.height} (FULL) hay {fast_cam.width}×{fast_cam.height} (FAST). Vui lòng nhập tiêu cự (mm) và kích thước pixel (µm) của máy ảnh.')
 
 def uses_custom_optics(req: object) -> object:
     opt_fields: object = (req.focal_mm, req.pixel_um, req.image_width, req.image_height, req.angular_tol_arcsec)
@@ -181,13 +184,13 @@ def resolve_run_camera(req: object, image: object, cam_full: object) -> object:
         h_px, w_px = (int(image.shape[0]), int(image.shape[1]))
         if not is_custom:
             cam, sc, md = camera_for_image(image, cam_full)
-            return (cam, sc, md, True)
+            return (cam, sc, md, md != 'custom')
         preset: object = _locked_camera_for_size(w_px, h_px, cam_full)
         fl: object = req.focal_mm if req.focal_mm is not None else preset.focal_mm if preset else None
         px: object = req.pixel_um if req.pixel_um is not None else preset.pixel_um if preset else None
         if fl is None or px is None:
             fast_c: object = cam_full.downscaled(4)
-            raise ValueError(f'Ảnh {w_px}×{h_px} không khớp khung demo {cam_full.width}×{cam_full.height} hoặc {fast_c.width}×{fast_c.height}. Nhập tiêu cự thật (mm) và cạnh pixel của đúng file (µm).')
+            raise ValueError(f'Ảnh {w_px}×{h_px} không khớp kích thước mẫu {cam_full.width}×{cam_full.height} hoặc {fast_c.width}×{fast_c.height}. Vui lòng nhập tiêu cự (mm) và kích thước pixel (µm) của máy ảnh.')
         return (_camera_from_numbers(w_px, h_px, px, fl), 1, 'custom', False)
     sc: object = int(req.scale) if req.scale is not None else 4 if req.mode == 'fast' else 1
     if sc < 1:
@@ -215,12 +218,13 @@ def match_tolerance_arcsec(camera: object, override: object=None) -> object:
     return float(TOL_ARCSEC_PER_PIXEL * camera.ifov_arcsec)
 
 def angle_table_note(diag_deg: object, theta_max_deg: object, n_pairs: object, built_now: object) -> object:
-    tail: object = f'Bảng K-vector (0,02°–{theta_max_deg:.1f}°) gồm {n_pairs:,} cặp sao, tra cứu O(1) trên mảng góc đơn điệu chỉ duyệt đúng dải dung sai.'
+    pairs_txt: object = f'{int(n_pairs):,}'.replace(',', '.')
+    tail: object = f'Bảng góc 0,02°–{theta_max_deg:.1f}° ({pairs_txt} cặp sao).'
     if diag_deg <= THETA_MAX_LOCKED_DEG + 1e-06 and abs(theta_max_deg - THETA_MAX_LOCKED_DEG) < 1e-06:
-        return f'Góc chéo nằm gọn trong phạm vi bảng {THETA_MAX_LOCKED_DEG:.1f}° mặc định, dùng ngay không cần tạo lại. ' + tail
+        return f'Trường nhìn chéo {diag_deg:.2f}° dùng sẵn bảng góc mặc định {THETA_MAX_LOCKED_DEG:.1f}°. {tail}'
     if built_now:
-        return f'Chéo trường nhìn {diag_deg:.2f}° rộng hơn {THETA_MAX_LOCKED_DEG:.1f}°. Đã dựng bảng tới {theta_max_deg:.1f}° và lưu lại. ' + tail
-    return f'Góc chéo {diag_deg:.2f}° tra cứu trực tiếp trên bảng {theta_max_deg:.1f}° đã lưu bộ nhớ đệm. ' + tail
+        return f'Trường nhìn chéo {diag_deg:.2f}° vượt mức mặc định {THETA_MAX_LOCKED_DEG:.1f}° — vừa tạo và lưu bảng góc mới tới {theta_max_deg:.1f}°. {tail}'
+    return f'Trường nhìn chéo {diag_deg:.2f}° dùng bảng góc mở rộng {theta_max_deg:.1f}° đã lưu sẵn. {tail}'
 
 def empty_truth() -> object:
     return RenderTruth(q_gt=asarray([1.0, 0.0, 0.0, 0.0], dtype=float64), uv_mid=zeros((0, 2), dtype=float64), cat_idx=zeros(0, dtype=int), streak_px=zeros(0, dtype=float64), omega_deg_s=zeros(3, dtype=float64), vis_mags=zeros(0, dtype=float64))
@@ -234,7 +238,7 @@ def truth_from_sidecar(meta: object, catalog: object) -> object:
         c_idx: object = asarray([int(item['catalog_idx']) for item in fov_list], dtype=int)
     else:
         lookup_id: object = {int(star_id): pos for pos, star_id in enumerate(catalog.ids)}
-        c_idx: object = asarray([lookup_id[int(item['hr'])] for item in fov_list if int(item['hr']) in lookup_id], dtype=int)
+        c_idx: object = asarray([lookup_id[int(item['hr'])] for item in fov_list if item.get('hr') is not None and int(item['hr']) in lookup_id], dtype=int)
         if len(c_idx) != len(fov_list):
             uv_pts: object = uv_pts[:len(c_idx)]
             mags: object = mags[:len(c_idx)]
@@ -255,9 +259,11 @@ def star_rows_from_indices(catalog: object, indices: object, uv: object=None, ma
 
 def _jsonable(value: object) -> object:
     if isinstance(value, ndarray):
-        return value.tolist()
+        return _jsonable(value.tolist())
     if isinstance(value, (floating, integer)):
-        return value.item()
+        value = value.item()
+    if isinstance(value, float):
+        return value if math_isfinite(value) else None
     if isinstance(value, dict):
         return {str(k): _jsonable(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -266,7 +272,7 @@ def _jsonable(value: object) -> object:
 
 def _ingest_note(path: object) -> object:
     if path is not None and Path(path).suffix.lower() in ('.jpg', '.jpeg', '.webp'):
-        return 'Ảnh JPEG/WebP đã nén và chỉnh sáng. Tâm sao có thể lệch so với TIFF tuyến tính.'
+        return 'Lưu ý: ảnh JPEG/WebP đã qua nén nên vị trí tâm sao có thể kém chính xác hơn ảnh gốc TIFF.'
     return None
 
 def fmt_q(q: object) -> object:
@@ -289,21 +295,72 @@ class RunOutcome:
     def __init__(self, success: object, payload: object, image: object, result: object, truth: object, metrics: object, catalog: object, camera: object, png_path: object, have_gt: object, error: object=None) -> object:
         self.success, self.payload, self.image, self.result, self.truth, self.metrics, self.catalog, self.camera, self.png_path, self.have_gt, self.error = (bool(success), payload, image, result, truth, metrics, catalog, camera, png_path, bool(have_gt), error)
 
-def _compare_rows(q_gt: object, q_est: object, metrics: object, have_gt: object, cfg: object) -> object:
-    q_labels: object = ('q0 (scalar)', 'q1', 'q2', 'q3')
-    rows: object = [dict(param=lbl, gt=None if not have_gt or q_gt is None else float(q_gt[idx]), est=None if q_est is None else float(q_est[idx]), delta=None if not have_gt or q_gt is None or q_est is None else float(q_est[idx] - q_gt[idx]), unit='', note='quy ước phần tử vô hướng đứng đầu (q và -q cùng biểu diễn một tư thế)' if idx == 0 else '') for idx, lbl in enumerate(q_labels)]
+def _compare_rows(q_gt: object, q_est: object, metrics: object, have_gt: object, cfg: object, match_stats: object=None) -> object:
+    mstats: object = match_stats if isinstance(match_stats, dict) else {}
+    q_labels: object = ('q0 (vô hướng)', 'q1', 'q2', 'q3')
+    rows: object = [dict(param=lbl, gt=None if not have_gt or q_gt is None else float(q_gt[idx]), est=None if q_est is None else float(q_est[idx]), delta=None if not have_gt or q_gt is None or q_est is None else float(q_est[idx] - q_gt[idx]), unit='', note='thành phần vô hướng đứng đầu (q và -q cùng chỉ một hướng)' if idx == 0 else '') for idx, lbl in enumerate(q_labels)]
+    status_val: object = str(metrics.get('status') or mstats.get('status') or ('SOLVED' if metrics.get('success') else 'LOST'))
+    reject_code: object = metrics.get('reject_code') if metrics.get('reject_code') is not None else mstats.get('reject_code')
+    rows.append(dict(param='Trạng thái định hướng', gt='SOLVED' if have_gt else '—', est=status_val, delta=reject_code or ('PASS' if status_val == 'SOLVED' else 'LOST'), unit='', note='kiểm tra độ tin cậy hình học trước khi khóa hướng'))
     coord_specs: object = (('RA', 'boresight_gt_ra_deg', 'boresight_est_ra_deg', format_ra_both), ('Dec', 'boresight_gt_dec_deg', 'boresight_est_dec_deg', format_dec_both))
     for tag, gt_key, est_key, fmt_fn in coord_specs:
         g_val, e_val = (metrics.get(gt_key), metrics.get(est_key))
-        rows.append(dict(param=f'Boresight {tag} (camera +Z)', gt=None if g_val is None else fmt_fn(g_val), est=None if e_val is None else fmt_fn(e_val), delta=None if g_val is None or e_val is None else float(e_val - g_val), unit='deg', gt_deg=g_val, est_deg=e_val, note='not lat/lon; độ và h/m/s (Stellarium)'))
+        rows.append(dict(param=f'Hướng ngắm {tag} (J2000)', gt=None if g_val is None else fmt_fn(g_val), est=None if e_val is None else fmt_fn(e_val), delta=None if g_val is None or e_val is None else float(e_val - g_val), unit='deg', gt_deg=g_val, est_deg=e_val, note='tọa độ xích đạo thiên cầu của tâm khung ảnh'))
     att_err: object = metrics.get('attitude_error_arcsec')
     lim_arc: object = float(cfg.attitude_error_limit_arcsec)
-    rows.append(dict(param='Attitude error', gt='0 (ideal)' if have_gt else '—', est=att_err, delta=att_err, unit='arcsec', limit_arcsec=lim_arc, note=f"limit {lim_arc:g} arcsec  ({metrics.get('verdict')})"))
+    rows.append(dict(param='Sai số tư thế 3 trục', gt='0″ (lý tưởng)' if have_gt else '—', est=att_err, delta=att_err, unit='arcsec', limit_arcsec=lim_arc, note=f"ngưỡng đạt {lim_arc:g}″ ({metrics.get('verdict')})"))
     nt, nd, nm = (metrics.get('n_truth'), metrics.get('n_detected'), metrics.get('n_matched'))
-    rows.append(dict(param='Stars FOV / detected / matched', gt=None if nt is None else f'{int(nt)} FOV', est=None if nd is None else f'{int(nd)} detect', delta=None if nm is None else f'{int(nm)} ID', unit='', note='giá trị Δ hiển thị tổng số sao khớp mẫu Pyramid'))
-    rows.append(dict(param='Centroid RMS', gt=None, est=metrics.get('centroid_rms_px'), delta=None, unit='px', note='vs sim GT centroids'))
+    rows.append(dict(param='Số sao (Khung nhìn / Phát hiện / Khớp)', gt=None if nt is None else f'{int(nt)} trong khung', est=None if nd is None else f'{int(nd)} phát hiện', delta=None if nm is None else f'{int(nm)} khớp', unit='', note='tổng sao thực tế, sao tìm thấy và sao nhận diện được'))
+    n_init: object = mstats.get('n_initial_matched', metrics.get('n_initial_matched'))
+    n_valid: object = mstats.get('n_valid_pairs', metrics.get('n_valid_pairs'))
+    n_rej: object = mstats.get('n_rejected_outliers', metrics.get('n_rejected_outliers'))
+    rows.append(dict(param='Cặp hợp lệ / Loại ngoại lai', gt=None if n_init is None else f'{int(n_init)} ban đầu', est=None if n_valid is None else f'{int(n_valid)} hợp lệ', delta=None if n_rej is None else f'-{int(n_rej)} ngoại lai', unit='', note='số sao giữ lại sau bước lọc sai số góc'))
+    rms_res: object = mstats.get('rms_residual_arcsec', metrics.get('rms_residual_arcsec'))
+    max_res: object = mstats.get('max_residual_arcsec', metrics.get('max_residual_arcsec'))
+    rows.append(dict(param='Phần dư khớp sao (RMS / Max)', gt=f'≤ {lim_arc:g}″', est=rms_res, delta=max_res, unit='arcsec', limit_arcsec=lim_arc, note='sai số góc trung bình và lớn nhất của các sao khớp'))
+    rows.append(dict(param='Độ lệch tâm sao (RMS)', gt=None, est=metrics.get('centroid_rms_px'), delta=None, unit='px', note='độ lệch vị trí tâm sao so với nhãn chuẩn (pixel)'))
+    c_prec: object = metrics.get('centroid_precision')
+    c_rec: object = metrics.get('centroid_recall')
+    if have_gt and (c_prec is not None or c_rec is not None):
+        rows.append(dict(param='Độ chính xác / Độ phủ tâm sao', gt='100.0% / 100.0%', est=None if c_prec is None else f'{float(c_prec) * 100.0:.1f}%', delta=None if c_rec is None else f'Độ phủ {float(c_rec) * 100.0:.1f}%', unit='', note='tỷ lệ điểm sáng đúng là sao và tỷ lệ sao tìm thấy (≤ 5 px)'))
     return rows
-SIM_METHOD = dict(generated_by_code=True, module='src.simulator.SkySimulator.render', not_iso_ccsds=True, practice_class='catalog + pinhole + PSF + detector noise + quaternion GT', same_class_as=['UW LOST --generate', 'ESA tetra3 synthetic tests', 'NASA COTS (math, not NOSA copy)'], demo_optics='APS-C 6000x4000, 3.72 um, 50 mm lens', radiometry='assumption=true, not a camera datasheet', steps=['Sinh quaternion chuẩn q_GT phân bố đều trên SO(3) từ seed cố định', 'Trích xuất vector đơn vị J2000 từ danh mục sao sáng Yale BSC5 (V<=6.0)', 'Chiếu tâm lỗ kim các tia sao b = A(q_GT)*r lên mặt phẳng cảm biến APS-C', 'Mô phỏng hàm truyền điểm PSF Gauss và vệt dịch chuyển theo vận tốc góc', 'Cộng nhiễu hạt photon, nhiễu đọc và lượng tử hóa về ảnh số 12-bit (uint16)', 'Thuật toán giải mù hoàn toàn từ mảng điểm ảnh để khôi phục tư thế q_est'])
+SIM_METHOD = dict(generated_by_code=True, module='src.simulator.SkySimulator.render', not_iso_ccsds=True, evaluation_scope='PC/laptop software demo (not flight-qualified spacecraft hardware)', practice_class='catalog + pinhole + PSF + detector noise + quaternion GT', same_class_as=['UW LOST --generate', 'ESA tetra3 synthetic tests', 'NASA COTS (math, not NOSA copy)'], demo_optics='APS-C 6000x4000, 3.72 um, 50 mm lens', radiometry='assumption=true, not a camera datasheet', steps=['Sinh quaternion chuẩn q_GT phân bố đều trên SO(3) từ seed cố định', 'Trích xuất vector đơn vị J2000 từ danh mục sao sáng Yale BSC5 (V<=6.0)', 'Chiếu tâm lỗ kim các tia sao b = A(q_GT)*r lên mặt phẳng cảm biến APS-C', 'Mô phỏng hàm truyền điểm PSF Gauss và vệt dịch chuyển theo vận tốc góc', 'Cộng nhiễu hạt photon, nhiễu đọc và lượng tử hóa về ảnh số 12-bit (uint16)', 'Thuật toán giải mù từ mảng điểm ảnh để khôi phục tư thế q_est (demo trên máy tính cá nhân)'])
+
+def _extract_match_verification(result: object, metrics: object, cfg: object) -> object:
+    status_val: object = str(metrics.get('status') or getattr(result, 'status', None) or ('SOLVED' if result.success else 'LOST'))
+    reject_val: object = metrics.get('reject_code')
+    if reject_val is None:
+        reject_val = getattr(result, 'reject_code', None)
+    raw_stats: object = getattr(result, 'match_stats', None)
+    if not isinstance(raw_stats, dict):
+        qual: object = getattr(result, 'quality', None)
+        raw_stats = qual if isinstance(qual, dict) else {}
+    res_raw: object = getattr(result, 'residuals_arcsec', None)
+    res_arr: object = None if res_raw is None else asarray(res_raw, dtype=float64)
+    rms_fb: object = float(sqrt(mean(res_arr * res_arr))) if res_arr is not None and res_arr.size else None
+    max_fb: object = float(res_arr.max()) if res_arr is not None and res_arr.size else None
+    min_req_default: object = max(int(getattr(cfg, 'min_stars', 4)), 3)
+    match_stats: object = dict(raw_stats)
+    match_stats['status'] = status_val
+    match_stats['reject_code'] = reject_val
+    for key, fallback in (
+        ('n_detected', metrics.get('n_detected')),
+        ('n_initial_matched', metrics.get('n_initial_matched', metrics.get('n_matched'))),
+        ('n_rejected_outliers', metrics.get('n_rejected_outliers', 0)),
+        ('n_valid_pairs', metrics.get('n_valid_pairs', metrics.get('n_matched'))),
+        ('min_pairs_required', metrics.get('min_pairs_required', min_req_default)),
+        ('rms_residual_arcsec', metrics.get('rms_residual_arcsec', rms_fb)),
+        ('max_residual_arcsec', metrics.get('max_residual_arcsec', max_fb)),
+        ('fov_expected_stars', metrics.get('fov_expected_stars')),
+    ):
+        if match_stats.get(key) is None:
+            match_stats[key] = fallback
+    metrics['status'] = status_val
+    metrics['reject_code'] = reject_val
+    for key in ('n_initial_matched', 'n_rejected_outliers', 'n_valid_pairs', 'min_pairs_required', 'rms_residual_arcsec', 'max_residual_arcsec', 'fov_expected_stars'):
+        if metrics.get(key) is None:
+            metrics[key] = match_stats.get(key)
+    return (status_val, reject_val, match_stats)
 
 class DemoEngine:
     """Stateful runner caching star catalogs and K-vector indices across runs."""
@@ -333,17 +390,29 @@ class DemoEngine:
         return self._stack[cache_key]
 
     def list_dataset_frames(self) -> object:
-        sim_root: object = self.root.joinpath('data', 'sim_dataset').resolve()
-        if not sim_root.exists():
-            return []
         entries: object = []
-        for sub_dir in sorted((p for p in sim_root.iterdir() if p.is_dir())):
-            md_name: object = sub_dir.name
-            for tif_p in sorted(sub_dir.glob('*.tif')):
-                sc_p: object = tif_p.with_suffix('.json')
-                meta: object = json_loads(sc_p.read_text(encoding='utf-8')) if sc_p.exists() else {}
-                bore: object = meta.get('boresight') or {}
-                entries.append(dict(id=f'{md_name}/{tif_p.stem}', file=f'{md_name}/{tif_p.name}', mode=md_name, n_stars=len(meta.get('stars_in_fov') or []), ra_deg=bore.get('ra_deg'), dec_deg=bore.get('dec_deg')))
+        sim_root: object = self.root.joinpath('data', 'sim_dataset').resolve()
+        if sim_root.exists():
+            for sub_dir in sorted((p for p in sim_root.iterdir() if p.is_dir())):
+                md_name: object = sub_dir.name
+                for tif_p in sorted(sub_dir.glob('*.tif')):
+                    sc_p: object = tif_p.with_suffix('.json')
+                    meta: object = json_loads(sc_p.read_text(encoding='utf-8')) if sc_p.exists() else {}
+                    bore: object = meta.get('boresight') or {}
+                    entries.append(dict(id=f'{md_name}/{tif_p.stem}', file=f'{md_name}/{tif_p.name}', mode=md_name, n_stars=len(meta.get('stars_in_fov') or []), ra_deg=bore.get('ra_deg'), dec_deg=bore.get('dec_deg')))
+        tetra_root: object = self.root.joinpath('data', 'tetra3').resolve()
+        if tetra_root.exists():
+            manifest_map: object = {}
+            manifest_p: object = self.root.joinpath('data', 'real_calibrated', 'manifest_real_calibrated.json')
+            if manifest_p.is_file():
+                try:
+                    m_data: object = json_loads(manifest_p.read_text(encoding='utf-8'))
+                    manifest_map = {str(item.get('path', '')).replace('\\', '/'): item for item in (m_data.get('frames') or [])}
+                except Exception:
+                    manifest_map = {}
+            for tiff_p in sorted((p for p in tetra_root.iterdir() if p.is_file() and p.suffix.lower() in ('.tif', '.tiff'))):
+                m_entry: object = manifest_map.get(f'data/tetra3/{tiff_p.name}', {})
+                entries.append(dict(id=f'tetra3/{tiff_p.stem}', file=f'tetra3/{tiff_p.name}', mode='tetra3', n_stars=len(m_entry.get('stars_in_fov') or []), ra_deg=m_entry.get('boresight_ra_deg'), dec_deg=m_entry.get('boresight_dec_deg'), focal_mm=float(m_entry.get('focal_mm') or 35.2911), pixel_um=float(m_entry.get('pixel_um') or 6.9)))
         return entries
 
     def resolve_dataset_image(self, rel: object) -> object:
@@ -351,6 +420,9 @@ class DemoEngine:
         if clean_rel.startswith('uploads/'):
             base_dir: object = self.root.joinpath('data', 'uploads').resolve()
             resolved: object = base_dir.joinpath(clean_rel[len('uploads/'):]).resolve()
+        elif clean_rel.startswith('tetra3/'):
+            base_dir: object = self.root.joinpath('data', 'tetra3').resolve()
+            resolved: object = base_dir.joinpath(clean_rel[len('tetra3/'):]).resolve()
         else:
             base_dir: object = self.root.joinpath('data', 'sim_dataset').resolve()
             resolved: object = base_dir.joinpath(clean_rel).resolve()
@@ -409,6 +481,7 @@ class DemoEngine:
         pipe: object = StarTrackerPipeline(camera, catalog, kvector, cfg)
         result: object = pipe.process_frame(image)
         metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
+        status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
         fov_rows: object = star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
         ident_rows: object = []
         if result.ident is not None and len(result.ident.cat_idx):
@@ -435,7 +508,7 @@ class DemoEngine:
         theta_max_actual: object = float(degrees(kvector.theta_max))
         bore_est_dict: object = None if metrics.get('boresight_est_ra_deg') is None else dict(ra_deg=metrics['boresight_est_ra_deg'], dec_deg=metrics['boresight_est_dec_deg'], ra_hms=metrics['boresight_est_ra_hms'], dec_dms=metrics['boresight_est_dec_dms'], frame='Trục quang học +Z trong hệ quy chiếu J2000')
         bore_gt_dict: object = None if not have_gt else dict(ra_deg=metrics['boresight_gt_ra_deg'], dec_deg=metrics['boresight_gt_dec_deg'], ra_hms=metrics['boresight_gt_ra_hms'], dec_dms=metrics['boresight_gt_dec_dms'])
-        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, centroid_detector=getattr(det_obj, 'last_backend', cfg.centroid_backend), centroid_fallback=bool(getattr(det_obj, 'last_fallback', False)), centroid_error=getattr(det_obj, 'last_error', None), centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), sky_clutter=req.sky_clutter, have_gt=have_gt, success=bool(result.success), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=int(metrics['n_detected'] - metrics['n_matched']), compare=_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, input_stats=stats)
+        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, centroid_detector=getattr(det_obj, 'last_backend', cfg.centroid_backend), centroid_fallback=bool(getattr(det_obj, 'last_fallback', False)), centroid_error=getattr(det_obj, 'last_error', None), centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), sky_clutter=req.sky_clutter, have_gt=have_gt, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, input_stats=stats)
         out_dir.joinpath('demo_result.json').write_text(json_dumps(payload, indent=2), encoding='utf-8')
         if req.save_raw and req.image is None:
             imwrite(str(out_dir / 'demo_raw.tif'), image)

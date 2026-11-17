@@ -1,7 +1,7 @@
 """End-to-end star tracker pipeline: glare masking, centroiding, pattern ID, and Wahba refinement."""
 from struct import pack
 from time import perf_counter
-from numpy import all as npall, argmin, asarray, concatenate, count_nonzero, degrees, einsum, flatnonzero, float64, hypot, inf, int32, maximum, mean, pi
+from numpy import all as npall, argmin, asarray, concatenate, count_nonzero, degrees, einsum, flatnonzero, float64, hypot, inf, int32, maximum, mean, pi, sqrt
 from .attitude import WahbaSolver
 from .centroid import CentroidDetector
 from .identification import IdResult, StarIdentifier
@@ -23,11 +23,47 @@ class PipelineConfig:
     def from_dict(cls, d: object) -> object:
         return cls(**{k: v for k, v in dict(d).items() if k in _CFG_DEFAULTS})
 
+def _dedup_pairs(obs_idx: object, cat_idx: object, n_det: int, n_cat: int) -> tuple:
+    """Enforce 1-to-1 uniqueness and index bounds on observation-catalog match pairs."""
+    seen_obs: set = set()
+    seen_cat: set = set()
+    out_obs: list = []
+    out_cat: list = []
+    for o_val, c_val in zip(asarray(obs_idx, dtype=int32).ravel().tolist(), asarray(cat_idx, dtype=int32).ravel().tolist()):
+        o_i, c_i = (int(o_val), int(c_val))
+        if o_i < 0 or o_i >= n_det or c_i < 0 or c_i >= n_cat:
+            continue
+        if o_i in seen_obs or c_i in seen_cat:
+            continue
+        seen_obs.add(o_i)
+        seen_cat.add(c_i)
+        out_obs.append(o_i)
+        out_cat.append(c_i)
+    return (asarray(out_obs, dtype=int32), asarray(out_cat, dtype=int32))
+
+def _build_match_stats(status: str, reject_code: object, n_detected: int, n_initial_matched: int, n_rejected_outliers: int, n_valid_pairs: int, min_pairs_required: int, rms_residual_arcsec: object, max_residual_arcsec: object, fov_expected_stars: int) -> dict:
+    """Construct standardized match & attitude diagnostic summary dictionary."""
+    return {
+        'status': str(status),
+        'reject_code': reject_code,
+        'n_detected': int(n_detected),
+        'n_initial_matched': int(n_initial_matched),
+        'n_rejected_outliers': int(n_rejected_outliers),
+        'n_valid_pairs': int(n_valid_pairs),
+        'min_pairs_required': int(min_pairs_required),
+        'rms_residual_arcsec': None if rms_residual_arcsec is None else float(rms_residual_arcsec),
+        'max_residual_arcsec': None if max_residual_arcsec is None else float(max_residual_arcsec),
+        'fov_expected_stars': int(fov_expected_stars),
+    }
+
 class TrackerResult:
     """Output container for a single processed star tracker frame."""
 
-    def __init__(self, success: object, q: object, a: object, centroids: object, ident: object, residuals_arcsec: object, cov_rad2: object, timing_ms: object, quality: object, error: object=None, glare_mask: object=None) -> object:
+    def __init__(self, success: object, q: object, a: object, centroids: object, ident: object, residuals_arcsec: object, cov_rad2: object, timing_ms: object, quality: object, error: object=None, glare_mask: object=None, status: object=None, reject_code: object=None, match_stats: object=None) -> object:
         self.success, self.q, self.a, self.centroids, self.ident, self.residuals_arcsec, self.cov_rad2, self.timing_ms, self.quality, self.error, self.glare_mask = (bool(success), q, a, centroids, ident, residuals_arcsec, cov_rad2, timing_ms, quality, error, glare_mask)
+        self.status = str(status) if status is not None else ('SOLVED' if self.success else 'LOST')
+        self.reject_code = reject_code
+        self.match_stats = match_stats
 
     def to_downlink_bytes(self) -> object:
         if self.q is None:
@@ -62,59 +98,131 @@ class StarTrackerPipeline:
         res_arc: object = self.wahba.residuals_arcsec(b_vecs, r_vecs, dcm)
         return (b_vecs, sig_r, quat, dcm, res_arc)
 
+    def _refine_inliers(self, cents: object, obs_sel: object, cat_sel: object, floor_arc: float, n_rejected_outliers: int) -> tuple:
+        """Iteratively solve Wahba and strip residual outliers until all surviving pairs satisfy the gate."""
+        if len(obs_sel) < 3:
+            return (False, 'INSUFFICIENT_INLIER_PAIRS', f'Only {len(obs_sel)} candidate pairs (< 3)', obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, None, None, floor_arc)
+        max_iters: int = max(int(self.cfg.max_refine), 0) + 1
+        n_sigma: float = float(self.cfg.residual_n_sigma)
+        b_vecs = sig_r = quat = dcm = res_arc = gate_arc = None
+        solved_clean: bool = False
+        for _ in range(max_iters):
+            try:
+                b_vecs, sig_r, quat, dcm, res_arc = self._solve_weighted_wahba(cents, obs_sel, cat_sel)
+            except ValueError as exc:
+                return (False, 'COLLINEAR_DEGENERATE_GEOMETRY', str(exc), obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, None, None, floor_arc)
+            gate_arc = maximum(n_sigma * (sig_r * ARCSEC_PER_RAD), floor_arc)
+            inliers: object = res_arc <= gate_arc
+            if bool(npall(inliers)):
+                solved_clean = True
+                break
+            n_rejected_outliers += int(count_nonzero(~inliers))
+            obs_sel, cat_sel = (obs_sel[inliers], cat_sel[inliers])
+            if len(obs_sel) < 3:
+                rms_r = float(sqrt(mean(res_arc * res_arc))) if len(res_arc) else None
+                max_r = float(res_arc.max()) if len(res_arc) else None
+                return (False, 'INSUFFICIENT_INLIER_PAIRS', f'Only {len(obs_sel)} inlier pairs survived residual gating (< 3)', obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, rms_r, max_r, floor_arc)
+        if not solved_clean:
+            try:
+                b_vecs, sig_r, quat, dcm, res_arc = self._solve_weighted_wahba(cents, obs_sel, cat_sel)
+            except ValueError as exc:
+                return (False, 'COLLINEAR_DEGENERATE_GEOMETRY', str(exc), obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, None, None, floor_arc)
+            gate_arc = maximum(n_sigma * (sig_r * ARCSEC_PER_RAD), floor_arc)
+            inliers = res_arc <= gate_arc
+            if not bool(npall(inliers)):
+                n_rejected_outliers += int(count_nonzero(~inliers))
+                obs_sel, cat_sel = (obs_sel[inliers], cat_sel[inliers])
+                if len(obs_sel) < 3:
+                    rms_r = float(sqrt(mean(res_arc * res_arc))) if len(res_arc) else None
+                    max_r = float(res_arc.max()) if len(res_arc) else None
+                    return (False, 'INSUFFICIENT_INLIER_PAIRS', f'Only {len(obs_sel)} inlier pairs survived residual gating (< 3)', obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, rms_r, max_r, floor_arc)
+                try:
+                    b_vecs, sig_r, quat, dcm, res_arc = self._solve_weighted_wahba(cents, obs_sel, cat_sel)
+                except ValueError as exc:
+                    return (False, 'COLLINEAR_DEGENERATE_GEOMETRY', str(exc), obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, None, None, floor_arc)
+                gate_arc = maximum(n_sigma * (sig_r * ARCSEC_PER_RAD), floor_arc)
+                inliers = res_arc <= gate_arc
+                if not bool(npall(inliers)):
+                    rms_r = float(sqrt(mean(res_arc * res_arc)))
+                    max_r = float(res_arc.max())
+                    return (False, 'EXCESSIVE_POSTFIT_RESIDUAL', f'Outliers persisted after refinement (max residual {max_r:.2f} arcsec)', obs_sel, cat_sel, None, None, None, None, n_rejected_outliers, rms_r, max_r, floor_arc)
+        cov_mat: object = self.wahba.covariance_rad2(b_vecs, sig_r)
+        rms_r: float = float(sqrt(mean(res_arc * res_arc)))
+        max_r: float = float(res_arc.max())
+        rms_limit: float = max(floor_arc, 0.8 * float(mean(gate_arc)))
+        return (True, None, None, obs_sel, cat_sel, quat, dcm, res_arc, cov_mat, n_rejected_outliers, rms_r, max_r, rms_limit)
+
     def process_frame(self, image: object) -> object:
         t_log: object = {}
         ts: object = perf_counter()
         g_mask: object = self.masker.make_mask(image)
         t_log['mask_ms'] = (perf_counter() - ts) * 1000.0
-        ts: object = perf_counter()
+        ts = perf_counter()
         cents: object = self.centroid_detector.detect(image, mask=g_mask)
         t_log['centroiding_ms'] = (perf_counter() - ts) * 1000.0
-        abort: object = lambda reason: TrackerResult(False, None, None, cents, None, None, None, t_log, {}, reason, g_mask)
-        req_stars: object = max(int(self.cfg.min_stars), 3)
-        n_det: object = int(len(cents.vectors))
+        req_stars: int = max(int(self.cfg.min_stars), 3)
+        n_det: int = int(len(cents.vectors))
+        cfg_be: str = str(self.cfg.centroid_backend or 'classical')
+
+        def abort(reject_code: str, reason: str, *, n_initial_matched: int=0, n_rejected_outliers: int=0, n_valid_pairs: int=0, rms_res: object=None, max_res: object=None, fov_expected: int=0) -> TrackerResult:
+            t_log['total_pipeline_ms'] = sum((val for key, val in t_log.items() if key != 'total_pipeline_ms'))
+            stats = _build_match_stats(status='LOST', reject_code=reject_code, n_detected=n_det, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=n_valid_pairs, min_pairs_required=req_stars, rms_residual_arcsec=rms_res, max_residual_arcsec=max_res, fov_expected_stars=fov_expected)
+            q_diag = dict(stats, n_matched=0, centroid_backend=cfg_be, centroid_detector=getattr(self.centroid_detector, 'last_backend', cfg_be), centroid_fallback=bool(getattr(self.centroid_detector, 'last_fallback', False)), low_recall=True, many_false=False)
+            return TrackerResult(success=False, q=None, a=None, centroids=cents, ident=None, residuals_arcsec=None, cov_rad2=None, timing_ms=t_log, quality=q_diag, error=f'LOST [{reject_code}]: {reason}', glare_mask=g_mask, status='LOST', reject_code=reject_code, match_stats=stats)
+
         if n_det < 3:
-            return abort(f'Insufficient stars detected ({n_det} < 3)')
-        ts: object = perf_counter()
+            return abort('INSUFFICIENT_DETECTIONS', f'Insufficient stars detected ({n_det} < 3)')
+        ts = perf_counter()
         id_res: object = self.star_identifier.identify(cents.vectors, cents.flux)
-        n_matched_init: object = int(len(id_res.obs_idx))
-        try_wide: object = (not id_res.success or n_matched_init < req_stars) or (id_res.success and n_matched_init < 8)
+        n_matched_init: int = int(len(id_res.obs_idx))
+        try_wide: bool = (not id_res.success or n_matched_init < req_stars) or (id_res.success and n_matched_init < 8)
         if try_wide and n_det >= req_stars:
             wide_res: object = self.star_identifier.identify_wide(cents.vectors, cents.flux, self.camera)
             if wide_res.success and len(wide_res.obs_idx) >= max(req_stars, n_matched_init + 1):
-                id_res: object = wide_res
+                id_res = wide_res
         t_log['identification_ms'] = (perf_counter() - ts) * 1000.0
         if not id_res.success or len(id_res.obs_idx) < 3:
-            return abort(f'Identification failed to match at least 3 stars (matched {len(id_res.obs_idx)})')
-        ts: object = perf_counter()
-        obs_sel: object = id_res.obs_idx.copy()
-        cat_sel: object = id_res.cat_idx.copy()
-        quat = dcm = res_arc = cov_mat = None
-        floor_arc: object = float(degrees(self.cfg.angular_tol_rad) * 3600.0)
-        for _ in range(int(self.cfg.max_refine) + 1):
-            b_vecs, sig_r, quat, dcm, res_arc = self._solve_weighted_wahba(cents, obs_sel, cat_sel)
-            gate_arc: object = maximum(self.cfg.residual_n_sigma * (sig_r * ARCSEC_PER_RAD), floor_arc)
-            inliers: object = res_arc <= gate_arc
-            if int(count_nonzero(inliers)) < 3 or bool(npall(inliers)):
-                cov_mat: object = self.wahba.covariance_rad2(b_vecs, sig_r)
-                break
-            obs_sel, cat_sel = (obs_sel[inliers], cat_sel[inliers])
-        if dcm is not None:
-            obs_sel, cat_sel = self._associate_remaining(cents, dcm, obs_sel, cat_sel)
-            if len(obs_sel) >= 3:
-                b_vecs, sig_r, quat, dcm, res_arc = self._solve_weighted_wahba(cents, obs_sel, cat_sel)
-                cov_mat: object = self.wahba.covariance_rad2(b_vecs, sig_r)
+            n_raw_id = int(len(id_res.obs_idx)) if id_res.success else 0
+            return abort('IDENTIFICATION_FAILED', f'Identification failed to match at least 3 stars (matched {len(id_res.obs_idx)})', n_initial_matched=n_raw_id, n_valid_pairs=n_raw_id)
+        ts = perf_counter()
+        obs_sel, cat_sel = _dedup_pairs(id_res.obs_idx, id_res.cat_idx, n_det, self.catalog.num_stars)
+        n_initial_matched: int = int(len(obs_sel))
+        if n_initial_matched < 3:
+            t_log['attitude_ms'] = (perf_counter() - ts) * 1000.0
+            return abort('IDENTIFICATION_FAILED', f'Identification failed to match at least 3 unique stars (matched {n_initial_matched})', n_initial_matched=n_initial_matched, n_valid_pairs=n_initial_matched)
+        floor_arc: float = float(degrees(self.cfg.angular_tol_rad) * 3600.0)
+        n_rejected_outliers: int = 0
+        ok, rej_code, rej_msg, obs_sel, cat_sel, quat, dcm, res_arc, cov_mat, n_rejected_outliers, rms_res, max_res, rms_limit = self._refine_inliers(cents, obs_sel, cat_sel, floor_arc, n_rejected_outliers)
+        if not ok:
+            t_log['attitude_ms'] = (perf_counter() - ts) * 1000.0
+            return abort(rej_code, rej_msg, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=int(len(obs_sel)), rms_res=rms_res, max_res=max_res)
+        obs_assoc, cat_assoc = self._associate_remaining(cents, dcm, obs_sel, cat_sel)
+        obs_assoc, cat_assoc = _dedup_pairs(obs_assoc, cat_assoc, n_det, self.catalog.num_stars)
+        if len(obs_assoc) != len(obs_sel) or not bool(npall(obs_assoc == obs_sel)) or not bool(npall(cat_assoc == cat_sel)):
+            ok, rej_code, rej_msg, obs_sel, cat_sel, quat, dcm, res_arc, cov_mat, n_rejected_outliers, rms_res, max_res, rms_limit = self._refine_inliers(cents, obs_assoc, cat_assoc, floor_arc, n_rejected_outliers)
+            if not ok:
+                t_log['attitude_ms'] = (perf_counter() - ts) * 1000.0
+                return abort(rej_code, rej_msg, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=int(len(obs_sel)), rms_res=rms_res, max_res=max_res)
         t_log['attitude_ms'] = (perf_counter() - ts) * 1000.0
-        t_log['total_pipeline_ms'] = sum(t_log.values())
-        num_final: object = int(len(obs_sel))
-        num_fov: object = int(count_nonzero(self.camera.project(einsum('ij,kj->ik', self.catalog.vectors, dcm))[1])) if dcm is not None else 0
-        fov_recall: object = num_final / float(num_fov) if num_fov else 0.0
-        is_valid: object = num_final >= 8 or (num_final >= req_stars and fov_recall >= 0.75) or (num_final == 3 and num_fov <= 3)
+        t_log['total_pipeline_ms'] = sum((val for key, val in t_log.items() if key != 'total_pipeline_ms'))
+        num_final: int = int(len(obs_sel))
+        num_fov: int = int(count_nonzero(self.camera.project(einsum('ij,kj->ik', self.catalog.vectors, dcm))[1])) if dcm is not None else 0
+        if num_final < 3:
+            return abort('INSUFFICIENT_INLIER_PAIRS', f'Only {num_final} valid inlier pairs (< 3)', n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, rms_res=rms_res, max_res=max_res, fov_expected=num_fov)
+        if rms_res is not None and rms_res > rms_limit:
+            return abort('EXCESSIVE_POSTFIT_RESIDUAL', f'Post-fit RMS residual {rms_res:.2f} arcsec exceeds tolerance {rms_limit:.2f} arcsec', n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, rms_res=rms_res, max_res=max_res, fov_expected=num_fov)
+        allow_three: bool = num_final == 3 and int(self.cfg.min_stars) <= 3 and (num_fov <= 3) and (max_res is not None) and (max_res <= 0.5 * floor_arc)
+        if num_final < req_stars and not allow_three:
+            return abort('INSUFFICIENT_INLIER_PAIRS', f'Only {num_final} valid inlier pairs (< min_stars {req_stars})', n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, rms_res=rms_res, max_res=max_res, fov_expected=num_fov)
+        fov_recall: float = num_final / float(num_fov) if num_fov else 0.0
+        is_valid: bool = num_final >= 8 or (num_final >= req_stars and fov_recall >= 0.75) or (num_final >= 5 and fov_recall >= 0.45 and (rms_res <= 0.6 * floor_arc)) or allow_three
         if not is_valid:
-            return abort(f'Attitude matched only {num_final} of {num_fov} catalog stars in that field')
+            return abort('LOW_FOV_CONSISTENCY', f'Attitude matched only {num_final} of {num_fov} catalog stars in that field', n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, rms_res=rms_res, max_res=max_res, fov_expected=num_fov)
         final_id: object = IdResult(obs_sel, cat_sel, True, id_res.n_pyramids_tested, id_res.expected_false)
+        match_stats: dict = _build_match_stats(status='SOLVED', reject_code=None, n_detected=n_det, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, min_pairs_required=req_stars, rms_residual_arcsec=rms_res, max_residual_arcsec=max_res, fov_expected_stars=num_fov)
         q_metrics: object = self._quality(cents, final_id, dcm)
-        return TrackerResult(success=True, q=quat, a=dcm, centroids=cents, ident=final_id, residuals_arcsec=res_arc, cov_rad2=cov_mat, timing_ms=t_log, quality=q_metrics, error=None, glare_mask=g_mask)
+        q_metrics.update(match_stats)
+        return TrackerResult(success=True, q=quat, a=dcm, centroids=cents, ident=final_id, residuals_arcsec=res_arc, cov_rad2=cov_mat, timing_ms=t_log, quality=q_metrics, error=None, glare_mask=g_mask, status='SOLVED', reject_code=None, match_stats=match_stats)
 
     def _associate_remaining(self, cents: object, a: object, obs_idx: object, cat_idx: object) -> object:
         """Greedily associate non-pyramid detected centroids with projected in-FOV catalog stars."""

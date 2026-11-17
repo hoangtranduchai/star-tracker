@@ -1,5 +1,5 @@
 """Wahba attitude estimation via Markley SVD and Davenport q-method (QUEST)."""
-from numpy import arccos, argmax, asarray, clip, diag, einsum, eye, float64, full, maximum, outer, sum as npsum, zeros
+from numpy import all as npall, arccos, argmax, asarray, clip, diag, einsum, eye, float64, full, isfinite, maximum, outer, sqrt, sum as npsum, zeros
 from numpy.linalg import det, eigh, pinv, svd
 from .quaternion import ARCSEC_PER_RAD, angular_error_arcsec, from_dcm, normalize, to_dcm
 
@@ -7,7 +7,9 @@ def _norm_weights(count: object, weights: object) -> object:
     if weights is None:
         return full(count, 1.0 / float(count), dtype=float64)
     w_vec: object = asarray(weights, dtype=float64).ravel()
-    total: object = float(npsum(w_vec)) if w_vec.size == count else -1.0
+    if w_vec.size != count or not bool(npall(isfinite(w_vec))) or not bool(npall(w_vec >= 0.0)):
+        raise ValueError('Weights must be finite, non-negative, and match vector count.')
+    total: object = float(npsum(w_vec))
     if not total > 0.0:
         raise ValueError('Weights must sum to a positive value.')
     return w_vec * (1.0 / total)
@@ -15,9 +17,21 @@ def _norm_weights(count: object, weights: object) -> object:
 def _prepare_wahba_inputs(obs_vectors: object, cat_vectors: object, weights: object) -> object:
     obs_mat: object = asarray(obs_vectors, dtype=float64)
     ref_mat: object = asarray(cat_vectors, dtype=float64)
+    if obs_mat.ndim != 2 or ref_mat.ndim != 2 or obs_mat.shape[1] != 3 or ref_mat.shape != obs_mat.shape:
+        raise ValueError(f'Expected matching (N, 3) vector arrays, got {obs_mat.shape} and {ref_mat.shape}.')
     count: object = int(obs_mat.shape[0])
-    if not count >= 3:
+    if count < 3:
         raise ValueError(f'At least 3 vector pairs required, got {count}.')
+    if not (bool(npall(isfinite(obs_mat))) and bool(npall(isfinite(ref_mat)))):
+        raise ValueError('Observation and catalog vectors must be finite.')
+    obs_norms: object = sqrt(npsum(obs_mat * obs_mat, axis=1))
+    ref_norms: object = sqrt(npsum(ref_mat * ref_mat, axis=1))
+    if not (bool(npall(obs_norms > 1e-12)) and bool(npall(ref_norms > 1e-12))):
+        raise ValueError('Observation and catalog vectors must have non-zero norms.')
+    s_obs: object = svd(obs_mat, compute_uv=False)
+    s_ref: object = svd(ref_mat, compute_uv=False)
+    if float(s_obs[-1]) < 1e-6 or float(s_ref[-1]) < 1e-6:
+        raise ValueError('Degenerate or collinear star geometry (<3 independent directions)')
     w_vec: object = _norm_weights(count, weights)
     profile: object = einsum('i,ij,ik->jk', w_vec, obs_mat, ref_mat)
     return (obs_mat, ref_mat, w_vec, profile)

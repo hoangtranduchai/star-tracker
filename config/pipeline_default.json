@@ -24,6 +24,7 @@
     "mask_dilate_px": 6,
     "mask_bg_excess_k": 3.0,
     "attitude_error_limit_arcsec": 40.0,
+    "min_stars": 4,
     "centroid_backend": "classical"
   },
   "full": {
@@ -51,6 +52,7 @@
     "mask_dilate_px": 25,
     "mask_bg_excess_k": 3.0,
     "attitude_error_limit_arcsec": 10.0,
+    "min_stars": 4,
     "centroid_backend": "classical"
   }
 }

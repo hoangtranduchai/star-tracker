@@ -2,7 +2,6 @@
 
 **Đơn vị:** Trường Đại học Bách khoa, Đại học Đà Nẵng — Khoa Công nghệ thông tin  
 **Đội (theo hồ sơ):** Hoàng Trần Đức Hải · Nguyễn Tiến · Mai Tạ Trúc Vy  
-**GVHD:** TS. Nguyễn Năng Hùng Vân  
 **File này:** lời nói + hỏi đáp. Không phải slide. Slide: `AI2026_SLIDE_THUYET_TRINH.pptx`.
 
 ---
@@ -11,14 +10,14 @@
 
 | Hạng mục | Gợi ý |
 |---|---|
-| Thời lượng nói | **7–8 phút** (không tính hỏi đáp) |
+| Thời lượng nói | **8–9 phút** (không tính hỏi đáp · 17 slide Vòng Chung kết · Chặng 1) |
 | Công cụ | Laptop + trình duyệt `http://127.0.0.1:8765/` (chạy `python app.py` trước) |
 | Demo sạch (Seed) | **⚡ FAST MODE**, Yale BSC5 (V ≤ 6), Wahba **SVD**, kính demo 50 mm · 3,72 µm, Seed **42** — preset tự gắn **CoG** |
-| Demo sáng tạo | Nút **🏔 Ảnh núi thật** — preset tự gắn **CNN** + 4,2 mm · 4,1 µm → đọc số trên màn (radio vẫn đổi tay được) |
-| Quy tắc lai | Ảnh giả lập và Seed 42 dùng CoG. Nút Ảnh núi thật dùng CNN. |
-| Số liệu kết quả live | Chỉ đọc số **đang hiện trên màn hình**. |
-| Số liệu hồ sơ (đã đo) | 500 khung sạch: CoG RMSE **0,1804** px / khoảng **34** ms; CNN **0,4745** px / khoảng **60** ms. Một khung sạch, tâm cổ điển, seed 42: **0,446″**. Núi LOST: núi/cây CoG **25**, CNN **1**. CNN khớp **63/79**, khoảng **5** s, RA **310,49°**, Dec **+36,01°**. CoG khớp **64/106**, khoảng **16** s, RA **310,52°**, Dec **+35,95°**. LOST công bố: **310,446° / +36,0229°**. |
-**Nhịp thời gian gợi ý (tổng ~7–8 phút):**
+| Demo sáng tạo & Ảnh thật | Nút **🏔 Ảnh núi thật** (tự gắn **CNN** + 4,2 mm · 4,1 µm) & **🌌 Ảnh trời thật (ESA tetra3)** → đọc số trên màn |
+| Quy tắc lai | Ảnh giả lập, Seed 42 và ảnh trời thật `tetra3` dùng CoG. Nút Ảnh núi thật dùng CNN. |
+| Số liệu kết quả live | Chỉ đọc số **đang hiện trên màn hình** (`SOLVED`/`LOST`, `reject_code`, số inlier). |
+| Số liệu hồ sơ (đã kiểm toán) | 500 khung sạch (`thr2`): CoG RMSE **0,1804** px (**Recall 93,3% · Precision 100,0% · 0 FP**, ~**34,2** ms); CNN **0,4745** px (**Rec 92,7% · Prec 75,4% · 8.191 FP**, ~**60,2** ms). **E2E 500 khung `hd1024`**: CoG **500/500 <40″** (`Δθ` tv **2,00″**, **87,2** ms) vs CNN **498/500 <40″** (`Δθ` tv **7,94″**, **123,9** ms). **Seed 42 FAST**: CoG **0,446″** (`36/36`) vs CNN **1,648″** (`30/36`). **Stress 100 ca**: **0/100 (0% False Lock)** vs **41/100 (41%)** cũ. **Núi St. Helens**: CoG `111` (`bg=31`) vs `106` (pipeline `mask+bg=33`), hậu kiểm **`LOST [INSUFFICIENT_INLIER_PAIRS]`** (1 inlier); CNN **`SOLVED` `54/79`**, RA **310,48°**, Dec **+36,00°**, **Δ `0,034°`** vs LOST (**`~2,76 s`**). |
+**Nhịp thời gian gợi ý (tổng ~8–9 phút):**
 
 | Phần | Thời lượng |
 |---|---|
@@ -38,7 +37,7 @@
 
 **Trang «Nội dung thuyết trình»:**
 
-« Em đi sáu phần. Trước hết là bài toán: từ một ảnh sao ra quaternion mười sáu byte. Tiếp theo là đường ống thuật toán: tìm tâm, nhận dạng sao, rồi giải hướng. Sau đó là số đo trên ảnh sạch, rồi ảnh núi thật, và phần trích dẫn tách riêng khỏi số của nhóm. »
+« Em đi theo trình tự bộ mười bảy slide. Trước hết là bài toán và đường ống lai CoG hoặc CNN ra quaternion mười sáu byte. Tiếp theo là số đo trên năm trăm khung sạch, bốn mươi khung lóa và ảnh núi thật. Sau đó là phần trích dẫn riêng bài báo Zhao. Cuối cùng là ba cải tiến Vòng Chung kết Chặng một: chốt chặn không phần trăm khóa sai, đánh giá End-to-End năm trăm bốn mươi khung mô phỏng cùng ảnh trời thật hiệu chuẩn, và đối soát minh bạch phạm vi demo PC. »
 
 **Trên màn sau đó:** Toàn trang web, tiêu đề Star Tracker laptop demo.
 
@@ -80,30 +79,29 @@ Bước ba là Wahba, SVD hoặc QUEST, ra quaternion. »
 
 *(Bấm 🚀 SINH ẢNH & GIẢI TƯ THẾ. Đọc số trên màn.)*
 
-« Sai số góc trên màn là … . Độ trễ … . Số sao định danh … trên … . Em chỉ đọc số vừa hiện. Trên năm trăm khung sạch, tâm cổ điển có RMSE không phẩy một tám không bốn pixel, khoảng ba mươi bốn mili giây. Mạng là không phẩy bốn bảy bốn năm pixel, khoảng sáu mươi mili giây. Khung sạch seed bốn mươi hai, tâm cổ điển, lệch không phẩy bốn bốn sáu giây cung. »
+« Sai số góc trên màn là … . Độ trễ … . Số sao định danh … trên … . Em chỉ đọc số vừa hiện. Trên năm trăm khung sạch, tâm cổ điển đạt RMSE không phẩy một tám không bốn pixel với Precision một trăm phần trăm và không đốm giả; mạng đạt không phẩy bốn bảy bốn năm pixel với Precision bảy mươi lăm phẩy bốn phần trăm. Khi chạy End-to-End ba bậc tự do, tâm cổ điển giải đúng cả năm trăm khung dưới bốn mươi giây cung, trung vị hai phẩy không không giây cung; khung seed bốn mươi hai đạt không phẩy bốn bốn sáu giây cung so với một phẩy sáu bốn tám giây cung của mạng. »
 
-### 2.5. Demo Ảnh núi thật — điểm sáng tạo (~90–110 giây)
+### 2.5. Demo Ảnh núi thật & Ảnh trời thật (~90–110 giây)
 
 **Việc:**
 
-1. Bấm **🏔 Ảnh núi thật** (preset tự gắn CNN + 4,2 mm · 4,1 µm).
-2. Đọc số trên màn (RA/Dec, ID, độ trễ).
-3. (Tuỳ chọn so) Đổi radio sang **Centroid cổ điển** → chạy lại → đọc số.
-4. So sánh miệng với số hồ sơ nếu khớp.
+1. Bấm **🏔 Ảnh núi thật** (preset tự gắn CNN + 4,2 mm · 4,1 µm) → đọc `SOLVED`, `54/79` sao, `0,034°`.
+2. Đổi radio sang **Centroid cổ điển** → chạy lại → thấy badge **`LOST [INSUFFICIENT_INLIER_PAIRS]`** và gói 16 byte `0x00`.
+3. Bấm **🌌 Ảnh trời thật (ESA tetra3)** (16-bit Alt60) để minh họa ảnh sao thật hiệu chuẩn.
 
 **Lời thoại:**
 
 « Đây là điểm sáng tạo. Em bấm Ảnh núi thật. Ảnh này công bố kèm phần mềm LOST của Đại học Washington, núi St. Helens, không phải ảnh nhóm em chụp. Khung một nghìn không hai mươi bốn vuông, tiêu cự bốn phẩy hai milimet, pixel bốn phẩy một micrômet. »
 
-*(Đọc xích kinh, xích vĩ, số sao khớp và độ trễ trên màn.)* « Trên mặt nạ địa hình, mạng còn một điểm, tâm cổ điển còn hai mươi lăm điểm. Cả hai hướng lệch số LOST công bố dưới một phần mười độ. Trên năm trăm khung sạch, tâm cổ điển vẫn chính xác hơn về tâm sao. »
+*(Đọc xích kinh, xích vĩ, số sao khớp và độ trễ trên màn.)* « Trên mặt nạ địa hình, mạng còn một điểm, tâm cổ điển còn hai mươi lăm điểm. Sau cải tiến, mạng giải đúng năm mươi bốn trên bảy mươi chín cặp, lệch LOST không phẩy không ba bốn độ trong khoảng hai phẩy bảy sáu giây. Còn tâm cổ điển, khi lọc sạch đốm nhiễu địa hình chỉ còn một cặp đúng — dưới ngưỡng ba — nên chốt chặn trả về LOST an toàn kèm mười sáu byte không, tuyệt đối không xuất tư thế giả. »
 
-### 2.6. Số đo + Zhao ngắn (~40–50 giây)
+### 2.6. Cải tiến Chặng 1 & Số Zhao (~60 giây)
 
-**Có thể chỉ slide 5–7 nếu đang chiếu song song.**
+**Có thể chỉ slide 9–15 nếu đang chiếu song song.**
 
 **Lời thoại:**
 
-« Thêm bốn mươi khung lóa mạnh: tâm cổ điển RMSE khoảng không phẩy một bốn bốn chín pixel, mạng khoảng không phẩy ba chín năm một pixel.
+« Thêm bốn mươi khung lóa mạnh: tâm cổ điển giải đúng bốn mươi trên bốn mươi khung với trung vị một phẩy chín chín giây cung, mạng giải đúng ba mươi chín trên bốn mươi khung. Trên một trăm ca đối kháng của Chặng một, chốt chặn mới và kiểm tra thẳng hàng SVD kéo tỷ lệ khóa sai False Lock từ bốn mươi mốt phần trăm về không phần trăm. Trên tập ảnh trời thật hiệu chuẩn của ESA tetra3 Alt60, cả hai giải đúng ở mức hai phẩy hai sáu đến bốn phẩy sáu lăm giây cung.
 
 Số trong bài Zhao là số của tác giả: khoảng hai mươi mili giây trên RTX 2060M, khoảng hai trăm sáu mươi sáu mili giây trên Coral. Hình trên slide có ghi nguồn arXiv 2404.19108. »
 
@@ -113,9 +111,9 @@ Số trong bài Zhao là số của tác giả: khoảng hai mươi mili giây t
 
 **Lời thoại:**
 
-« Đầu ra là bốn số thực ba mươi hai bit, tức mười sáu byte, hướng camera trong hệ J2000.
+« Đầu ra là bốn số thực ba mươi hai bit, tức mười sáu byte, hướng camera trong hệ J2000 trên phần mềm demo PC, hoặc mười sáu byte không khi LOST.
 
-Ảnh seed là mô phỏng. Trên năm trăm khung sạch, mạng có RMSE cao hơn tâm cổ điển. Mặt nạ núi là ước lượng, có hình để kiểm bằng mắt. Sai số góc em vừa đọc là của một khung sạch.
+Ảnh seed là mô phỏng. Trên năm trăm khung sạch, mạng có RMSE cao hơn tâm cổ điển. Mặt nạ núi là ước lượng, có hình để kiểm bằng mắt. Toàn bộ thí nghiệm chạy trên laptop RTX 5070 và CPU — nhóm chưa kiểm chứng trên phần cứng vệ tinh hay bức xạ bay.
 
 Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 
@@ -123,14 +121,14 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 
 ## 3. Câu hỏi nhanh (rút gọn — chi tiết ở `CAU_HOI_BGK.md`)
 
-1. Lost-in-space? → Không có tư thế ban đầu; từ ảnh sao ra quaternion.  
-2. Vì sao tâm cổ điển chính xác hơn trên ảnh sạch? → 500 khung: RMSE 0,1804 px so với 0,4745 px.  
-3. Vì sao dùng mạng trên ảnh núi? → Núi/cây 25 so với 1; mạng khoảng 5 giây, khớp 63/79; tâm cổ điển khoảng 16 giây, khớp 64/106.  
-4. Ảnh núi có phải nhóm chụp? → Không. Ảnh công bố kèm LOST.  
-5. Có AI không? → Mạng chỉ ở bước tìm tâm. Nhận dạng và tư thế là Pyramid và Wahba.  
-6. Có dùng mét trên mặt đất không? → Không. Đầu ra là hướng.  
-7. Đầu ra? → Quaternion 16 byte.  
-8. Cổng chỉ sao từ cấp 6? → Có trên giao diện. Trên một khung đã thử, cổng này không làm mạng chính xác hơn tâm cổ điển.
+1. Lost-in-space? → Không có tư thế ban đầu; từ ảnh sao ra quaternion 16 byte (hoặc `0x00` khi `LOST`).
+2. Vì sao tâm cổ điển chính xác hơn trên ảnh sạch? → 500 khung `thr2`: RMSE `0,1804` px (`Prec 100%`) vs `0,4745` px (`Prec 75,4%`); E2E `2,00″` vs `7,94″`.
+3. Vì sao dùng mạng trên ảnh núi? → Núi/cây `25` so với `1`; hậu kiểm mạng giải `SOLVED 54/79` (`Δ 0,034°`, `~2,76 s`), còn CoG bị tạp núi & méo góc rộng nên chốt chặn từ chối an toàn `LOST [INSUFFICIENT_INLIER_PAIRS]`.
+4. Chốt chặn từ chối khớp sai Chặng 1? → Sửa lỗi `break`, lọc ngoại lai trước & sau gắn sao bổ sung, kiểm SVD thẳng hàng → `0/100 (0% False Lock)` vs `41/100 (41%)` cũ.
+5. Ảnh núi có phải nhóm chụp? → Không. Ảnh công bố kèm LOST (ĐH Washington).
+6. Có AI không? → Mạng chỉ ở bước tìm tâm (hỗ trợ 8/12/16-bit). Nhận dạng và tư thế là Pyramid và Wahba.
+7. Có dùng mét trên mặt đất hay kiểm chứng bay chưa? → Không dùng GSD mét; đây là phần mềm demo PC Laptop, chưa kiểm chứng trên phần cứng vệ tinh hay bus ADCS bay.
+8. Đối soát Log–Slide? → Đã xóa toàn bộ số cũ chưa đối soát, sửa Slide 7/8/10/16, bổ sung 4 slide cải tiến (tổng 17 slide).
 
 ---
 
@@ -138,9 +136,9 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 
 ```text
 □ python app.py → http://127.0.0.1:8765/
-□ FAST + Seed 42 + CoG → chạy thử → đọc KPI
-□ 🏔 Ảnh núi thật → CoG rồi CNN → đối chiếu 25 vs 1
-□ Tab quaternion 16 byte
-□ Nhắc: sim sạch CoG thắng; núi LOST = sáng tạo; số Zhao = của tác giả
-□ Slide: AI2026_SLIDE_THUYET_TRINH.pptx (có overlay núi)
+□ FAST + Seed 42 + CoG → chạy thử → đọc KPI (đối chiếu 0,446″ trong JSON)
+□ 🏔 Ảnh núi thật → CNN SOLVED (54/79) rồi CoG LOST [INSUFFICIENT_INLIER_PAIRS]
+□ 🌌 Ảnh trời thật (ESA tetra3 Alt60) → giải ảnh 16-bit thực tế
+□ Tab quaternion 16 byte + nhấn mạnh phạm vi PC Demo (chưa kiểm chứng bay)
+□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (17 slide đã đối soát)
 ```

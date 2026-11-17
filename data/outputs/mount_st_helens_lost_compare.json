@@ -4,6 +4,19 @@
     "dec_deg": 36.0229,
     "source": "lost-website.netlify.app screenshot"
   },
+  "manifest_gt": {
+    "q_gt": [
+      0.6229533216449149,
+      -0.030545154152480283,
+      -0.45299404894345846,
+      0.6370184802901562
+    ],
+    "boresight_ra_deg": 310.5028441879448,
+    "boresight_dec_deg": 35.9958583317873,
+    "calibrated_focal_mm": 4.163043225470905,
+    "k1": 0.08897545958095043,
+    "k2": -0.09770961126729949
+  },
   "optics": {
     "focal_mm": 4.2,
     "pixel_um": 4.1,
@@ -12,8 +25,90 @@
   },
   "image": "data/uploads/mount_st_helens_1.png",
   "image_sha256_12_array": "62593b48bc0c",
-  "source_note": "Web UI confirmed run (contrast-ranked 8-bit CNN). Both within ~0.1° of LOST.",
+  "source_note": "Audited DemoEngine run after Wave 2 strict outlier-rejection guard. CNN solves within ~0.04 deg of UW LOST; uncalibrated classical CoG (106 detections incl. terrain clutter and severe wide-angle distortion) is cleanly rejected as LOST [INSUFFICIENT_INLIER_PAIRS] instead of bypassing residual gating.",
+  "pipeline_vs_standalone_diff": {
+    "standalone_bg_block": 31,
+    "standalone_mask": null,
+    "standalone_n_detected": 111,
+    "standalone_time_ms": 40.32370000004448,
+    "pipeline_cfg_bg_block": 32,
+    "pipeline_effective_odd_bg_block": 33,
+    "pipeline_bg32_nomask_n_detected": 106,
+    "pipeline_bg32_nomask_time_ms": 36.14390000075218,
+    "pipeline_glare_mask_px": 0,
+    "pipeline_glare_mask_frac": 0.0,
+    "pipeline_mask_ms": 18.88619999954244,
+    "pipeline_centroiding_ms": 36.99320000032458,
+    "pipeline_total_detection_ms": 55.87939999986702,
+    "pipeline_n_detected": 106,
+    "delta_n_detected": 5,
+    "explanation_vi": "CentroidDetector độc lập dùng bg_block=31 và không chạy GlareMasker nên tách được 111 điểm (40.3 ms). Trong StarTrackerPipeline (chế độ fast), GlareMasker chạy thêm (18.9 ms; phủ 0 px trên ảnh 8-bit vì mask_full_scale=4095.0) và CentroidDetector nhận bg_block=32 (được làm lẻ thành 33 via bg_block|1), làm giảm 5 đốm sát ngưỡng xuống còn 106 điểm (37.0 ms đo hiện tại; 97.5 ms ở lần web log trước đó)."
+  },
   "modes": {
+    "cnn": {
+      "success": true,
+      "status": "SOLVED",
+      "reject_code": null,
+      "verdict": "SOLVED_NO_GT",
+      "e2e_outcome": "SOLVED_NO_GT",
+      "n_detected": 79,
+      "n_matched": 54,
+      "n_initial_matched": 9,
+      "n_rejected_outliers": 9,
+      "n_valid_pairs": 54,
+      "rms_residual_arcsec": 192.9055995479834,
+      "max_residual_arcsec": 285.03927220943774,
+      "detector": "cnn_zhao2024",
+      "fallback": false,
+      "ra_deg": 310.47998413645274,
+      "dec_deg": 36.00338404371295,
+      "sep_deg_from_LOST": 0.03371240896981965,
+      "dra_deg": 0.03398413645271603,
+      "ddec_deg": -0.019515956287051495,
+      "attitude_error_arcsec_vs_manifest": 110.0464095562077,
+      "pipeline_ms": 2755.8409999992364,
+      "timings": {
+        "mask_ms": 21.05550000032963,
+        "centroiding_ms": 157.13030000006256,
+        "identification_ms": 2575.2913999995144,
+        "attitude_ms": 2.3637999993297854,
+        "total_pipeline_ms": 2755.8409999992364
+      },
+      "error": null
+    },
+    "classical": {
+      "success": false,
+      "status": "LOST",
+      "reject_code": "INSUFFICIENT_INLIER_PAIRS",
+      "verdict": "FAIL",
+      "e2e_outcome": "LOST",
+      "n_detected": 106,
+      "n_matched": 0,
+      "n_initial_matched": 9,
+      "n_rejected_outliers": 8,
+      "n_valid_pairs": 1,
+      "rms_residual_arcsec": 469.5989016260198,
+      "max_residual_arcsec": 1015.5212667827848,
+      "detector": "classical",
+      "fallback": false,
+      "ra_deg": null,
+      "dec_deg": null,
+      "sep_deg_from_LOST": null,
+      "dra_deg": null,
+      "ddec_deg": null,
+      "attitude_error_arcsec_vs_manifest": null,
+      "pipeline_ms": 9407.167100001061,
+      "timings": {
+        "mask_ms": 20.092000000659027,
+        "centroiding_ms": 36.436000000321656,
+        "identification_ms": 9350.328700000318,
+        "attitude_ms": 0.31039999976201216,
+        "total_pipeline_ms": 9407.167100001061
+      },
+      "error": "LOST [INSUFFICIENT_INLIER_PAIRS]: Only 1 inlier pairs survived residual gating (< 3)"
+    }
+  },
+  "legacy_pre_fix_reference": {
     "cnn": {
       "success": true,
       "verdict": "SOLVED_NO_GT",

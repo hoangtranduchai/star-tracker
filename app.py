@@ -1,4 +1,6 @@
 """Flask web interface for the star tracker simulator and lost-in-space attitude solver."""
+from math import isfinite
+import os
 from pathlib import Path
 import sys
 from threading import Lock, Timer
@@ -11,13 +13,15 @@ if str(BASE) not in sys.path:
 matplotlib.use('Agg')
 from src.demo_session import DemoEngine, RunRequest, SIM_METHOD
 from src.quaternion import format_dec_both, format_dec_stellarium, format_ra_both, format_ra_hms, parse_dec_deg, parse_ra_deg, split_radec_text
-from src.starnames import n_iau_names, n_named_hr
+from src.starnames import describe_index, n_iau_names, n_named_hr
 app = Flask(__name__, template_folder=str(BASE.joinpath('web', 'templates')), static_folder=str(BASE.joinpath('web', 'static')))
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0, TEMPLATES_AUTO_RELOAD=True, MAX_CONTENT_LENGTH=80 * 1024 * 1024)
 app.jinja_env.auto_reload = True
 app.jinja_env.cache = {}
 ENGINE = DemoEngine(BASE)
 LOCK = Lock()
+_SKY_CATALOG_CACHE = {}
+_SKY_CACHE_LOCK = Lock()
 _VALID_BACKENDS = ('classical', 'cnn', 'cnn_zhao2024', 'zhao', 'mobileunet')
 _UPLOAD_EXTS = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.webp')
 
@@ -60,13 +64,13 @@ def _body_radec(body: object) -> object:
     if no_ra and no_dec:
         return (None, None)
     if no_ra or no_dec:
-        raise ValueError('Cần cả RA và Dec. Dán một dòng Stellarium: 18h 37m51.2s   +38°48\'46.2"')
+        raise ValueError('Vui lòng nhập đủ cả RA và Dec (ví dụ: 18h 37m 51.2s  +38°48\'46.2").')
     fmt_tag: object = str(body.get('radec_fmt') or 'auto')
     return (parse_ra_deg(ra_in, fmt=fmt_tag), parse_dec_deg(dec_in, fmt=fmt_tag))
 
 def _run_locked(req: object) -> object:
     if not LOCK.acquire(timeout=0.15):
-        raise EngineBusy('Engine đang xử lý request khác. Đợi xong (hoặc F5) rồi bấm lại — không tự chạy khi vừa mở trang.')
+        raise EngineBusy('Hệ thống đang xử lý khung ảnh trước đó. Vui lòng đợi giây lát rồi thử lại.')
     try:
         outcome: object = ENGINE.run(req)
     finally:
@@ -89,6 +93,48 @@ def index() -> object:
 @app.get('/api/frames')
 def api_frames() -> object:
     return jsonify(dict(frames=ENGINE.list_dataset_frames()))
+
+@app.get('/api/sky-catalog')
+def api_sky_catalog() -> object:
+    kind: object = str(request.args.get('catalog') or 'bsc5').strip().lower()
+    if kind not in ('bsc5', 'hipparcos'):
+        return (jsonify(dict(error='catalog must be bsc5 or hipparcos')), 400)
+    raw_mag: object = request.args.get('max_mag')
+    try:
+        mag_val: object = 6.0 if _is_blank(raw_mag) else float(raw_mag)
+    except (TypeError, ValueError):
+        return (jsonify(dict(error='max_mag must be a number')), 400)
+    if not isfinite(mag_val):
+        mag_val = 6.0
+    max_mag: object = round(min(7.5, max(1.0, mag_val)), 3)
+    cache_key: object = (kind, max_mag)
+    cached: object = _SKY_CATALOG_CACHE.get(cache_key)
+    if cached is not None:
+        return jsonify(cached)
+    with _SKY_CACHE_LOCK:
+        cached = _SKY_CATALOG_CACHE.get(cache_key)
+        if cached is None:
+            cat, is_syn, _ = ENGINE.stack(kind, max_mag)
+            vecs: object = cat.vectors
+            names_map: object = {}
+            for idx in range(cat.num_stars):
+                rec: object = describe_index(cat, idx)
+                iau_name: object = rec.get('iau_name')
+                if iau_name:
+                    names_map[str(rec['id'])] = str(iau_name)
+            cached = dict(
+                source=str(cat.source),
+                synthetic=bool(is_syn),
+                n=int(cat.num_stars),
+                ids=[int(x) for x in cat.ids],
+                vx=[round(float(v), 5) for v in vecs[:, 0]],
+                vy=[round(float(v), 5) for v in vecs[:, 1]],
+                vz=[round(float(v), 5) for v in vecs[:, 2]],
+                mag=[round(float(m), 2) for m in cat.mags],
+                names=names_map,
+            )
+            _SKY_CATALOG_CACHE[cache_key] = cached
+    return jsonify(cached)
 
 @app.post('/api/parse-radec')
 def api_parse_radec() -> object:
@@ -163,11 +209,14 @@ def output_file(name: object) -> object:
     return send_from_directory(out_root, name)
 
 def main() -> object:
-    port_num: object = 8765
+    raw_port: object = os.environ.get('STAR_TRACKER_PORT', '').strip()
+    port_num: object = int(raw_port) if raw_port else 8765
     app_url: object = f'http://127.0.0.1:{port_num}/'
     banner: object = ('=' * 60, '  Star tracker  —  Star Tracker demo app', f'  Open {app_url}', '  Demo camera: APS-C 6000x4000, 3.72 um, 50 mm', '  Synthetic starframes rendered via src.simulator.SkySimulator', '=' * 60)
     print('\n'.join(banner))
-    Timer(0.8, lambda: open_browser(app_url)).start()
+    no_browser_env: object = os.environ.get('STAR_TRACKER_NO_BROWSER', '').strip().lower() in ('1', 'true', 'yes')
+    if not (no_browser_env or '--no-browser' in sys.argv):
+        Timer(0.8, lambda: open_browser(app_url)).start()
     app.run(host='127.0.0.1', port=port_num, debug=False, threaded=True)
 if __name__ == '__main__':
     main()

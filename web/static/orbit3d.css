@@ -1,0 +1,414 @@
+/* StarTrackerOrbit3D — Minimalist Deep-Cosmos 3D Attitude & J2000 Sky Viewport */
+
+:where(.orbit3d-root) {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 440px;
+  background: radial-gradient(ellipse 90% 80% at 50% 45%, #090e19 0%, #05070b 72%, #020306 100%);
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  isolation: isolate;
+}
+
+.orbit3d-root {
+  position: relative;
+  overflow: hidden;
+  background-color: #05070b;
+  color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.o3d-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+  z-index: 1;
+}
+
+.o3d-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.o3d-stage.is-pov {
+  cursor: move;
+}
+
+.o3d-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+/* Projected 2D Star & Landmark Labels */
+.o3d-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.o3d-star-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  transition: opacity 0.14s ease-out;
+}
+
+.o3d-star-label.is-matched {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 6px 2px 5px;
+  border-radius: 4px;
+  background: rgba(5, 8, 15, 0.62);
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.o3d-star-label.is-matched::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.75);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.o3d-star-label .o3d-star-sub {
+  font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.o3d-star-label.is-landmark {
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 10.5px;
+  font-weight: 500;
+  padding-left: 6px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+.o3d-star-label.is-landmark.is-pole {
+  color: rgba(125, 211, 252, 0.82);
+}
+
+/* Container-aware HUD Layer */
+.o3d-hud-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  container-type: inline-size;
+}
+
+.o3d-hud-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.o3d-telemetry-pill {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background: rgba(11, 15, 23, 0.76);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.42);
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+}
+
+.o3d-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #64748b;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.o3d-status-dot.is-solved {
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.65);
+}
+
+.o3d-status-dot.is-lost {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+.o3d-status-dot.is-idle {
+  background: #7dd3fc;
+  opacity: 0.75;
+}
+
+.o3d-telemetry-text {
+  font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.o3d-telemetry-meta {
+  font-size: 10.5px;
+  color: #94a3b8;
+  padding-left: 7px;
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  white-space: nowrap;
+}
+
+.o3d-top-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.o3d-hint-pill {
+  padding: 4px 9px;
+  border-radius: 9999px;
+  background: rgba(11, 15, 23, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
+  transition: opacity 0.35s ease;
+}
+
+.o3d-hint-pill.is-dimmed {
+  opacity: 0.42;
+}
+
+.o3d-pov-zoom {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(11, 15, 23, 0.80);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.o3d-pov-zoom[hidden],
+.o3d-hint-pill[hidden] {
+  display: none !important;
+}
+
+.o3d-mini-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  white-space: nowrap;
+}
+
+.o3d-mini-btn:hover {
+  color: #f8fafc;
+}
+
+.o3d-mini-btn.is-active {
+  color: #f8fafc;
+  background: rgba(125, 211, 252, 0.14);
+  border-color: rgba(125, 211, 252, 0.32);
+}
+
+/* Bottom Floating Control Bar */
+.o3d-controls {
+  pointer-events: auto;
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 16px);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 9999px;
+  background: rgba(11, 15, 23, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+.o3d-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.o3d-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.10);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.o3d-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.o3d-btn svg {
+  width: 13.5px;
+  height: 13.5px;
+  flex-shrink: 0;
+  stroke-width: 1.6;
+}
+
+.o3d-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.o3d-btn:focus-visible,
+.o3d-mini-btn:focus-visible {
+  outline: 1px solid rgba(125, 211, 252, 0.65);
+  outline-offset: 1px;
+}
+
+.o3d-btn.is-active {
+  color: #f8fafc;
+  background: rgba(125, 211, 252, 0.14);
+  border-color: rgba(125, 211, 252, 0.30);
+}
+
+.o3d-btn.is-toggle-on {
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.09);
+  border-color: rgba(125, 211, 252, 0.20);
+}
+
+/* Compact split-pane adaptation via CSS Container Query */
+@container (max-width: 580px) {
+  .o3d-telemetry-meta {
+    display: none;
+  }
+  .o3d-hint-pill {
+    display: none;
+  }
+  .o3d-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .o3d-btn.is-compact-icon .o3d-btn-txt {
+    display: none;
+  }
+}
+
+@container (max-width: 420px) {
+  .o3d-telemetry-text {
+    font-size: 10px;
+  }
+  .o3d-btn {
+    padding: 5px 7px;
+    font-size: 10.5px;
+  }
+}
+
+/* Graceful WebGL Fallback */
+.o3d-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 40%, #0b1220 0%, #05070b 80%);
+  color: #94a3b8;
+  z-index: 3;
+}
+
+.o3d-fallback svg {
+  width: 36px;
+  height: 36px;
+  color: #7dd3fc;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.o3d-fallback-title {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.o3d-fallback-desc {
+  font-size: 12px;
+  max-width: 340px;
+  line-height: 1.45;
+  color: #94a3b8;
+}

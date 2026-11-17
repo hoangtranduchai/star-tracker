@@ -22,20 +22,37 @@ Công thức: \(f_x = f / p\), trường nhìn \(2\arctan(\text{cạnh cảm bi�
 
 Ảnh khác kích thước vẫn giải được nếu nhập tiêu cự thật (mm) và cạnh pixel của đúng file (µm). Không dùng tiêu cự quy đổi 35 mm.
 
-## Thuật toán
+## Thuật toán & Chốt chặn an toàn (Vòng Chung kết · Chặng 1)
 
-1. **Centroid** — mặc định: nền theo khối, ngưỡng theo độ lệch, opening nhị phân, connected components, trọng tâm cửa sổ. Tùy chọn: MobileUNet công khai (Zhao et al.) + trilateration (`centroid_backend=cnn`).
-2. **Nhận dạng sao** — góc giữa các sao, bảng **K-vector**, **Pyramid** và các sao còn lại. Không khớp chòm sao văn hóa.
-3. **Wahba** — SVD hoặc QUEST ra quaternion. `q` và `−q` là cùng một tư thế.
+1. **Centroid** — mặc định: nền theo khối, ngưỡng theo độ lệch, opening nhị phân, connected components, trọng tâm cửa sổ (`CoG`). Tùy chọn: MobileUNet công khai (Zhao et al., `arXiv:2404.19108`) + trilateration (`centroid_backend=cnn`), hỗ trợ ảnh thật **8-bit, 12-bit (`/16`) và 16-bit (`/256` + xếp hạng contrast SNR)**. Nếu thiếu trọng số hoặc suy luận lỗi sẽ tự fallback về `CoG`.
+2. **Nhận dạng sao** — góc giữa các sao, bảng **K-vector**, **Pyramid (Mortari)** và gán các sao còn lại trên catalog mặc định **Yale BSC5** (`V ≤ 6`, 5.023 sao; hỗ trợ `Hipparcos V ≤ 7` tùy chọn). Không khớp chòm sao văn hóa.
+3. **Wahba + Chốt chặn chống khóa sai (`0% False Lock`)** — `src/camera.py` hỗ trợ tâm `(cx, cy)` hiệu chuẩn; `src/attitude.py` kiểm tra hạng hình học bằng SVD (`s_min >= 1e-6`, chặn hình học thẳng hàng `COLLINEAR_DEGENERATE_GEOMETRY`); `src/pipeline.py` lọc ngoại lai lặp `_refine_inliers` cả **trước và sau** `_associate_remaining` (không `break` giữ ngoại lai khi `< 3` inlier), kiểm dư RMS hậu kiểm, cưỡng chế `min_stars >= 4` và kiểm mật độ FOV (`LOW_FOV_CONSISTENCY`).
+4. **Đầu ra `TrackerResult` & Downlink 16 byte** — khi hợp lệ trả `status="SOLVED"` kèm `q = [w, x, y, z]` (J2000, `4 × float32`) và `match_stats`; khi không đạt trả `status="LOST"`, `q=None`, `reject_code` cụ thể và gói downlink **16 byte `0x00`**.
 
 Bảng góc mặc định phủ tới **30,5°** (đường chéo trường nhìn demo). Ảnh rộng hơn thì lần đầu dựng bảng mới và lưu trong `data/catalogs/`.
 
-Hằng số electron, nhiễu đọc và dòng tối trong `config/camera_specs.json` có `"assumption": true`. Đó là số để mô phỏng, không phải số đo của một máy ảnh.
+Hằng số electron, nhiễu đọc và dòng tối trong `config/camera_specs.json` có `"assumption": true`. Đó là số để mô phỏng trên PC, không phải số đo phần cứng vệ tinh hay cảm biến bay thực tế.
 
-## Chạy
+> **Phạm vi kiểm chứng (Demo trên PC):** Toàn bộ số liệu bên dưới đo trên **PC Laptop (NVIDIA GeForce RTX 5070 Laptop GPU + CPU)** — phần mềm nghiên cứu mô phỏng & thử nghiệm dữ liệu công khai, **chưa kiểm chứng** trên phần cứng vệ tinh, chip nhúng chịu bức xạ, nhiệt chân không hay giao tiếp ADCS thực tế.
+
+## Kết quả kiểm chứng sau cải tiến (Chặng 1)
+
+| Thử nghiệm | CoG (Mặc định) | CNN MobileUNet (`d_th=2,0`) | False Lock Rate |
+|---|---|---|---|
+| **Stress đối kháng (100 ca)** (`benchmark_rejection_stress.json`) | Từ chối `LOST` 100/100 (`16B 0x00`) vs Legacy `41/100` | Dùng chung chốt chặn hậu kiểm & SVD | **`0,0%` (`0/100`)** vs `41,0%` cũ |
+| **500 khung sạch `hd1024` E2E** (`benchmark_sim_hd1024_e2e.json`) | `500/500 <40″` (`100,0%`), `Δθ` tv **`2,00″`** (`P90 6,26″`), `87,2 ms` | `500/500 solved`, `498/500 <40″` (`99,6%`), `Δθ` tv **`7,94″`**, `123,9 ms`, `1.118 FP` | **`0,0%` (`0/500`)** |
+| **500 khung `thr2` Centroid** (`log_reconciliation_audit.json`) | `25.206/27.017` (`Rec 93,30%` · `Prec 100,00%` · `0 FP`), RMSE `0,1804 px`, `34,2 ms` | `25.050/27.017` (`Rec 92,72%` · `Prec 75,36%` · `8.191 FP`), RMSE `0,4745 px`, `60,2 ms` | — |
+| **40 khung lóa mạnh E2E** (`benchmark_sim_glare_e2e.json`) | `40/40 <40″`, `Δθ` tv **`1,99″`**, `78,3 ms` | `40/40 solved`, `39/40 <40″`, `Δθ` tv **`10,59″`**, `131,1 ms`, `157 FP` | **`0,0%` (`0/40`)** |
+| **Seed 42 FAST** (`seed42_cog_vs_cnn.json`) | **`0,446″`** (`36/36`, Prec/Rec `100%`, `146,4 ms`) | **`1,648″`** (`30/36`, Prec `85,7%`, Rec `83,3%`, `399,5 ms` / warm `226,1 ms`) | **`0,0%`** |
+| **Ảnh trời thật hiệu chuẩn** (`benchmark_real_calibrated_e2e.json`) | `1/5` BSC5 (`Alt60 2,26″`); `Alt40 Hip V≤7 39,51″`; `MSH LOST [INSUFFICIENT_INLIER_PAIRS]` | `3/5` BSC5 (`Alt60 4,65″`, `Zhao 54,70″`, `MSH 0,034°` vs UW LOST / `54/79` ~`2,76 s`); `Alt40 Hip V≤7 26,60″` | **`0,0%`** (kể cả `0006.png` & `verification`) |
+
+## Chạy & Tái lập kiểm thử
 
 ```text
 pip install -r requirements.txt
+pytest -v
+python scripts/benchmark_end_to_end.py --suites all
+python scripts/reconcile_logs.py
 python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show
 python app.py
 python scripts/benchmark_centroid_cnn.py --n 500
@@ -49,7 +66,7 @@ third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt
 
 Nguồn: https://github.com/HongruiZhao/CNNStarDetectCentroid — bài arXiv:2404.19108.
 
-`app.py` mở giao diện tại `http://127.0.0.1:8765/`. Nút sinh ảnh vẽ bầu trời bằng `SkySimulator` rồi giải quaternion. Catalog mặc định là Yale BSC5, cấp sáng V ≤ 6.
+`app.py` mở giao diện Web tối giản tại `http://127.0.0.1:8765/` (hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser` và `STAR_TRACKER_PORT`) với thanh kịch bản nhanh (**`Mẫu chuẩn Seed 42`**, **`Bầu trời thật ESA`**, **`Núi St. Helens`**, **`Ngược nắng lóa mạnh`**), hiển thị trực tiếp trạng thái `SOLVED` / `LOST`, `reject_code`, số cặp inlier, dư góc RMS/Max và gói 16 byte. Giao diện tích hợp endpoint `GET /api/sky-catalog` dựng không gian 3D quỹ đạo Trái Đất và thiên cầu thực J2000 (**5.023 sao Yale BSC5**, cấp sáng V ≤ 6) ở hai góc nhìn (`Quỹ đạo 3D` và `Góc nhìn Vệ tinh` 1:1 theo ma trận DCM từ quaternion `q_est`), cho phép **đối chiếu trực quan tư thế vệ tinh 3D trên nền sao thực với khung ảnh gốc** (lưu ý: đây là mô phỏng trực quan chạy trên PC cá nhân, không phải phần cứng bay hay vòng điều khiển ADCS thực tế).
 
 Một khung đã lưu:
 

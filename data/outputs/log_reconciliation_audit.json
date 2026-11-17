@@ -1,0 +1,1066 @@
+{
+  "audit_version": "stage3a_reconciliation_v1",
+  "all_json_finite_check_passed": true,
+  "non_finite_paths": {},
+  "all_required_pngs_present": true,
+  "png_check": {
+    "data/outputs/e2e_figures/real_sky_e2e_summary.png": true,
+    "data/outputs/e2e_figures/sim500_e2e_comparison.png": true,
+    "data/outputs/e2e_figures/precision_recall_centroid.png": true,
+    "data/outputs/e2e_figures/rejection_guard_before_after.png": true,
+    "data/outputs/failure_cases/tetra3_alt40_nominal_vs_calibrated.png": true,
+    "data/outputs/failure_cases/ntnu_0006_distortion_lost.png": true,
+    "data/outputs/failure_cases/hd1024_cnn_false_positives_example.png": true,
+    "data/outputs/failure_cases/invalid_match_rejection_case.png": true
+  },
+  "thr2_centroid_precision_recall_audit": {
+    "source_file": "data/outputs/centroid_benchmark_hd1024_thr2.json",
+    "n_frames": 500,
+    "gt_stars_total": 27017,
+    "gt_stars_per_frame": 54.034,
+    "classical": {
+      "matched_stars_total": 25206,
+      "predicted_stars_total": 25206,
+      "false_positives_total": 0,
+      "false_positives_per_frame": 0.0,
+      "recall_pct": 93.29681311766666,
+      "precision_pct": 100.0,
+      "rmse_px_mean": 0.18040886595576064,
+      "rmse_px_median": 0.0639341106033459,
+      "time_ms_median": 34.23125000017535,
+      "vi_summary": "25.206 / 27.017 = 93.30% Recall; 25.206 / 25.206 = 100.00% Precision; 0 FP"
+    },
+    "cnn": {
+      "matched_stars_total": 25050,
+      "predicted_stars_total": 33241,
+      "false_positives_total": 8191,
+      "false_positives_per_frame": 16.382,
+      "recall_pct": 92.71939889699078,
+      "precision_pct": 75.35874372010468,
+      "rmse_px_mean": 0.4745012971374174,
+      "rmse_px_median": 0.4567264303190045,
+      "time_ms_median": 60.17494999969131,
+      "vi_summary": "25.050 / 27.017 = 92.72% Recall; 25.050 / 33.241 = 75.36% Precision; 8.191 false detections (16.382/frame)"
+    }
+  },
+  "e2e_summary_reconciliation": {
+    "real_calibrated": {
+      "nominal": {
+        "classical": {
+          "n_frames": 6,
+          "n_gt_frames": 4,
+          "n_solved": 0,
+          "solve_rate_pct": 0.0,
+          "n_solved_gt": 0,
+          "n_correct": 0,
+          "n_warn": 0,
+          "n_within_60_arcsec": 0,
+          "true_solve_rate_pct": 0.0,
+          "n_false_lock": 0,
+          "false_lock_rate_pct": 0.0,
+          "n_lost": 6,
+          "lost_rate_pct": 100.0,
+          "reject_code_counts": {
+            "INSUFFICIENT_INLIER_PAIRS": 5,
+            "IDENTIFICATION_FAILED": 1
+          },
+          "attitude_error_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          },
+          "cross_boresight_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          },
+          "roll_error_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          },
+          "axis_error_arcsec": {
+            "mean_abs_dx": null,
+            "mean_abs_dy": null,
+            "mean_abs_dz": null
+          },
+          "centroid_precision": 0.9481132075471699,
+          "centroid_recall": 0.4253414925105755,
+          "centroid_f1": 0.5525521127423302,
+          "centroid_precision_micro": 0.8333333333333334,
+          "centroid_recall_micro": 0.3206997084548105,
+          "centroid_gt_stars_total": 343,
+          "centroid_detected_total": 132,
+          "centroid_matched_5px_total": 110,
+          "centroid_false_pos_5px_total": 22,
+          "centroid_rmse_3px": 0.3636790166423839,
+          "centroid_rmse_5px": 0.37860592153720984,
+          "n_detected": {
+            "n": 6,
+            "mean": 477.5,
+            "median": 11.0,
+            "p90": 1417.5,
+            "max": 2729.0,
+            "min": 4.0
+          },
+          "n_initial_matched": {
+            "n": 6,
+            "mean": 5.0,
+            "median": 4.0,
+            "p90": 9.0,
+            "max": 9.0,
+            "min": 0.0
+          },
+          "n_rejected_outliers": {
+            "n": 6,
+            "mean": 4.0,
+            "median": 3.0,
+            "p90": 8.0,
+            "max": 8.0,
+            "min": 0.0
+          },
+          "n_valid_pairs": {
+            "n": 6,
+            "mean": 1.0,
+            "median": 1.0,
+            "p90": 2.0,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "rms_residual_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          },
+          "mask_ms": {
+            "n": 6,
+            "mean": 188.87948333394888,
+            "median": 33.06525000061811,
+            "p90": 522.644150000815,
+            "max": 1008.3204000002297,
+            "min": 7.55360000039218
+          },
+          "centroiding_ms": {
+            "n": 6,
+            "mean": 253.93799999922825,
+            "median": 29.47934999883728,
+            "p90": 723.2350999993287,
+            "max": 1358.8756999997713,
+            "min": 6.86659999882977
+          },
+          "identification_ms": {
+            "n": 6,
+            "mean": 9909.14791666637,
+            "median": 7372.584650000135,
+            "p90": 21742.956950000007,
+            "max": 25195.04180000149,
+            "min": 101.85589999855438
+          },
+          "attitude_ms": {
+            "n": 6,
+            "mean": 0.3852500000599927,
+            "median": 0.46180000026652124,
+            "p90": 0.4939999998896383,
+            "max": 0.509700001202873,
+            "min": 0.0
+          },
+          "total_pipeline_ms": {
+            "n": 6,
+            "mean": 10352.350649999607,
+            "median": 7392.8132000000915,
+            "p90": 22987.46680000022,
+            "max": 25316.415100001905,
+            "min": 164.90089999570046
+          }
+        },
+        "cnn": {
+          "n_frames": 6,
+          "n_gt_frames": 4,
+          "n_solved": 1,
+          "solve_rate_pct": 16.666666666666668,
+          "n_solved_gt": 1,
+          "n_correct": 1,
+          "n_warn": 0,
+          "n_within_60_arcsec": 0,
+          "true_solve_rate_pct": 25.0,
+          "n_false_lock": 0,
+          "false_lock_rate_pct": 0.0,
+          "n_lost": 5,
+          "lost_rate_pct": 83.33333333333333,
+          "reject_code_counts": {
+            "INSUFFICIENT_INLIER_PAIRS": 3,
+            "LOW_FOV_CONSISTENCY": 1,
+            "IDENTIFICATION_FAILED": 1
+          },
+          "attitude_error_arcsec": {
+            "n": 1,
+            "mean": 110.04639942650623,
+            "median": 110.04639942650623,
+            "p90": 110.04639942650623,
+            "max": 110.04639942650623,
+            "min": 110.04639942650623
+          },
+          "cross_boresight_arcsec": {
+            "n": 1,
+            "mean": 71.88055267037768,
+            "median": 71.88055267037768,
+            "p90": 71.88055267037768,
+            "max": 71.88055267037768,
+            "min": 71.88055267037768
+          },
+          "roll_error_arcsec": {
+            "n": 1,
+            "mean": 83.3270419611313,
+            "median": 83.3270419611313,
+            "p90": 83.3270419611313,
+            "max": 83.3270419611313,
+            "min": 83.3270419611313
+          },
+          "axis_error_arcsec": {
+            "mean_abs_dx": 67.6969140351775,
+            "mean_abs_dy": 24.16488531553021,
+            "mean_abs_dz": 83.3270419611313
+          },
+          "centroid_precision": 0.6826115922718188,
+          "centroid_recall": 0.6030368913697566,
+          "centroid_f1": 0.48170715129302805,
+          "centroid_precision_micro": 0.6823529411764706,
+          "centroid_recall_micro": 0.33819241982507287,
+          "centroid_gt_stars_total": 343,
+          "centroid_detected_total": 170,
+          "centroid_matched_5px_total": 116,
+          "centroid_false_pos_5px_total": 54,
+          "centroid_rmse_3px": 0.36065703752734257,
+          "centroid_rmse_5px": 0.49161643392146603,
+          "n_detected": {
+            "n": 6,
+            "mean": 42.333333333333336,
+            "median": 41.5,
+            "p90": 79.5,
+            "max": 80.0,
+            "min": 4.0
+          },
+          "n_initial_matched": {
+            "n": 6,
+            "mean": 5.833333333333333,
+            "median": 6.5,
+            "p90": 9.0,
+            "max": 9.0,
+            "min": 0.0
+          },
+          "n_rejected_outliers": {
+            "n": 6,
+            "mean": 4.5,
+            "median": 3.5,
+            "p90": 8.5,
+            "max": 9.0,
+            "min": 0.0
+          },
+          "n_valid_pairs": {
+            "n": 6,
+            "mean": 10.5,
+            "median": 1.0,
+            "p90": 30.0,
+            "max": 54.0,
+            "min": 0.0
+          },
+          "rms_residual_arcsec": {
+            "n": 1,
+            "mean": 192.90559809696813,
+            "median": 192.90559809696813,
+            "p90": 192.90559809696813,
+            "max": 192.90559809696813,
+            "min": 192.90559809696813
+          },
+          "mask_ms": {
+            "n": 6,
+            "mean": 180.5856999999378,
+            "median": 30.225200000131736,
+            "p90": 500.3006999995705,
+            "max": 969.4978999996238,
+            "min": 7.636199999978999
+          },
+          "centroiding_ms": {
+            "n": 6,
+            "mean": 4000.4771666663146,
+            "median": 109.30574999929377,
+            "p90": 11849.088399999346,
+            "max": 23269.719399999303,
+            "min": 28.829000000769156
+          },
+          "identification_ms": {
+            "n": 6,
+            "mean": 4252.861316666895,
+            "median": 3839.3238500002553,
+            "p90": 8865.92924999968,
+            "max": 10800.98259999977,
+            "min": 47.46090000116965
+          },
+          "attitude_ms": {
+            "n": 6,
+            "mean": 1.984733332695517,
+            "median": 0.636099999610451,
+            "p90": 5.1069999990431825,
+            "max": 7.459799999196548,
+            "min": 0.0
+          },
+          "total_pipeline_ms": {
+            "n": 6,
+            "mean": 8435.908916665843,
+            "median": 4157.97984999881,
+            "p90": 21003.98159999895,
+            "max": 31170.515399997385,
+            "min": 134.02689999929862
+          }
+        }
+      },
+      "calibrated": {
+        "classical": {
+          "n_frames": 5,
+          "n_gt_frames": 4,
+          "n_solved": 1,
+          "solve_rate_pct": 20.0,
+          "n_solved_gt": 1,
+          "n_correct": 1,
+          "n_warn": 0,
+          "n_within_60_arcsec": 1,
+          "true_solve_rate_pct": 25.0,
+          "n_false_lock": 0,
+          "false_lock_rate_pct": 0.0,
+          "n_lost": 4,
+          "lost_rate_pct": 80.0,
+          "reject_code_counts": {
+            "INSUFFICIENT_INLIER_PAIRS": 3,
+            "IDENTIFICATION_FAILED": 1
+          },
+          "attitude_error_arcsec": {
+            "n": 1,
+            "mean": 2.2632107772614365,
+            "median": 2.2632107772614365,
+            "p90": 2.2632107772614365,
+            "max": 2.2632107772614365,
+            "min": 2.2632107772614365
+          },
+          "cross_boresight_arcsec": {
+            "n": 1,
+            "mean": 1.434883633307031,
+            "median": 1.434883633307031,
+            "p90": 1.434883633307031,
+            "max": 1.434883633307031,
+            "min": 1.434883633307031
+          },
+          "roll_error_arcsec": {
+            "n": 1,
+            "mean": 1.7502020103780693,
+            "median": 1.7502020103780693,
+            "p90": 1.7502020103780693,
+            "max": 1.7502020103780693,
+            "min": 1.7502020103780693
+          },
+          "axis_error_arcsec": {
+            "mean_abs_dx": 0.44453804198761776,
+            "mean_abs_dy": 1.364286249420627,
+            "mean_abs_dz": 1.7502020103780693
+          },
+          "centroid_precision": 0.9481132075471699,
+          "centroid_recall": 0.4253414925105755,
+          "centroid_f1": 0.5525521127423302,
+          "centroid_precision_micro": 0.8333333333333334,
+          "centroid_recall_micro": 0.3206997084548105,
+          "centroid_gt_stars_total": 343,
+          "centroid_detected_total": 132,
+          "centroid_matched_5px_total": 110,
+          "centroid_false_pos_5px_total": 22,
+          "centroid_rmse_3px": 0.3637367197683631,
+          "centroid_rmse_5px": 0.37866362466318904,
+          "n_detected": {
+            "n": 5,
+            "mean": 27.2,
+            "median": 8.0,
+            "p90": 69.20000000000002,
+            "max": 106.0,
+            "min": 4.0
+          },
+          "n_initial_matched": {
+            "n": 5,
+            "mean": 5.6,
+            "median": 4.0,
+            "p90": 10.2,
+            "max": 11.0,
+            "min": 0.0
+          },
+          "n_rejected_outliers": {
+            "n": 5,
+            "mean": 18.8,
+            "median": 2.0,
+            "p90": 54.60000000000001,
+            "max": 89.0,
+            "min": 0.0
+          },
+          "n_valid_pairs": {
+            "n": 5,
+            "mean": 2.6,
+            "median": 1.0,
+            "p90": 6.6000000000000005,
+            "max": 9.0,
+            "min": 0.0
+          },
+          "rms_residual_arcsec": {
+            "n": 1,
+            "mean": 4.999461229988272,
+            "median": 4.999461229988272,
+            "p90": 4.999461229988272,
+            "max": 4.999461229988272,
+            "min": 4.999461229988272
+          },
+          "mask_ms": {
+            "n": 5,
+            "mean": 25.104540000393172,
+            "median": 31.659700000091107,
+            "p90": 35.479400000258465,
+            "max": 36.20480000063253,
+            "min": 8.882300000550458
+          },
+          "centroiding_ms": {
+            "n": 5,
+            "mean": 32.89735999969707,
+            "median": 26.10349999849859,
+            "p90": 67.06186000010348,
+            "max": 94.18670000013663,
+            "min": 6.7681999989872565
+          },
+          "identification_ms": {
+            "n": 5,
+            "mean": 3190.145759999723,
+            "median": 1016.0853000015777,
+            "p90": 7938.670059998913,
+            "max": 10315.606099999059,
+            "min": 44.798099999752594
+          },
+          "attitude_ms": {
+            "n": 5,
+            "mean": 1.945960000011837,
+            "median": 1.1051000001316424,
+            "p90": 4.530700000032084,
+            "max": 6.244500000320841,
+            "min": 0.0
+          },
+          "total_pipeline_ms": {
+            "n": 5,
+            "mean": 3250.093619999825,
+            "median": 1074.5398000017303,
+            "p90": 7959.019719999196,
+            "max": 10331.256599998596,
+            "min": 106.3979999980802
+          }
+        },
+        "cnn": {
+          "n_frames": 5,
+          "n_gt_frames": 4,
+          "n_solved": 3,
+          "solve_rate_pct": 60.0,
+          "n_solved_gt": 3,
+          "n_correct": 3,
+          "n_warn": 0,
+          "n_within_60_arcsec": 2,
+          "true_solve_rate_pct": 75.0,
+          "n_false_lock": 0,
+          "false_lock_rate_pct": 0.0,
+          "n_lost": 2,
+          "lost_rate_pct": 40.0,
+          "reject_code_counts": {
+            "LOW_FOV_CONSISTENCY": 1,
+            "IDENTIFICATION_FAILED": 1
+          },
+          "attitude_error_arcsec": {
+            "n": 3,
+            "mean": 59.870254769918155,
+            "median": 54.70179437346406,
+            "p90": 107.14802885228768,
+            "max": 120.25958747199358,
+            "min": 4.649382464296845
+          },
+          "cross_boresight_arcsec": {
+            "n": 3,
+            "mean": 15.652471888154423,
+            "median": 5.401257211897593,
+            "p90": 32.00923129374446,
+            "max": 38.66122481420618,
+            "min": 2.8949336383595
+          },
+          "roll_error_arcsec": {
+            "n": 3,
+            "mean": 57.31611538512865,
+            "median": 54.434481368674945,
+            "p90": 101.9874656801766,
+            "max": 113.875711758052,
+            "min": 3.63815302865899
+          },
+          "axis_error_arcsec": {
+            "mean_abs_dx": 8.45488071978718,
+            "mean_abs_dy": 12.373921838315738,
+            "mean_abs_dz": 57.31611538512865
+          },
+          "centroid_precision": 0.6826115922718188,
+          "centroid_recall": 0.6030368913697566,
+          "centroid_f1": 0.48170715129302805,
+          "centroid_precision_micro": 0.6823529411764706,
+          "centroid_recall_micro": 0.33819241982507287,
+          "centroid_gt_stars_total": 343,
+          "centroid_detected_total": 170,
+          "centroid_matched_5px_total": 116,
+          "centroid_false_pos_5px_total": 54,
+          "centroid_rmse_3px": 0.36070341580944765,
+          "centroid_rmse_5px": 0.49166281168120834,
+          "n_detected": {
+            "n": 5,
+            "mean": 34.8,
+            "median": 38.0,
+            "p90": 65.4,
+            "max": 79.0,
+            "min": 4.0
+          },
+          "n_initial_matched": {
+            "n": 5,
+            "mean": 6.4,
+            "median": 8.0,
+            "p90": 10.2,
+            "max": 11.0,
+            "min": 0.0
+          },
+          "n_rejected_outliers": {
+            "n": 5,
+            "mean": 0.4,
+            "median": 0.0,
+            "p90": 1.2000000000000002,
+            "max": 2.0,
+            "min": 0.0
+          },
+          "n_valid_pairs": {
+            "n": 5,
+            "mean": 17.4,
+            "median": 8.0,
+            "p90": 43.2,
+            "max": 66.0,
+            "min": 0.0
+          },
+          "rms_residual_arcsec": {
+            "n": 3,
+            "mean": 41.017162030313294,
+            "median": 27.91026550469954,
+            "p90": 78.35457130618873,
+            "max": 90.96564775656103,
+            "min": 4.175572829679309
+          },
+          "mask_ms": {
+            "n": 5,
+            "mean": 24.13308000031975,
+            "median": 29.664200001207064,
+            "p90": 34.632080000665155,
+            "max": 35.0272000014229,
+            "min": 7.903699999587843
+          },
+          "centroiding_ms": {
+            "n": 5,
+            "mean": 93.78929999984393,
+            "median": 66.96010000086972,
+            "p90": 189.60239999942132,
+            "max": 265.1829999995243,
+            "min": 29.03359999982058
+          },
+          "identification_ms": {
+            "n": 5,
+            "mean": 2578.6544600003253,
+            "median": 245.73200000122597,
+            "p90": 7035.3031999999075,
+            "max": 10065.978200000245,
+            "min": 36.40769999947224
+          },
+          "attitude_ms": {
+            "n": 5,
+            "mean": 1.9600999999966007,
+            "median": 1.2681999996857485,
+            "p90": 4.175339999710559,
+            "max": 6.1088999991625315,
+            "min": 0.0
+          },
+          "total_pipeline_ms": {
+            "n": 5,
+            "mean": 2698.5369400004856,
+            "median": 552.0511000013357,
+            "p90": 7096.625300000596,
+            "max": 10102.915499999654,
+            "min": 102.70110000055865
+          }
+        }
+      }
+    },
+    "sim_hd1024_500": {
+      "classical": {
+        "n_frames": 500,
+        "n_solved": 500,
+        "solve_rate_pct": 100.0,
+        "n_correct": 500,
+        "true_solve_rate_pct": 100.0,
+        "n_false_lock": 0,
+        "false_lock_rate_pct": 0.0,
+        "n_lost": 0,
+        "attitude_error_arcsec": {
+          "n": 500,
+          "mean": 3.064040523932185,
+          "median": 1.9965622088224295,
+          "p90": 6.264205267359012,
+          "max": 38.047026246758584,
+          "min": 0.14507842734385712
+        },
+        "centroid_precision_micro": 1.0,
+        "centroid_recall_micro": 0.931413554428693,
+        "centroid_false_pos_5px_total": 0,
+        "total_pipeline_ms": {
+          "n": 500,
+          "mean": 92.19312519996674,
+          "median": 87.20444999926258,
+          "p90": 106.47132999838504,
+          "max": 5100.42600000088,
+          "min": 32.31000000050699
+        }
+      },
+      "cnn": {
+        "n_frames": 500,
+        "n_solved": 500,
+        "solve_rate_pct": 100.0,
+        "n_correct": 498,
+        "true_solve_rate_pct": 99.6,
+        "n_false_lock": 0,
+        "false_lock_rate_pct": 0.0,
+        "n_lost": 0,
+        "attitude_error_arcsec": {
+          "n": 500,
+          "mean": 10.310216519272101,
+          "median": 7.940823188945336,
+          "p90": 20.39777002371104,
+          "max": 55.94634516155072,
+          "min": 0.8292530392896124
+        },
+        "centroid_precision_micro": 0.9546008283927556,
+        "centroid_recall_micro": 0.8701188140800237,
+        "centroid_false_pos_5px_total": 1118,
+        "total_pipeline_ms": {
+          "n": 500,
+          "mean": 145.23794620000263,
+          "median": 123.90160000086325,
+          "p90": 151.37978000093426,
+          "max": 3826.957500001299,
+          "min": 64.111600000615
+        }
+      }
+    },
+    "sim_hd1024_glare_40": {
+      "classical": {
+        "n_frames": 40,
+        "n_solved": 40,
+        "solve_rate_pct": 100.0,
+        "n_correct": 40,
+        "true_solve_rate_pct": 100.0,
+        "n_false_lock": 0,
+        "false_lock_rate_pct": 0.0,
+        "n_lost": 0,
+        "attitude_error_arcsec": {
+          "n": 40,
+          "mean": 3.67108886941826,
+          "median": 1.985819977140508,
+          "p90": 7.999758681567479,
+          "max": 22.440419086514638,
+          "min": 0.05429033767920144
+        },
+        "centroid_precision_micro": 1.0,
+        "centroid_recall_micro": 0.6986842105263158,
+        "centroid_false_pos_5px_total": 0,
+        "total_pipeline_ms": {
+          "n": 40,
+          "mean": 80.17564750009569,
+          "median": 78.27650000081121,
+          "p90": 85.47910000006596,
+          "max": 166.18000000016764,
+          "min": 63.6690000010276
+        }
+      },
+      "cnn": {
+        "n_frames": 40,
+        "n_solved": 40,
+        "solve_rate_pct": 100.0,
+        "n_correct": 39,
+        "true_solve_rate_pct": 97.5,
+        "n_false_lock": 0,
+        "false_lock_rate_pct": 0.0,
+        "n_lost": 0,
+        "attitude_error_arcsec": {
+          "n": 40,
+          "mean": 11.750778066162107,
+          "median": 10.58584804027932,
+          "p90": 19.55157529546558,
+          "max": 46.1036257009428,
+          "min": 2.2760307738641523
+        },
+        "centroid_precision_micro": 0.9101316542644533,
+        "centroid_recall_micro": 0.6973684210526315,
+        "centroid_false_pos_5px_total": 157,
+        "total_pipeline_ms": {
+          "n": 40,
+          "mean": 138.25967249986206,
+          "median": 131.11159999925803,
+          "p90": 175.93511999921247,
+          "max": 188.86919999931706,
+          "min": 102.32949999954144
+        }
+      }
+    },
+    "seed42_fast": {
+      "classical_err_arcsec": 0.4463370537767079,
+      "cnn_err_arcsec": 1.6484849401581194,
+      "classical_valid_pairs": 36,
+      "cnn_valid_pairs": 30,
+      "classical_precision_recall": [
+        1.0,
+        1.0
+      ],
+      "cnn_precision_recall": [
+        0.8571428571428571,
+        0.8333333333333334
+      ]
+    },
+    "rejection_stress_100": {
+      "improved": {
+        "n_rejected_lost": 100,
+        "false_lock_count": 0,
+        "false_lock_rate_pct": 0.0,
+        "all_downlink_16_zero_bytes": true
+      },
+      "legacy": {
+        "n_rejected_lost": 59,
+        "false_lock_count": 41,
+        "false_lock_rate_pct": 41.0
+      },
+      "by_category": {
+        "a_lt3_detections": {
+          "n_trials": 25,
+          "improved_n_rejected": 25,
+          "improved_false_lock_count": 0,
+          "improved_false_lock_rate_pct": 0.0,
+          "improved_all_downlink_zero": true,
+          "improved_reject_codes": {
+            "INSUFFICIENT_DETECTIONS": 25
+          },
+          "legacy_false_lock_count": 0,
+          "legacy_false_lock_rate_pct": 0.0,
+          "legacy_bogus_error_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          }
+        },
+        "b_corrupted_lt3_inliers": {
+          "n_trials": 25,
+          "improved_n_rejected": 25,
+          "improved_false_lock_count": 0,
+          "improved_false_lock_rate_pct": 0.0,
+          "improved_all_downlink_zero": true,
+          "improved_reject_codes": {
+            "INSUFFICIENT_INLIER_PAIRS": 25
+          },
+          "legacy_false_lock_count": 16,
+          "legacy_false_lock_rate_pct": 64.0,
+          "legacy_bogus_error_arcsec": {
+            "n": 16,
+            "mean": 639991.6148640485,
+            "median": 645484.962821766,
+            "p90": 647095.0895888531,
+            "max": 647282.5489738237,
+            "min": 603012.9864350788
+          }
+        },
+        "c_collinear_3stars": {
+          "n_trials": 25,
+          "improved_n_rejected": 25,
+          "improved_false_lock_count": 0,
+          "improved_false_lock_rate_pct": 0.0,
+          "improved_all_downlink_zero": true,
+          "improved_reject_codes": {
+            "COLLINEAR_DEGENERATE_GEOMETRY": 25
+          },
+          "legacy_false_lock_count": 25,
+          "legacy_false_lock_rate_pct": 100.0,
+          "legacy_bogus_error_arcsec": {
+            "n": 25,
+            "mean": 393.3824003015959,
+            "median": 347.9464312716708,
+            "p90": 648.7813340996861,
+            "max": 928.8431860293549,
+            "min": 28.72429007388688
+          }
+        },
+        "d_pure_false_clutter": {
+          "n_trials": 25,
+          "improved_n_rejected": 25,
+          "improved_false_lock_count": 0,
+          "improved_false_lock_rate_pct": 0.0,
+          "improved_all_downlink_zero": true,
+          "improved_reject_codes": {
+            "INSUFFICIENT_INLIER_PAIRS": 25
+          },
+          "legacy_false_lock_count": 0,
+          "legacy_false_lock_rate_pct": 0.0,
+          "legacy_bogus_error_arcsec": {
+            "n": 0,
+            "mean": null,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "min": null
+          }
+        }
+      }
+    },
+    "mount_st_helens": {
+      "standalone_vs_pipeline": {
+        "standalone_bg_block": 31,
+        "standalone_mask": null,
+        "standalone_n_detected": 111,
+        "standalone_time_ms": 40.32370000004448,
+        "pipeline_cfg_bg_block": 32,
+        "pipeline_effective_odd_bg_block": 33,
+        "pipeline_bg32_nomask_n_detected": 106,
+        "pipeline_bg32_nomask_time_ms": 36.14390000075218,
+        "pipeline_glare_mask_px": 0,
+        "pipeline_glare_mask_frac": 0.0,
+        "pipeline_mask_ms": 18.88619999954244,
+        "pipeline_centroiding_ms": 36.99320000032458,
+        "pipeline_total_detection_ms": 55.87939999986702,
+        "pipeline_n_detected": 106,
+        "delta_n_detected": 5,
+        "explanation_vi": "CentroidDetector độc lập dùng bg_block=31 và không chạy GlareMasker nên tách được 111 điểm (40.3 ms). Trong StarTrackerPipeline (chế độ fast), GlareMasker chạy thêm (18.9 ms; phủ 0 px trên ảnh 8-bit vì mask_full_scale=4095.0) và CentroidDetector nhận bg_block=32 (được làm lẻ thành 33 via bg_block|1), làm giảm 5 đốm sát ngưỡng xuống còn 106 điểm (37.0 ms đo hiện tại; 97.5 ms ở lần web log trước đó)."
+      },
+      "modes": {
+        "cnn": {
+          "success": true,
+          "status": "SOLVED",
+          "reject_code": null,
+          "verdict": "SOLVED_NO_GT",
+          "e2e_outcome": "SOLVED_NO_GT",
+          "n_detected": 79,
+          "n_matched": 54,
+          "n_initial_matched": 9,
+          "n_rejected_outliers": 9,
+          "n_valid_pairs": 54,
+          "rms_residual_arcsec": 192.9055995479834,
+          "max_residual_arcsec": 285.03927220943774,
+          "detector": "cnn_zhao2024",
+          "fallback": false,
+          "ra_deg": 310.47998413645274,
+          "dec_deg": 36.00338404371295,
+          "sep_deg_from_LOST": 0.03371240896981965,
+          "dra_deg": 0.03398413645271603,
+          "ddec_deg": -0.019515956287051495,
+          "attitude_error_arcsec_vs_manifest": 110.0464095562077,
+          "pipeline_ms": 2755.8409999992364,
+          "timings": {
+            "mask_ms": 21.05550000032963,
+            "centroiding_ms": 157.13030000006256,
+            "identification_ms": 2575.2913999995144,
+            "attitude_ms": 2.3637999993297854,
+            "total_pipeline_ms": 2755.8409999992364
+          },
+          "error": null
+        },
+        "classical": {
+          "success": false,
+          "status": "LOST",
+          "reject_code": "INSUFFICIENT_INLIER_PAIRS",
+          "verdict": "FAIL",
+          "e2e_outcome": "LOST",
+          "n_detected": 106,
+          "n_matched": 0,
+          "n_initial_matched": 9,
+          "n_rejected_outliers": 8,
+          "n_valid_pairs": 1,
+          "rms_residual_arcsec": 469.5989016260198,
+          "max_residual_arcsec": 1015.5212667827848,
+          "detector": "classical",
+          "fallback": false,
+          "ra_deg": null,
+          "dec_deg": null,
+          "sep_deg_from_LOST": null,
+          "dra_deg": null,
+          "ddec_deg": null,
+          "attitude_error_arcsec_vs_manifest": null,
+          "pipeline_ms": 9407.167100001061,
+          "timings": {
+            "mask_ms": 20.092000000659027,
+            "centroiding_ms": 36.436000000321656,
+            "identification_ms": 9350.328700000318,
+            "attitude_ms": 0.31039999976201216,
+            "total_pipeline_ms": 9407.167100001061
+          },
+          "error": "LOST [INSUFFICIENT_INLIER_PAIRS]: Only 1 inlier pairs survived residual gating (< 3)"
+        }
+      }
+    }
+  },
+  "portfolio_discrepancies_audit": {
+    "pptx_discrepancies": [
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 7 table",
+        "old_claim": "CoG: 25206/27017 (100%); CNN: 25050/27017 (98,4%)",
+        "audited_truth": "CoG Recall = 93.30% (25,206/27,017), Precision = 100.00% (25,206/25,206); CNN Recall = 92.72% (25,050/27,017), Precision = 75.36% (25,050/33,241) with 8,191 false detections omitted from the slide.",
+        "severity": "HIGH_MATHEMATICAL_ERROR"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 12 FAQ 2",
+        "old_claim": "Tỷ lệ khớp sao CoG đạt tuyệt đối 100% (12.592/12.592 sao).",
+        "audited_truth": "Stale/contradictory count: authoritative thr2 JSON has 27,017 GT stars across 500 frames and CoG matched 25,206/27,017 (93.30% Recall, 100.00% Precision), NOT 12,592/12,592.",
+        "severity": "HIGH_CONTRADICTION"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 3",
+        "old_claim": "Xác định hướng vệ tinh thời gian thực",
+        "audited_truth": "Laptop software demo only; not spacecraft flight hardware or ADCS-qualified.",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 3",
+        "old_claim": "chuẩn hóa cho ADCS",
+        "audited_truth": "Downlink quaternion format follows 4xfloat32 J2000 convention for demo, not flight-qualified ADCS hardware.",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 4",
+        "old_claim": "độ tin cậy tuyệt đối",
+        "audited_truth": "Pre-fix pipeline even had a break bug admitting <3 valid inliers; post-fix achieves 0% false lock on 100 stress trials and 500 sim frames, but real uncalibrated wide-angle frames cleanly return LOST.",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 4",
+        "old_claim": "Sai số góc đạt dưới 1 giây cung trên ảnh sạch",
+        "audited_truth": "Only true on single FAST Seed 42 CoG (0.4463\"); across 500 hd1024 frames median is 2.00\" and P90 is 6.26\".",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 10",
+        "old_claim": "chuẩn hóa cho vệ tinh",
+        "audited_truth": "Laptop demo output; not flight hardware.",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 11",
+        "old_claim": "được kiểm chứng trên một khung hình sạch tĩnh mẫu",
+        "audited_truth": "Now resolved: full 500-frame hd1024 + 40-frame glare + real calibrated sky E2E benchmarks completed.",
+        "severity": "OVERCLAIM_OR_STALE"
+      },
+      {
+        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
+        "location": "Slide 12",
+        "old_claim": "đảm bảo luôn chứa 10–30 sao định vị tại mọi vị trí bầu trời",
+        "audited_truth": "Overclaim: BSC5 V<=6 star density varies across the celestial sphere (e.g., Alt40 11.4 deg FOV only has 3 BSC5 stars inside edge margin).",
+        "severity": "OVERCLAIM_OR_STALE"
+      }
+    ],
+    "markdown_portfolio_discrepancies": [
+      {
+        "file": "AI2026_Ho-so-du-an_StarTracker.md",
+        "issue": "unlogged_seed42_1_65_arcsec",
+        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
+        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
+      },
+      {
+        "file": "AI2026_Ho-so-du-an_StarTracker.md",
+        "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
+        "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
+        "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
+      },
+      {
+        "file": "AI2026_Ho-so-du-an_StarTracker.md",
+        "issue": "stale_untested_large_sim_e2e",
+        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
+        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+      },
+      {
+        "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
+        "issue": "unlogged_seed42_1_65_arcsec",
+        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
+        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
+      },
+      {
+        "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
+        "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
+        "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
+        "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
+      },
+      {
+        "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
+        "issue": "stale_untested_large_sim_e2e",
+        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
+        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+      },
+      {
+        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH.md",
+        "issue": "unlogged_seed42_1_65_arcsec",
+        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
+        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
+      },
+      {
+        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH.md",
+        "issue": "stale_untested_large_sim_e2e",
+        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
+        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+      },
+      {
+        "file": "AI2026_Portfolio/KICH_BAN_QUAY_DEMO.md",
+        "issue": "unlogged_seed42_1_65_arcsec",
+        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
+        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
+      },
+      {
+        "file": "AI2026_Portfolio/KICH_BAN_QUAY_DEMO.md",
+        "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
+        "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
+        "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
+      },
+      {
+        "file": "AI2026_Portfolio/README_HOAN_THIEN_HO_SO.md",
+        "issue": "unlogged_seed42_1_65_arcsec",
+        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
+        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
+      },
+      {
+        "file": "AI2026_Portfolio/README_HOAN_THIEN_HO_SO.md",
+        "issue": "stale_untested_large_sim_e2e",
+        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
+        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+      }
+    ],
+    "total_discrepancies_logged": 21
+  }
+}

@@ -55,3 +55,40 @@ def test_fewer_than_three_stars_raises() -> object:
     unit_z: object = np.asarray([[0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], dtype=np.float64)
     with pytest.raises(ValueError):
         WahbaSolver.solve_svd(unit_z, unit_z)
+
+
+def test_collinear_geometry_raises_svd_and_quest() -> object:
+    q_truth: object = random_quaternion(np.random.default_rng(11))
+    dcm_truth: object = to_dcm(q_truth)
+    collinear_obs: object = np.asarray([[-0.15, 0.0, 1.0], [0.0, 0.0, 1.0], [0.15, 0.0, 1.0]], dtype=np.float64)
+    collinear_obs /= np.linalg.norm(collinear_obs, axis=1, keepdims=True)
+    collinear_ref: object = (dcm_truth.T @ collinear_obs.T).T
+    with pytest.raises(ValueError, match='Degenerate or collinear'):
+        WahbaSolver.solve_svd(collinear_obs, collinear_ref)
+    with pytest.raises(ValueError, match='Degenerate or collinear'):
+        WahbaSolver.solve_quest(collinear_obs, collinear_ref)
+
+    # Duplicate direction vectors (<3 independent directions) must also raise
+    dup_obs: object = np.asarray([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.1, 0.2, 1.0]], dtype=np.float64)
+    dup_obs /= np.linalg.norm(dup_obs, axis=1, keepdims=True)
+    dup_ref: object = (dcm_truth.T @ dup_obs.T).T
+    with pytest.raises(ValueError, match='Degenerate or collinear'):
+        WahbaSolver.solve_svd(dup_obs, dup_ref)
+
+
+def test_invalid_shapes_nan_and_zero_norm_raise() -> object:
+    _, ref, obs = _generate_synthetic_star_field(star_count=4, sigma_rad=0.0, rng_seed=3)
+    with pytest.raises(ValueError):
+        WahbaSolver.solve_svd(obs[:3], ref)
+    with pytest.raises(ValueError):
+        WahbaSolver.solve_svd(obs[:, :2], ref[:, :2])
+
+    obs_nan: object = obs.copy()
+    obs_nan[0, 1] = np.nan
+    with pytest.raises(ValueError):
+        WahbaSolver.solve_svd(obs_nan, ref)
+
+    obs_zero: object = obs.copy()
+    obs_zero[2] = 0.0
+    with pytest.raises(ValueError):
+        WahbaSolver.solve_svd(obs_zero, ref)

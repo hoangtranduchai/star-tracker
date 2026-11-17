@@ -107,3 +107,33 @@ def test_moon_disk_is_masked_not_identified(fast_stack: object) -> object:
     if solved_out.centroids is not None and len(solved_out.centroids.uv):
         offsets: object = np.linalg.norm(solved_out.centroids.uv - np.asarray([moon_u, moon_v]), axis=1)
         _check_pipe(float(offsets.min()) > 8.0)
+
+
+def test_pipeline_match_stats_and_status_fields(fast_stack: object) -> object:
+    _, _, tracker, renderer = fast_stack
+    solved_out: object = None
+    for idx in range(30):
+        target_q: object = SkySimulator.generate_random_quaternion(seed=40 + idx)
+        frame, gt = renderer.render(target_q, omega_deg_s=(0.0, 0.0, 0.0), add_noise=True)
+        if len(gt.cat_idx) >= 8:
+            solved_out: object = tracker.process_frame(frame)
+            if solved_out.success:
+                break
+    _check_pipe(solved_out is not None and bool(solved_out.success))
+    _check_pipe(solved_out.status == 'SOLVED')
+    _check_pipe(solved_out.reject_code is None)
+    _check_pipe(solved_out.match_stats is not None)
+    _check_pipe(solved_out.match_stats['status'] == 'SOLVED')
+    _check_pipe(solved_out.match_stats['n_valid_pairs'] == len(solved_out.ident.obs_idx))
+    _check_pipe(solved_out.match_stats['rms_residual_arcsec'] is not None)
+    _check_pipe(solved_out.quality['n_valid_pairs'] == solved_out.match_stats['n_valid_pairs'])
+
+    blank: object = np.full((tracker.camera.height, tracker.camera.width), 64, dtype=np.uint16)
+    lost_out: object = tracker.process_frame(blank)
+    _check_pipe(not bool(lost_out.success))
+    _check_pipe(lost_out.status == 'LOST')
+    _check_pipe(lost_out.reject_code == 'INSUFFICIENT_DETECTIONS')
+    _check_pipe(lost_out.q is None and lost_out.a is None)
+    _check_pipe(lost_out.to_downlink_bytes() == b'\x00' * 16)
+    _check_pipe(lost_out.match_stats['status'] == 'LOST')
+    _check_pipe(lost_out.quality['reject_code'] == 'INSUFFICIENT_DETECTIONS')

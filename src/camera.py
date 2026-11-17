@@ -13,10 +13,10 @@ def _radial_tangential_step(x_val: object, y_val: object, k1: object, k2: object
     return (rad, dx_t, dy_t)
 
 class CameraModel:
-    """Pinhole + Brown-Conrady camera model with principal point at `((W-1)/2, (H-1)/2)`."""
+    """Pinhole + Brown-Conrady camera model with principal point at `((W-1)/2, (H-1)/2)` by default."""
 
-    def __init__(self, width: object, height: object, pixel_um: object, focal_mm: object, k1: object=0.0, k2: object=0.0, k3: object=0.0, p1: object=0.0, p2: object=0.0, edge_margin_px: object=5.0) -> object:
-        attrs: object = dict(width=int(width), height=int(height), pixel_um=float(pixel_um), focal_mm=float(focal_mm), k1=float(k1), k2=float(k2), k3=float(k3), p1=float(p1), p2=float(p2), edge_margin_px=float(edge_margin_px))
+    def __init__(self, width: object, height: object, pixel_um: object, focal_mm: object, k1: object=0.0, k2: object=0.0, k3: object=0.0, p1: object=0.0, p2: object=0.0, edge_margin_px: object=5.0, cx: object=None, cy: object=None) -> object:
+        attrs: object = dict(width=int(width), height=int(height), pixel_um=float(pixel_um), focal_mm=float(focal_mm), k1=float(k1), k2=float(k2), k3=float(k3), p1=float(p1), p2=float(p2), edge_margin_px=float(edge_margin_px), _cx=None if cx is None else float(cx), _cy=None if cy is None else float(cy))
         self.__dict__.update(attrs)
 
     def __setattr__(self, name: object, value: object) -> object:
@@ -41,11 +41,11 @@ class CameraModel:
 
     @property
     def cx(self) -> object:
-        return (self.width - 1) * 0.5
+        return (self.width - 1) * 0.5 if self._cx is None else self._cx
 
     @property
     def cy(self) -> object:
-        return (self.height - 1) * 0.5
+        return (self.height - 1) * 0.5 if self._cy is None else self._cy
 
     @property
     def ifov_rad(self) -> object:
@@ -82,7 +82,9 @@ class CameraModel:
         fac: object = int(factor)
         if not fac >= 1:
             raise ValueError('downscale factor must be >= 1')
-        return CameraModel(width=self.width // fac, height=self.height // fac, pixel_um=self.pixel_um * fac, focal_mm=self.focal_mm, k1=self.k1, k2=self.k2, k3=self.k3, p1=self.p1, p2=self.p2, edge_margin_px=max(1.0, self.edge_margin_px / fac))
+        cx_scaled: object = None if self._cx is None else (self._cx + 0.5) / fac - 0.5
+        cy_scaled: object = None if self._cy is None else (self._cy + 0.5) / fac - 0.5
+        return CameraModel(width=self.width // fac, height=self.height // fac, pixel_um=self.pixel_um * fac, focal_mm=self.focal_mm, k1=self.k1, k2=self.k2, k3=self.k3, p1=self.p1, p2=self.p2, edge_margin_px=max(1.0, self.edge_margin_px / fac), cx=cx_scaled, cy=cy_scaled)
 
     def apply_distortion(self, x_u: object, y_u: object) -> object:
         rad, dx_t, dy_t = _radial_tangential_step(x_u, y_u, self.k1, self.k2, self.k3, self.p1, self.p2)
@@ -146,4 +148,6 @@ def demo_camera_long_side(long_side: object=1024, **kwargs) -> object:
     ref_cam: object = demo_camera(**kwargs)
     ratio: object = ref_cam.width / float(target_w)
     target_h: object = max(32, int(round(ref_cam.height / ratio)))
-    return CameraModel(width=target_w, height=target_h, pixel_um=ref_cam.pixel_um * ratio, focal_mm=ref_cam.focal_mm, k1=ref_cam.k1, k2=ref_cam.k2, k3=ref_cam.k3, p1=ref_cam.p1, p2=ref_cam.p2, edge_margin_px=max(1.0, ref_cam.edge_margin_px / ratio))
+    cx_scaled: object = None if ref_cam._cx is None else (ref_cam._cx + 0.5) / ratio - 0.5
+    cy_scaled: object = None if ref_cam._cy is None else (ref_cam._cy + 0.5) / ratio - 0.5
+    return CameraModel(width=target_w, height=target_h, pixel_um=ref_cam.pixel_um * ratio, focal_mm=ref_cam.focal_mm, k1=ref_cam.k1, k2=ref_cam.k2, k3=ref_cam.k3, p1=ref_cam.p1, p2=ref_cam.p2, edge_margin_px=max(1.0, ref_cam.edge_margin_px / ratio), cx=cx_scaled, cy=cy_scaled)

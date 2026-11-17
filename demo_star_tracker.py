@@ -64,6 +64,39 @@ def main(argv: object=None) -> object:
     for label_t, key_t in (('Centroiding', 'centroiding_ms'), ('Star ID    ', 'identification_ms'), ('Wahba      ', 'attitude_ms'), ('Total      ', 'total_pipeline_ms')):
         print(f'  {label_t} : {t_ms.get(key_t, 0.0):.2f} ms')
     print(sep_dash)
+    status_tag: object = info.get('status') or ('SOLVED' if outcome.success else 'LOST')
+    reject_code: object = info.get('reject_code')
+    mstats: object = info.get('match_stats') or {}
+    met: object = info.get('metrics') or {}
+    if status_tag == 'SOLVED':
+        print('  Status      : SOLVED')
+    else:
+        rc_txt: object = f' (reject_code={reject_code})' if reject_code else ''
+        print(f'  Status      : LOST{rc_txt}')
+    n_init: object = mstats.get('n_initial_matched', met.get('n_initial_matched'))
+    n_valid: object = mstats.get('n_valid_pairs', met.get('n_valid_pairs', met.get('n_matched')))
+    n_rej: object = mstats.get('n_rejected_outliers', met.get('n_rejected_outliers'))
+    min_req: object = mstats.get('min_pairs_required', met.get('min_pairs_required'))
+    rms_res: object = mstats.get('rms_residual_arcsec', met.get('rms_residual_arcsec'))
+    max_res: object = mstats.get('max_residual_arcsec', met.get('max_residual_arcsec'))
+    valid_txt: object = str(n_valid) if n_valid is not None else 'n/a'
+    if n_init is not None:
+        valid_txt = f"{valid_txt} (initial={n_init}" + (f", min_req={min_req})" if min_req is not None else ')')
+    print(f'  Valid pairs : {valid_txt}')
+    print(f"  Rejected outliers          : {n_rej if n_rej is not None else 'n/a'}")
+    if rms_res is not None or max_res is not None:
+        rms_s: object = f'{float(rms_res):.3f}' if rms_res is not None else 'n/a'
+        max_s: object = f'{float(max_res):.3f}' if max_res is not None else 'n/a'
+        print(f'  Post-fit residual RMS/Max (arcsec): {rms_s} / {max_s}')
+    else:
+        print('  Post-fit residual RMS/Max (arcsec): n/a')
+    if outcome.have_gt:
+        c_prec: object = met.get('centroid_precision')
+        c_rec: object = met.get('centroid_recall')
+        if c_prec is not None or c_rec is not None:
+            p_s: object = f'{float(c_prec) * 100.0:.1f}%' if c_prec is not None else 'n/a'
+            r_s: object = f'{float(c_rec) * 100.0:.1f}%' if c_rec is not None else 'n/a'
+            print(f'  Centroid precision/recall  : {p_s} / {r_s}')
     if outcome.success:
         print(f"  q_est       : {info['q_est_text']}")
         est_b: object = info.get('boresight_est') or {}
@@ -79,6 +112,7 @@ def main(argv: object=None) -> object:
         if matched_ids:
             print(f"  matched HR  : {', '.join((str(int(m)) for m in matched_ids))}")
     else:
+        print(f"  downlink    : {info['downlink_hex']}  ({info['downlink_bytes']} bytes)")
         print(f'  FAILED: {outcome.error}')
     if opts.lookup:
         print(f'{sep_dash}\n  LOOKUP  Yale HR + IAU WGSN name (overlay; not used by Pyramid/Wahba)')

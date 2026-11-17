@@ -42,18 +42,30 @@ def _pad_to_multiple(img: np.ndarray, multiple: int=32) -> tuple[np.ndarray, tup
     out[:h, :w] = img
     return (out, (h, w))
 
-def _frame_is_high_bit(image: np.ndarray) -> bool:
-    """True for 12/16-bit sim (sparse stars: p99.9 can sit well below 255)."""
+def _frame_bit_regime(image: np.ndarray) -> str:
+    """Classify frame intensity regime as '8bit' (<=255.5), '12bit' (<=4095.5), or '16bit' (>4095.5)."""
     img: object = np.asarray(image)
     if img.size == 0:
-        return False
-    return float(np.max(img)) > 255.5
+        return '8bit'
+    max_val: float = float(np.max(img))
+    if max_val <= 255.5:
+        return '8bit'
+    if max_val <= 4095.5:
+        return '12bit'
+    return '16bit'
+
+def _frame_is_high_bit(image: np.ndarray) -> bool:
+    """True only for 12-bit synthetic sim frames (255.5 < max <= 4095.5)."""
+    return _frame_bit_regime(image) == '12bit'
 
 def _to_author_intensity(image: np.ndarray) -> np.ndarray:
-    """Map project DN (often 12-bit) toward the authors' ~8-bit training scale."""
+    """Map 8-bit, 12-bit sim (/16), or 16-bit camera (/256) DN toward the authors' ~8-bit scale."""
     img: object = np.asarray(image, dtype=np.float32)
-    if _frame_is_high_bit(img):
-        img: object = img / 16.0
+    regime: str = _frame_bit_regime(img)
+    if regime == '12bit':
+        return img / 16.0
+    if regime == '16bit':
+        return img / 256.0
     return img
 
 def nms_seed_pixels(dist_map: np.ndarray, seg_map: np.ndarray, d_th: float=_D_TH) -> tuple[np.ndarray, np.ndarray]:
@@ -292,10 +304,15 @@ class CNNCentroidDetector:
             dist: object = pred[0, 1].detach().cpu().numpy()
         seg: object = seg[:oh, :ow]
         dist: object = dist[:oh, :ow]
-        high_bit: object = _frame_is_high_bit(raw)
+        regime: str = _frame_bit_regime(raw)
+        is_12bit_sim: bool = regime == '12bit'
         rows, cols = nms_seed_pixels(dist, seg, _D_TH)
-        seed_scores: object = None if high_bit else outdoor_seed_scores(raw, rows, cols)
-        self.last_seed_policy = 'raster' if high_bit else 'contrast_snr'
+        if is_12bit_sim:
+            seed_scores: object = None
+            self.last_seed_policy = 'raster'
+        else:
+            seed_scores = outdoor_seed_scores(raw, rows, cols)
+            self.last_seed_policy = 'contrast_snr_16bit' if regime == '16bit' else 'contrast_snr'
         uv: object = trilateration_centroids(dist, seg, radius=self.radius, max_stars=int(self.max_stars), seed_scores=seed_scores, seeds=(rows, cols))
         self.last_fallback = False
         if uv.size == 0:
@@ -327,7 +344,7 @@ class CNNCentroidDetector:
             y1: object = min(h, int(v) + 3)
             flux[i] = float(raw[y0:y1, x0:x1].sum())
         self.last_n_raw = int(len(uv))
-        if self.min_peak_dn > 0.0 and high_bit:
+        if self.min_peak_dn > 0.0 and is_12bit_sim:
             bright: object = peak >= self.min_peak_dn
             uv: object = uv[bright]
             flux: object = flux[bright]
@@ -353,22 +370,41 @@ class CNNCentroidDetector:
         return Centroids(uv=uv, flux=flux, area=area, peak=peak, mu20=z, mu02=z, mu11=z, axis_ratio=np.ones(len(uv), dtype=np.float64), angle_rad=z, vectors=vectors, sigma_px=np.full(len(uv), 0.5, dtype=np.float64))
 
 def match_centroid_rmse(pred_uv: np.ndarray, gt_uv: np.ndarray, match_radius_px: float=5.0) -> dict:
-    """Greedy nearest-neighbor match; RMSE over matched pairs only."""
+    """Greedy nearest-neighbor match; RMSE over matched pairs plus precision/recall/F1."""
     pred: object = np.asarray(pred_uv, dtype=np.float64).reshape(-1, 2)
     gt: object = np.asarray(gt_uv, dtype=np.float64).reshape(-1, 2)
-    if len(pred) == 0 or len(gt) == 0:
-        return {'n_pred': int(len(pred)), 'n_gt': int(len(gt)), 'n_matched': 0, 'rmse_px': None, 'mean_err_px': None}
-    used: object = np.zeros(len(pred), dtype=bool)
+    n_pred: int = int(len(pred))
+    n_gt: int = int(len(gt))
     errs: list[float] = []
-    for g in gt:
-        d: object = np.linalg.norm(pred - g, axis=1)
-        d[used] = np.inf
-        j: object = int(np.argmin(d))
-        if not np.isfinite(d[j]) or d[j] > match_radius_px:
-            continue
-        used[j] = True
-        errs.append(float(d[j]))
-    if not errs:
-        return {'n_pred': int(len(pred)), 'n_gt': int(len(gt)), 'n_matched': 0, 'rmse_px': None, 'mean_err_px': None}
+    if n_pred > 0 and n_gt > 0:
+        used: object = np.zeros(n_pred, dtype=bool)
+        for g in gt:
+            d: object = np.linalg.norm(pred - g, axis=1)
+            d[used] = np.inf
+            j: int = int(np.argmin(d))
+            if not np.isfinite(d[j]) or d[j] > match_radius_px:
+                continue
+            used[j] = True
+            errs.append(float(d[j]))
+    n_matched: int = len(errs)
+    n_false_pos: int = n_pred - n_matched
+    n_false_neg: int = n_gt - n_matched
+    precision: float = float(n_matched / n_pred) if n_pred > 0 else (1.0 if n_gt == 0 else 0.0)
+    recall: float | None = float(n_matched / n_gt) if n_gt > 0 else None
+    if precision is not None and recall is not None and (precision + recall) > 0.0:
+        f1: float | None = float(2.0 * precision * recall / (precision + recall))
+    else:
+        f1 = 0.0 if n_gt > 0 else None
     arr: object = np.asarray(errs, dtype=np.float64)
-    return {'n_pred': int(len(pred)), 'n_gt': int(len(gt)), 'n_matched': int(len(arr)), 'rmse_px': float(np.sqrt(np.mean(arr ** 2))), 'mean_err_px': float(np.mean(arr))}
+    return {
+        'n_pred': n_pred,
+        'n_gt': n_gt,
+        'n_matched': n_matched,
+        'n_false_pos': n_false_pos,
+        'n_false_neg': n_false_neg,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+        'rmse_px': float(np.sqrt(np.mean(arr ** 2))) if n_matched > 0 else None,
+        'mean_err_px': float(np.mean(arr)) if n_matched > 0 else None,
+    }
