@@ -122,6 +122,9 @@ def test_full_viewport_cosmos_observatory_layout(star_tracker_root: object) -> N
     _verify_ui('dataset.theme' in js_src, 'Missing dataset.theme toggle logic in app.js')
     _verify_ui('[data-theme="light"]' in css_src, 'Missing [data-theme="light"] theme rules in app.css')
     _verify_ui('brightness(' in css_src, 'Missing starfield brightness boost CSS filter in app.css')
+    _verify_ui('data-tab="tab-compare"' in html_src, 'Missing tab-compare navigation button')
+    _verify_ui('id="cmp-overlay-canvas"' in html_src, 'Missing comparison overlay canvas')
+    _verify_ui('/api/compare' in js_src and '/api/benchmark-summary' in js_src, 'Missing comparison API calls in app.js')
 
 
 def test_human_copy_free_of_robotic_disclaimers(star_tracker_root: object) -> None:

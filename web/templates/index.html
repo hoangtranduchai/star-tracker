@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=32" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=32" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=33" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=33" />
 </head>
 <body>
   <!-- ROW 1: Minimalist Top Command Header (~52px) -->
@@ -77,7 +77,11 @@
           <input type="radio" name="centroid_backend" value="classical" checked id="centroid-classical" form="run-form" />
           <span>CoG</span>
         </label>
-        <label class="inline-seg-opt">
+        <label class="inline-seg-opt" title="Thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 (local_mean + global RMS)">
+          <input type="radio" name="centroid_backend" value="tetra3" id="centroid-tetra3" form="run-form" />
+          <span>tetra3</span>
+        </label>
+        <label class="inline-seg-opt" title="CNN-Hybrid: lọc nền MobileUNet + tinh chỉnh CoG cục bộ dưới mức pixel">
           <input type="radio" name="centroid_backend" value="cnn" id="centroid-cnn" form="run-form" />
           <span>CNN</span>
         </label>
@@ -124,6 +128,14 @@
           <circle cx="12" cy="12" r="2.2" />
         </svg>
         <span>Không gian &amp; Đối chiếu</span>
+      </button>
+      <button type="button" class="tab-btn is-compare-tab" data-tab="tab-compare">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="7" height="16" rx="1.5" />
+          <rect x="14" y="4" width="7" height="16" rx="1.5" />
+          <path d="M10 12h4" />
+        </svg>
+        <span>So sánh CoG / tetra3 ↔ CNN</span>
       </button>
       <button type="button" class="tab-btn" data-tab="tab-telemetry">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -321,6 +333,183 @@
           </div>
           <div class="static-frame-viewport is-large">
             <img id="hud-img" alt="Bản tổng hợp kết quả định hướng sao" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 1B: Side-by-Side Comparison (CoG vs tetra3-Threshold vs CNN-Hybrid) -->
+    <section id="tab-compare" class="tab-pane editorial-pane" hidden>
+      <div class="editorial-container cmp-container">
+        <!-- Quick Compare Scenario Bar -->
+        <div class="glass-card cmp-toolbar-card">
+          <div class="cmp-toolbar-head">
+            <div>
+              <h2 class="editorial-title">Đối chiếu Trực tiếp: CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN-Hybrid</h2>
+              <p class="card-desc">Chạy cả 3 thuật toán tách tâm sao trên <strong>cùng một khung ảnh điểm ảnh</strong> qua chung bộ nhận diện Pyramid K-vector và bộ giải Wahba SVD (kèm kiểm định lọc ngoại lai).</p>
+            </div>
+            <div class="cmp-scenario-pills" role="group" aria-label="Chọn kịch bản so sánh nhanh">
+              <button type="button" id="btn-cmp-mount" class="exp-pill is-featured" title="So sánh trên ảnh thực có tiền cảnh núi St. Helens (8-bit)">Núi St. Helens</button>
+              <button type="button" id="btn-cmp-tetra3" class="exp-pill" title="So sánh trên ảnh chụp bầu trời thực ESA tetra3 (16-bit Alt60)">Trời thực ESA</button>
+              <button type="button" id="btn-cmp-glare" class="exp-pill" title="So sánh khi có ánh nắng chói lóa mạnh">Ngược nắng</button>
+              <button type="button" id="btn-cmp-seed42" class="exp-pill" title="So sánh trên bầu trời mô phỏng sạch 12-bit (Seed 42)">Bầu trời chuẩn</button>
+              <button type="button" id="btn-cmp-current" class="cmd-solve-btn cmp-run-btn" title="Chạy so sánh 3 thuật toán theo tham số đang chọn">
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />
+                </svg>
+                <span>Chạy theo cấu hình hiện tại</span>
+              </button>
+            </div>
+          </div>
+          <div id="cmp-verdict-banner" class="cmp-verdict-banner">
+            Chọn một kịch bản phía trên (gợi ý <strong>Núi St. Helens</strong> hoặc <strong>Trời thực ESA</strong>) để quan sát trực tiếp sự khác biệt giữa chọn ngưỡng truyền thống và mạng CNN-Hybrid.
+          </div>
+        </div>
+
+        <!-- Live Visual Overlay + Head-to-Head Metrics -->
+        <div class="cmp-live-grid">
+          <!-- Left: Synchronized Multi-Layer Starfield Overlay -->
+          <div class="glass-card cmp-viewer-card">
+            <div class="cmp-viewer-bar">
+              <div class="cmp-layer-toggles" role="group" aria-label="Bật tắt lớp phát hiện theo phương pháp">
+                <button type="button" id="btn-cmp-layer-cog" class="cmp-layer-btn is-cog active" title="Bật/tắt tâm sao từ CoG (Nhóm)">
+                  <span class="cmp-swatch is-cog"></span><span>CoG (Nhóm)</span>
+                </button>
+                <button type="button" id="btn-cmp-layer-tetra3" class="cmp-layer-btn is-tetra3 active" title="Bật/tắt tâm sao từ ngưỡng kiểu ESA tetra3">
+                  <span class="cmp-swatch is-tetra3"></span><span>Ngưỡng tetra3</span>
+                </button>
+                <button type="button" id="btn-cmp-layer-cnn" class="cmp-layer-btn is-cnn active" title="Bật/tắt tâm sao từ CNN-Hybrid">
+                  <span class="cmp-swatch is-cnn"></span><span>CNN-Hybrid</span>
+                </button>
+              </div>
+              <button type="button" id="btn-cmp-only-matched" class="sensor-pill-btn" title="Chuyển giữa hiển thị mọi tâm sáng (thấy rõ tâm nhiễu) và chỉ các sao đã khớp">
+                <span id="cmp-only-matched-label">Hiện mọi tâm phát hiện</span>
+              </button>
+            </div>
+
+            <div class="cmp-stage-wrap" id="cmp-stage-wrap">
+              <div class="frame-placeholder" id="cmp-placeholder">
+                <div class="placeholder-content">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="7" height="16" rx="1.5" />
+                    <rect x="14" y="4" width="7" height="16" rx="1.5" />
+                    <path d="M10 12h4" />
+                  </svg>
+                  <p>Bấm <strong>Núi St. Helens</strong> để thấy ngưỡng truyền thống (CoG / tetra3) bắt nhiều đốm sáng trên sườn núi trong khi <strong>CNN-Hybrid</strong> tách sạch nền và khóa tư thế thành công.</p>
+                </div>
+              </div>
+              <img id="cmp-clean-img" class="img-bright-std" alt="Khung ảnh sao dùng chung để đối chiếu 3 thuật toán" hidden />
+              <canvas id="cmp-overlay-canvas" class="sensor-overlay-canvas"></canvas>
+              <div id="cmp-star-tooltip" class="sensor-star-tooltip" hidden></div>
+            </div>
+            <div class="cmp-viewer-foot">
+              <span id="cmp-frame-meta">Chưa chạy đối chiếu</span>
+              <span class="cmp-legend-hint">Vòng đứt = tâm chưa khớp / nhiễu · Vòng liền có dấu chữ thập = sao khớp danh mục J2000</span>
+            </div>
+          </div>
+
+          <!-- Right: 3 Summary Cards + Detailed Metrics Table -->
+          <div class="cmp-metrics-col">
+            <div class="cmp-cards-row" id="cmp-cards-row">
+              <div class="cmp-method-card is-cog" id="cmp-card-classical">
+                <div class="cmp-card-top">
+                  <span class="cmp-method-name"><span class="cmp-swatch is-cog"></span>CoG (Nhóm)</span>
+                  <span class="kpi-badge status-pill IDLE" id="cmp-st-classical">IDLE</span>
+                </div>
+                <div class="cmp-card-main" id="cmp-dth-classical">--</div>
+                <div class="cmp-card-sub" id="cmp-sub-classical">Cặp hợp lệ: -- · Thời gian: --</div>
+              </div>
+
+              <div class="cmp-method-card is-tetra3" id="cmp-card-tetra3">
+                <div class="cmp-card-top">
+                  <span class="cmp-method-name"><span class="cmp-swatch is-tetra3"></span>Ngưỡng tetra3</span>
+                  <span class="kpi-badge status-pill IDLE" id="cmp-st-tetra3">IDLE</span>
+                </div>
+                <div class="cmp-card-main" id="cmp-dth-tetra3">--</div>
+                <div class="cmp-card-sub" id="cmp-sub-tetra3">Cặp hợp lệ: -- · Thời gian: --</div>
+              </div>
+
+              <div class="cmp-method-card is-cnn" id="cmp-card-cnn">
+                <div class="cmp-card-top">
+                  <span class="cmp-method-name"><span class="cmp-swatch is-cnn"></span>CNN-Hybrid</span>
+                  <span class="kpi-badge status-pill IDLE" id="cmp-st-cnn">IDLE</span>
+                </div>
+                <div class="cmp-card-main" id="cmp-dth-cnn">--</div>
+                <div class="cmp-card-sub" id="cmp-sub-cnn">Cặp hợp lệ: -- · Thời gian: --</div>
+              </div>
+            </div>
+
+            <div class="glass-card cmp-table-card">
+              <div class="card-head">
+                <h3>Bảng chỉ số Đối chiếu Trên Cùng Khung ảnh</h3>
+                <span class="glass-chip" id="cmp-gt-chip">Chưa có dữ liệu</span>
+              </div>
+              <div class="table-responsive">
+                <table id="cmp-live-table" class="data-table cmp-table">
+                  <thead>
+                    <tr>
+                      <th>Chỉ số đo</th>
+                      <th>CoG (Nhóm)</th>
+                      <th>Ngưỡng kiểu tetra3</th>
+                      <th>CNN-Hybrid (Cải tiến)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="4" class="empty">Chọn một kịch bản ở thanh trên để chạy so sánh trực tiếp.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audited Multi-Dataset Benchmark Card (Loaded from /api/benchmark-summary) -->
+        <div class="glass-card cmp-bench-card" id="cmp-bench-card">
+          <div class="card-head">
+            <div>
+              <h3>Tổng hợp Đối chuẩn Toàn bộ Tập dữ liệu (560 ảnh Mô phỏng &amp; 6 ảnh Trời thực)</h3>
+              <p class="card-desc" id="cmp-bench-scope">Số liệu đo tự động trên PC demo (không phải phần cứng vệ tinh), đối chiếu cả phiên bản CNN gốc trước nâng cấp (Ablation).</p>
+            </div>
+            <span class="glass-chip" id="cmp-bench-device">Đang tải số liệu đối chuẩn...</span>
+          </div>
+          <div class="table-responsive">
+            <table id="cmp-bench-table" class="data-table cmp-table">
+              <thead>
+                <tr>
+                  <th>Tập kiểm thử</th>
+                  <th>Phương pháp</th>
+                  <th>Giải đúng / Tổng</th>
+                  <th>Khóa sai</th>
+                  <th>Δθ trung vị</th>
+                  <th>Precision / FP</th>
+                  <th>Recall</th>
+                  <th>RMSE (5 px)</th>
+                  <th>Độ trễ TB</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="9" class="empty">Đang nạp bảng đối chuẩn...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="cmp-real-wrap" id="cmp-real-wrap">
+            <h4 class="cmp-subhead">Chi tiết từng ảnh bầu trời thực đã hiệu chuẩn (BSC5 V ≤ 6.0 &amp; Hipparcos V ≤ 7.0)</h4>
+            <div class="table-responsive">
+              <table id="cmp-real-table" class="data-table cmp-table">
+                <thead>
+                  <tr>
+                    <th>Khung ảnh thực</th>
+                    <th>CoG (Nhóm)</th>
+                    <th>Ngưỡng kiểu tetra3</th>
+                    <th>CNN gốc (Trước)</th>
+                    <th>CNN-Hybrid (Sau nâng cấp)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="empty">Đang nạp kết quả ảnh trời thực...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -959,7 +1148,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=32"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=32"></script>
+  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=33"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=33"></script>
 </body>
 </html>

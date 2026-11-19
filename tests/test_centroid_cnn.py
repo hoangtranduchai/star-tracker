@@ -175,3 +175,25 @@ def test_trilateration_single_star() -> object:
 
 def test_weights_path_check_is_bool() -> object:
     assert isinstance(weights_available(), bool)
+
+
+def test_tetra3_threshold_detector_recovers_subpixel_stars() -> None:
+    from src.camera import CameraModel
+    from src.centroid_tetra3 import Tetra3ThresholdDetector
+
+    cam = CameraModel(width=128, height=128, pixel_um=5.0, focal_mm=25.0)
+    rng = np.random.default_rng(7)
+    img = np.clip(64.0 + rng.normal(0.0, 2.0, size=(128, 128)), 0.0, 4095.0).astype(np.float32)
+    yy, xx = np.mgrid[0:128, 0:128]
+    gt = np.array([[34.35, 41.72], [88.61, 79.28], [62.15, 25.84]], dtype=np.float64)
+    for u, v in gt:
+        img += (1800.0 * np.exp(-((xx - u) ** 2 + (yy - v) ** 2) / (2.0 * 1.4 ** 2))).astype(np.float32)
+
+    det = Tetra3ThresholdDetector(cam, sigma=2.0, filtsize=25, min_area=5, max_area=100)
+    cents = det.detect(img)
+    assert det.last_backend == 'tetra3_threshold'
+    assert len(cents.uv) == 3
+    m = match_centroid_rmse(cents.uv, gt, match_radius_px=2.0)
+    assert m['n_matched'] == 3 and m['n_false_pos'] == 0
+    assert m['rmse_px'] is not None and m['rmse_px'] < 0.15
+

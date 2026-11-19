@@ -7,6 +7,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from typing import Optional
+import cv2
 import numpy as np
 from scipy import ndimage
 from scipy.linalg import lstsq
@@ -18,6 +19,10 @@ _AUTHOR_STD = (44.31162568,)
 _D_TH = 2.0
 _SEG_PROB_MIN = 0.5
 _NMS_SIZE = 10
+_R_BG = 10
+_YY_BG, _XX_BG = np.ogrid[-_R_BG:_R_BG + 1, -_R_BG:_R_BG + 1]
+_R2_BG = _XX_BG * _XX_BG + _YY_BG * _YY_BG
+_ANNULUS_BG = (_R2_BG >= 16) & (_R2_BG <= _R_BG * _R_BG)
 _DEFAULT_WEIGHTS = Path(__file__).resolve().parent.parent / 'third_party' / 'cnn_star_centroid' / 'saved_models' / 'MobileUNet_B10_50.pt'
 _VENDOR_DIR = _DEFAULT_WEIGHTS.parent.parent
 
@@ -211,14 +216,21 @@ def _empty_centroids(camera: CameraModel) -> Centroids:
     return Centroids(uv=empty, flux=z, area=z, peak=z, mu20=z, mu02=z, mu11=z, axis_ratio=z, angle_rad=z, vectors=np.empty((0, 3), dtype=np.float64), sigma_px=z)
 
 class CNNCentroidDetector:
-    """MobileUNet + trilateration.
+    """MobileUNet semantic star filter with optional local sub-pixel CoG refinement (CNN-Hybrid).
+
+    When ``refine_subpixel=True`` (default), MobileUNet suppresses extended terrain,
+    cloud, and horizon clutter while each candidate seed undergoes local
+    background-subtracted hollow-annulus SNR gating, single-pixel hot-pixel
+    rejection, and connected-component aperture CoG sub-pixel refinement.
+    Setting ``refine_subpixel=False`` restores raw Zhao et al. trilateration for
+    ablation benchmarks.
 
     Hard failures (missing weights, torch crash) may fall back to classical CoG;
     empty CNN output after a successful forward pass does **not** — callers see
     zero CNN centroids so Pyramid / KPIs reflect the CNN path.
     """
 
-    def __init__(self, camera: CameraModel, classical: CentroidDetector | None=None, weights_path: Path | None=None, device: str | None=None, radius: int=7, max_stars: int=80, min_mag_gate: float | None=6.0, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2, seg_prob_min: float=_SEG_PROB_MIN) -> object:
+    def __init__(self, camera: CameraModel, classical: CentroidDetector | None=None, weights_path: Path | None=None, device: str | None=None, radius: int=7, max_stars: int=80, min_mag_gate: float | None=6.0, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2, seg_prob_min: float=_SEG_PROB_MIN, refine_subpixel: bool=True) -> object:
         self.camera = camera
         self.classical = classical or CentroidDetector(camera)
         self.weights_path = Path(weights_path) if weights_path else _DEFAULT_WEIGHTS
@@ -229,6 +241,7 @@ class CNNCentroidDetector:
         self.t_exp_s = float(t_exp_s)
         self.psf_sigma_px = float(psf_sigma_px)
         self.seg_prob_min = float(seg_prob_min)
+        self.refine_subpixel = bool(refine_subpixel)
         if min_mag_gate is None:
             self.min_peak_dn = 0.0
         else:
@@ -238,6 +251,7 @@ class CNNCentroidDetector:
         self._device = device
         self.device_name = 'cpu'
         self.last_backend = 'classical'
+        self.last_mode = 'hybrid_cog' if self.refine_subpixel else 'raw_trilateration'
         self.last_error: str | None = None
         self.last_fallback = False
         self.last_n_raw: int = 0
@@ -304,70 +318,235 @@ class CNNCentroidDetector:
             dist: object = pred[0, 1].detach().cpu().numpy()
         seg: object = seg[:oh, :ow]
         dist: object = dist[:oh, :ow]
+        mask_bool: np.ndarray | None = None
+        if mask is not None:
+            mask_bool = np.asarray(mask, dtype=bool)
+            if mask_bool.shape == seg.shape:
+                seg = seg & ~mask_bool
         regime: str = _frame_bit_regime(raw)
         is_12bit_sim: bool = regime == '12bit'
+        is_8bit: bool = regime == '8bit'
         rows, cols = nms_seed_pixels(dist, seg, _D_TH)
+        if not self.refine_subpixel:
+            self.last_mode = 'raw_trilateration'
+            if is_12bit_sim:
+                seed_scores: object = None
+                self.last_seed_policy = 'raster'
+            else:
+                seed_scores = outdoor_seed_scores(raw, rows, cols)
+                self.last_seed_policy = 'contrast_snr_16bit' if regime == '16bit' else 'contrast_snr'
+            uv: object = trilateration_centroids(dist, seg, radius=self.radius, max_stars=int(self.max_stars), seed_scores=seed_scores, seeds=(rows, cols))
+            self.last_fallback = False
+            if uv.size == 0:
+                self.last_n_raw = 0
+                self.last_n_after_gate = 0
+                self.last_backend = 'cnn_zhao2024'
+                self.last_error = None
+                return _empty_centroids(self.camera)
+            keep: object = (uv[:, 0] >= 1.0) & (uv[:, 1] >= 1.0) & (uv[:, 0] < ow - 1.0) & (uv[:, 1] < oh - 1.0)
+            uv = uv[keep]
+            if len(uv) == 0:
+                self.last_n_raw = 0
+                self.last_n_after_gate = 0
+                self.last_backend = 'cnn_zhao2024'
+                self.last_error = None
+                return _empty_centroids(self.camera)
+            flux: object = np.zeros(len(uv), dtype=np.float64)
+            peak: object = np.zeros(len(uv), dtype=np.float64)
+            area: object = np.full(len(uv), 9.0, dtype=np.float64)
+            h, w = raw.shape
+            for i, (u, v) in enumerate(uv):
+                pk, _ = _local_peak_and_bg(raw, float(u), float(v))
+                peak[i] = pk
+                x0: object = max(0, int(u) - 2)
+                x1: object = min(w, int(u) + 3)
+                y0: object = max(0, int(v) - 2)
+                y1: object = min(h, int(v) + 3)
+                flux[i] = float(raw[y0:y1, x0:x1].sum())
+            self.last_n_raw = int(len(uv))
+            if self.min_peak_dn > 0.0 and is_12bit_sim:
+                bright: object = peak >= self.min_peak_dn
+                uv = uv[bright]
+                flux = flux[bright]
+                peak = peak[bright]
+                area = area[bright]
+            self.last_n_after_gate = int(len(uv))
+            if len(uv) == 0:
+                self.last_backend = 'cnn_zhao2024'
+                self.last_error = None
+                return _empty_centroids(self.camera)
+            order: object = np.argsort(-flux)
+            if int(self.max_stars) > 0 and len(order) > int(self.max_stars):
+                order = order[:int(self.max_stars)]
+            uv = uv[order]
+            flux = flux[order]
+            peak = peak[order]
+            area = area[order]
+            z: object = np.zeros(len(uv), dtype=np.float64)
+            vectors: object = self.camera.unproject(uv)
+            self.last_backend = 'cnn_zhao2024'
+            self.last_error = None
+            return Centroids(uv=uv, flux=flux, area=area, peak=peak, mu20=z, mu02=z, mu11=z, axis_ratio=np.ones(len(uv), dtype=np.float64), angle_rad=z, vectors=vectors, sigma_px=np.full(len(uv), 0.5, dtype=np.float64))
+
+        # CNN-Hybrid path: MobileUNet semantic mask + background-subtracted local CoG refinement + SNR gate
+        self.last_mode = 'hybrid_cog'
+        self.last_fallback = False
+        if len(rows) == 0:
+            self.last_n_raw = 0
+            self.last_n_after_gate = 0
+            self.last_backend = 'cnn_zhao2024'
+            self.last_error = None
+            return _empty_centroids(self.camera)
+
+        smooth_bg: np.ndarray = cv2.boxFilter(raw, ddepth=-1, ksize=(31, 31), normalize=True, borderType=cv2.BORDER_REPLICATE)
+        net: np.ndarray = raw - smooth_bg
+        flat_net: np.ndarray = net.ravel()
+        med_g: float = float(np.median(flat_net))
+        mad_g: float = float(np.median(np.abs(flat_net - med_g)))
+        sig_g: float = max(1.4826 * mad_g, 1.0)
+
         if is_12bit_sim:
-            seed_scores: object = None
-            self.last_seed_policy = 'raster'
+            seed_scores = net[rows, cols].astype(np.float64)
+            self.last_seed_policy = 'net_contrast_12bit'
+            cap_raw: int = max(int(self.max_stars) * 2, 160) if int(self.max_stars) > 0 else 0
         else:
             seed_scores = outdoor_seed_scores(raw, rows, cols)
             self.last_seed_policy = 'contrast_snr_16bit' if regime == '16bit' else 'contrast_snr'
-        uv: object = trilateration_centroids(dist, seg, radius=self.radius, max_stars=int(self.max_stars), seed_scores=seed_scores, seeds=(rows, cols))
-        self.last_fallback = False
-        if uv.size == 0:
+            cap_raw = int(self.max_stars) if int(self.max_stars) > 0 else 0
+
+        uv_raw: np.ndarray = trilateration_centroids(dist, seg, radius=self.radius, max_stars=cap_raw, seed_scores=seed_scores, seeds=(rows, cols))
+        if uv_raw.size == 0:
             self.last_n_raw = 0
             self.last_n_after_gate = 0
             self.last_backend = 'cnn_zhao2024'
             self.last_error = None
             return _empty_centroids(self.camera)
-        keep: object = (uv[:, 0] >= 1.0) & (uv[:, 1] >= 1.0) & (uv[:, 0] < ow - 1.0) & (uv[:, 1] < oh - 1.0)
-        uv: object = uv[keep]
-        if len(uv) == 0:
-            self.last_n_raw = 0
-            self.last_n_after_gate = 0
-            self.last_backend = 'cnn_zhao2024'
-            self.last_error = None
-            return _empty_centroids(self.camera)
-        flux: object = np.zeros(len(uv), dtype=np.float64)
-        peak: object = np.zeros(len(uv), dtype=np.float64)
-        contrast: object = np.zeros(len(uv), dtype=np.float64)
-        area: object = np.full(len(uv), 9.0, dtype=np.float64)
+
         h, w = raw.shape
-        for i, (u, v) in enumerate(uv):
-            pk, bg = _local_peak_and_bg(raw, float(u), float(v))
-            peak[i] = pk
-            contrast[i] = pk - bg
-            x0: object = max(0, int(u) - 2)
-            x1: object = min(w, int(u) + 3)
-            y0: object = max(0, int(v) - 2)
-            y1: object = min(h, int(v) + 3)
-            flux[i] = float(raw[y0:y1, x0:x1].sum())
-        self.last_n_raw = int(len(uv))
-        if self.min_peak_dn > 0.0 and is_12bit_sim:
-            bright: object = peak >= self.min_peak_dn
-            uv: object = uv[bright]
-            flux: object = flux[bright]
-            peak: object = peak[bright]
-            contrast: object = contrast[bright]
-            area: object = area[bright]
-        self.last_n_after_gate = int(len(uv))
-        if len(uv) == 0:
+        keep_bounds = (uv_raw[:, 0] >= 2.0) & (uv_raw[:, 1] >= 2.0) & (uv_raw[:, 0] < w - 2.0) & (uv_raw[:, 1] < h - 2.0)
+        uv_raw = uv_raw[keep_bounds]
+        self.last_n_raw = int(len(uv_raw))
+        if len(uv_raw) == 0:
+            self.last_n_after_gate = 0
             self.last_backend = 'cnn_zhao2024'
             self.last_error = None
             return _empty_centroids(self.camera)
-        order: object = np.argsort(-flux)
+
+        snr_gate: float = 1.5 if is_8bit else (4.0 if is_12bit_sim else 3.5)
+        min_area: int = 1 if is_8bit else 3
+        sat_thresh: float = 3900.0 if is_12bit_sim else (60000.0 if regime == '16bit' else 250.0)
+        out_uv: list[tuple[float, float]] = []
+        out_flux: list[float] = []
+        out_peak: list[float] = []
+        out_area: list[float] = []
+        out_sig: list[float] = []
+
+        for u0, v0 in uv_raw:
+            ui, vi = (int(round(float(u0))), int(round(float(v0))))
+            if mask_bool is not None and mask_bool.shape == raw.shape and bool(mask_bool[vi, ui]):
+                continue
+            sy0, sy1 = (max(0, vi - 2), min(h, vi + 3))
+            sx0, sx1 = (max(0, ui - 2), min(w, ui + 3))
+            sub_s = net[sy0:sy1, sx0:sx1]
+            sub_max = float(sub_s.max())
+            # Center on plateau when saturated or tied so bright stars do not bias top-left
+            plat_y, plat_x = np.nonzero(sub_s >= sub_max - max(1.0, 0.01 * abs(sub_max)))
+            if len(plat_y) > 1:
+                py = sy0 + int(round(float(np.mean(plat_y))))
+                px = sx0 + int(round(float(np.mean(plat_x))))
+            else:
+                flat_idx = int(np.argmax(sub_s))
+                py = sy0 + flat_idx // sub_s.shape[1]
+                px = sx0 + flat_idx % sub_s.shape[1]
+            pk_raw = float(raw[py, px])
+            if is_12bit_sim and self.min_peak_dn > 0.0 and pk_raw < self.min_peak_dn:
+                continue
+
+            by0, by1 = (max(0, py - _R_BG), min(h, py + _R_BG + 1))
+            bx0, bx1 = (max(0, px - _R_BG), min(w, px + _R_BG + 1))
+            patch_net = net[by0:by1, bx0:bx1]
+            my0, my1 = (_R_BG - (py - by0), _R_BG + (by1 - py))
+            mx0, mx1 = (_R_BG - (px - bx0), _R_BG + (bx1 - px))
+            ann_vals = patch_net[_ANNULUS_BG[my0:my1, mx0:mx1]]
+            bg_loc = float(np.median(ann_vals)) if ann_vals.size >= 8 else 0.0
+            mad_loc = float(np.median(np.abs(ann_vals - bg_loc))) if ann_vals.size >= 8 else 0.0
+            sig_loc = max(1.4826 * mad_loc, 0.5 * sig_g, 1.0)
+            pk_net = float(net[py, px]) - bg_loc
+            snr = pk_net / sig_loc
+            if snr < snr_gate:
+                continue
+
+            r_ap: int = 2 if is_8bit else (5 if pk_raw >= sat_thresh else 3)
+            ay0, ay1 = (max(0, py - r_ap), min(h, py + r_ap + 1))
+            ax0, ax1 = (max(0, px - r_ap), min(w, px + r_ap + 1))
+            gy, gx = np.mgrid[ay0:ay1, ax0:ax1]
+            r2_ap = (gx - px) ** 2 + (gy - py) ** 2
+            ap_net = net[ay0:ay1, ax0:ax1] - bg_loc
+            thr = (1.5 if is_8bit else 2.0) * sig_loc
+            active = (r2_ap <= (r_ap + 0.5) ** 2) & (ap_net > thr)
+            cy_l, cx_l = (py - ay0, px - ax0)
+            active[cy_l, cx_l] = ap_net[cy_l, cx_l] > 0.0
+            _, cc_lbl = cv2.connectedComponents(active.astype(np.uint8), connectivity=8)
+            pk_lbl = int(cc_lbl[cy_l, cx_l])
+            in_star = (cc_lbl == pk_lbl) if pk_lbl > 0 else ((r2_ap <= 4.0) & (ap_net > 0.0))
+            area_px = int(np.count_nonzero(in_star))
+            if area_px < min_area:
+                continue
+
+            wt = np.where(in_star, np.maximum(ap_net, 0.0), 0.0)
+            f_sum = float(wt.sum())
+            if f_sum > 0.0:
+                u_ref = float((wt * gx).sum() / f_sum)
+                v_ref = float((wt * gy).sum() / f_sum)
+                if float(np.hypot(u_ref - float(u0), v_ref - float(v0))) <= 3.0:
+                    u_fin, v_fin = (u_ref, v_ref)
+                else:
+                    u_fin, v_fin = (float(u0), float(v0))
+            else:
+                u_fin, v_fin = (float(u0), float(v0))
+
+            if any(float(np.hypot(u_fin - eu, v_fin - ev)) < 2.2 for eu, ev in out_uv):
+                continue
+
+            snr_flux = f_sum / max(sig_loc * float(np.sqrt(max(area_px, 1))), 1.0)
+            pos_sig = self.psf_sigma_px / max(float(np.sqrt(max(snr_flux, 1.0))), 1.0)
+            if is_8bit:
+                pos_sig = max(pos_sig, 0.5)
+                fx0, fx1 = (max(0, int(u_fin) - 2), min(w, int(u_fin) + 3))
+                fy0, fy1 = (max(0, int(v_fin) - 2), min(h, int(v_fin) + 3))
+                rank_flux = float(raw[fy0:fy1, fx0:fx1].sum())
+            else:
+                rank_flux = max(f_sum, pk_net, 1.0)
+            out_uv.append((u_fin, v_fin))
+            out_flux.append(rank_flux)
+            out_peak.append(pk_raw)
+            out_area.append(float(area_px))
+            out_sig.append(pos_sig)
+
+        self.last_n_after_gate = int(len(out_uv))
+        if not out_uv:
+            self.last_backend = 'cnn_zhao2024'
+            self.last_error = None
+            return _empty_centroids(self.camera)
+
+        uv_arr = np.asarray(out_uv, dtype=np.float64)
+        flux_arr = np.asarray(out_flux, dtype=np.float64)
+        peak_arr = np.asarray(out_peak, dtype=np.float64)
+        area_arr = np.asarray(out_area, dtype=np.float64)
+        sig_arr = np.asarray(out_sig, dtype=np.float64)
+        order = np.argsort(-flux_arr)
         if int(self.max_stars) > 0 and len(order) > int(self.max_stars):
-            order: object = order[:int(self.max_stars)]
-        uv: object = uv[order]
-        flux: object = flux[order]
-        peak: object = peak[order]
-        area: object = area[order]
-        z: object = np.zeros(len(uv), dtype=np.float64)
-        vectors: object = self.camera.unproject(uv)
+            order = order[:int(self.max_stars)]
+        uv_arr = uv_arr[order]
+        flux_arr = flux_arr[order]
+        peak_arr = peak_arr[order]
+        area_arr = area_arr[order]
+        sig_arr = sig_arr[order]
+        z = np.zeros(len(uv_arr), dtype=np.float64)
+        vectors = self.camera.unproject(uv_arr)
         self.last_backend = 'cnn_zhao2024'
         self.last_error = None
-        return Centroids(uv=uv, flux=flux, area=area, peak=peak, mu20=z, mu02=z, mu11=z, axis_ratio=np.ones(len(uv), dtype=np.float64), angle_rad=z, vectors=vectors, sigma_px=np.full(len(uv), 0.5, dtype=np.float64))
+        return Centroids(uv=uv_arr, flux=flux_arr, area=area_arr, peak=peak_arr, mu20=z, mu02=z, mu11=z, axis_ratio=np.ones(len(uv_arr), dtype=np.float64), angle_rad=z, vectors=vectors, sigma_px=sig_arr)
 
 def match_centroid_rmse(pred_uv: np.ndarray, gt_uv: np.ndarray, match_radius_px: float=5.0) -> dict:
     """Greedy nearest-neighbor match; RMSE over matched pairs plus precision/recall/F1."""

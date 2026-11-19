@@ -1,7 +1,7 @@
 """End-to-end star tracker pipeline: glare masking, centroiding, pattern ID, and Wahba refinement."""
 from struct import pack
 from time import perf_counter
-from numpy import all as npall, argmin, asarray, concatenate, count_nonzero, degrees, einsum, flatnonzero, float64, hypot, inf, int32, maximum, mean, pi, sqrt
+from numpy import all as npall, arccos, argmin, asarray, clip, concatenate, count_nonzero, degrees, dot, einsum, flatnonzero, float64, hypot, inf, int32, maximum, mean, pi, sqrt
 from .attitude import WahbaSolver
 from .centroid import CentroidDetector
 from .identification import IdResult, StarIdentifier
@@ -79,10 +79,16 @@ class StarTrackerPipeline:
         self.camera, self.catalog, self.kvector, self.cfg = (camera, catalog, kvector, conf)
         self.masker = GlareMasker(bright_frac=conf.mask_bright_frac, min_area_px=conf.mask_min_area_px, min_span_px=conf.mask_min_span_px, dilate_px=conf.mask_dilate_px, bg_excess_k=conf.mask_bg_excess_k, full_scale=conf.mask_full_scale)
         base_det: object = CentroidDetector(camera, k_sigma=conf.k_sigma, bg_block=conf.bg_block, min_area=conf.min_area, max_area=conf.max_area, max_area_sat=conf.max_area_sat, max_axis_ratio=conf.max_axis_ratio, saturation_dn=conf.saturation_dn, binary_open=conf.binary_open, cog_pad=conf.cog_pad)
-        backend_tag: object = str(conf.centroid_backend or 'classical').lower()
-        if backend_tag in ('cnn', 'cnn_zhao2024', 'zhao', 'mobileunet'):
+        backend_tag: object = str(conf.centroid_backend or 'classical').lower().strip()
+        if backend_tag in ('cnn', 'cnn_hybrid', 'cnn_zhao2024', 'zhao', 'mobileunet'):
             from .centroid_cnn import CNNCentroidDetector
-            self.centroid_detector = CNNCentroidDetector(camera, classical=base_det)
+            self.centroid_detector = CNNCentroidDetector(camera, classical=base_det, refine_subpixel=True)
+        elif backend_tag in ('cnn_raw', 'cnn_trilateration'):
+            from .centroid_cnn import CNNCentroidDetector
+            self.centroid_detector = CNNCentroidDetector(camera, classical=base_det, refine_subpixel=False)
+        elif backend_tag in ('tetra3', 'tetra3_threshold'):
+            from .centroid_tetra3 import Tetra3ThresholdDetector
+            self.centroid_detector = Tetra3ThresholdDetector(camera)
         else:
             self.centroid_detector = base_det
         self.star_identifier = StarIdentifier(catalog, kvector, tol_rad=conf.angular_tol_rad, tol_frac=conf.tol_frac, n_false_sky=conf.n_false_sky, p_max=conf.p_max, max_stars=conf.max_stars, cutoff=conf.cutoff)
@@ -230,19 +236,29 @@ class StarTrackerPipeline:
             return (obs_idx, cat_idx)
         taken_o: object = {int(x) for x in obs_idx}
         taken_c: object = {int(x) for x in cat_idx}
-        proj_uv, in_fov = self.camera.project(einsum('ij,kj->ik', self.catalog.vectors, a))
+        cam_cat: object = einsum('ij,kj->ik', self.catalog.vectors, a)
+        proj_uv, in_fov = self.camera.project(cam_cat)
         plate_scale: object = max(float(self.camera.ifov_arcsec), 1e-09)
-        rad_px: object = max(2.5, float(degrees(self.cfg.angular_tol_rad) * 3600.0) / plate_scale)
+        tol_arc: float = float(degrees(self.cfg.angular_tol_rad) * 3600.0)
+        rad_px: object = max(2.5, tol_arc / plate_scale)
+        # Guard against wide-FOV negative-k1 polynomial fold-back projecting off-axis stars back into image
+        max_ang_arc: float = max(rad_px * plate_scale * 1.5, 3.0 * tol_arc)
         det_u, det_v = (cents.uv[:, 0], cents.uv[:, 1])
         more_o, more_c = ([], [])
         for c_i in flatnonzero(in_fov):
             c_idx: object = int(c_i)
             if c_idx in taken_c:
                 continue
+            r_cam = cam_cat[c_idx]
+            if float(r_cam[2]) <= 0.15:
+                continue
             pu, pv = proj_uv[c_idx]
             dists: object = hypot(det_u - pu, det_v - pv)
             best_o: object = int(argmin(dists))
             if dists[best_o] <= rad_px and best_o not in taken_o:
+                ang_arc = float(degrees(arccos(clip(float(dot(cents.vectors[best_o], r_cam)), -1.0, 1.0))) * 3600.0)
+                if ang_arc > max_ang_arc:
+                    continue
                 dists[best_o] = inf
                 if float(dists.min()) > rad_px:
                     taken_o.add(best_o)

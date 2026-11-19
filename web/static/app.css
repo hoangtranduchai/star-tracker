@@ -2520,6 +2520,341 @@ input[type="range"] {
 }
 
 /* =========================================================================
+   Side-by-Side Algorithm Comparison Workspace (#tab-compare)
+   ========================================================================= */
+.tab-btn.is-compare-tab {
+  color: var(--accent-text);
+}
+
+.tab-btn.is-compare-tab.active {
+  color: var(--text-bright);
+}
+
+.cmp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  max-width: 1560px;
+}
+
+.cmp-toolbar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.cmp-toolbar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cmp-scenario-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.cmp-run-btn {
+  padding: 0.42rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.cmp-verdict-banner {
+  padding: 0.62rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-control);
+  color: var(--text-main);
+  font-size: 0.84rem;
+  line-height: 1.48;
+}
+
+.cmp-verdict-banner.is-highlight {
+  background: var(--status-ok-bg);
+  border-color: var(--status-ok-border);
+  color: var(--text-bright);
+}
+
+.cmp-live-grid {
+  display: grid;
+  grid-template-columns: minmax(420px, 1.08fr) minmax(420px, 1fr);
+  gap: 0.95rem;
+  align-items: stretch;
+}
+
+.cmp-viewer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem;
+}
+
+.cmp-viewer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cmp-layer-toggles {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.cmp-layer-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.34rem 0.68rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-btn);
+  border: 1px solid var(--border-btn);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.58;
+  transition: all var(--ease);
+}
+
+.cmp-layer-btn:hover {
+  opacity: 0.9;
+  color: var(--text-bright);
+}
+
+.cmp-layer-btn.active {
+  opacity: 1;
+  color: var(--text-bright);
+  background: var(--bg-elevated);
+}
+
+.cmp-layer-btn.is-cog.active {
+  border-color: rgba(245, 158, 11, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.28);
+}
+
+.cmp-layer-btn.is-tetra3.active {
+  border-color: rgba(192, 132, 252, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.28);
+}
+
+.cmp-layer-btn.is-cnn.active {
+  border-color: rgba(52, 211, 153, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.28);
+}
+
+.cmp-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cmp-swatch.is-cog {
+  background: #F59E0B;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+}
+
+.cmp-swatch.is-tetra3 {
+  background: #C084FC;
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.7);
+}
+
+.cmp-swatch.is-cnn {
+  background: #34D399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
+}
+
+.cmp-stage-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 410px;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-viewport);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmp-stage-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+.cmp-stage-wrap img[hidden] {
+  display: none;
+}
+
+.cmp-viewer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.cmp-legend-hint {
+  color: var(--text-sub);
+}
+
+.cmp-metrics-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.cmp-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.cmp-method-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md);
+  padding: 0.72rem 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color var(--ease), transform var(--ease);
+}
+
+.cmp-method-card.is-winner {
+  border-color: var(--status-ok-border);
+  box-shadow: 0 0 0 1px var(--status-ok-border), 0 6px 18px rgba(16, 185, 129, 0.14);
+}
+
+.cmp-method-card.is-lost {
+  border-color: var(--status-err-border);
+}
+
+.cmp-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.cmp-method-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  white-space: nowrap;
+}
+
+.cmp-card-main {
+  font-family: var(--font-mono);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+}
+
+.cmp-card-sub {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  line-height: 1.38;
+}
+
+.cmp-table-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cmp-table th,
+.cmp-table td {
+  font-size: 0.79rem;
+  padding: 0.48rem 0.62rem;
+  white-space: nowrap;
+}
+
+.cmp-table td:first-child {
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: normal;
+}
+
+.cmp-cell-best {
+  color: var(--status-ok) !important;
+  font-weight: 700;
+}
+
+.cmp-cell-lost {
+  color: var(--status-err) !important;
+  font-weight: 700;
+}
+
+.cmp-cell-warn {
+  color: var(--status-warn) !important;
+  font-weight: 600;
+}
+
+.cmp-bench-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.cmp-real-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.cmp-subhead {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.cmp-row-hybrid td {
+  background: var(--status-ok-bg);
+}
+
+[data-theme="light"] .cmp-row-hybrid td {
+  background: rgba(5, 150, 105, 0.08);
+}
+
+@media (max-width: 1120px) {
+  .cmp-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .cmp-cards-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================================
    Responsive Adaptation
    ========================================================================= */
 @media (max-width: 1280px) {

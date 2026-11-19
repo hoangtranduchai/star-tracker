@@ -73,6 +73,8 @@ def _load_all_data() -> dict[str, Any]:
         if not p.is_file():
             raise FileNotFoundError(f'Missing audited JSON: {p}')
         data[k] = json.loads(p.read_text(encoding='utf-8'))
+    b3_path = OUT_DIR / 'benchmark_3way_comparison.json'
+    data['bench3'] = json.loads(b3_path.read_text(encoding='utf-8')) if b3_path.is_file() else None
     return data
 
 
@@ -1553,7 +1555,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '',
         '### 2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng',
         '',
-        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **127 passed, 2 skipped** (0 lỗi).',
+        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **129 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `POST /api/compare` và `GET /api/benchmark-summary`.',
         f"- Chạy đối kháng 100 thử nghiệm (`data/outputs/benchmark_rejection_stress.json`): hệ thống **sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock)**, 100/100 ca trả về `LOST` và 16 byte `0x00`, trong khi **logic cũ trước sửa bị {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock)**:",
         '',
         md_table(['Nhóm thử nghiệm (25 ca/nhóm)', 'Số ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau cải tiến False Lock', 'Downlink 16B', 'Phân bố reject_code'], t_stress_rows),
@@ -1656,10 +1658,11 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '```powershell',
         '# 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai',
         'pytest -v',
-        '# Kỳ vọng: 127 passed, 2 skipped (test cache tùy chọn không có sẵn)',
+        '# Kỳ vọng: 129 passed, 2 skipped (test cache tùy chọn không có sẵn)',
         '',
-        '# 2. Chạy benchmark End-to-End đầy đủ (ảnh thật hiệu chuẩn + 500 hd1024 + 40 lóa + Seed 42 + 100 ca stress + sinh 8 hình)',
+        '# 2. Chạy benchmark End-to-End đầy đủ & đối chuẩn 4 phương pháp (CoG vs tetra3 vs CNN gốc vs CNN-Hybrid)',
         'python scripts/benchmark_end_to_end.py --suites all',
+        'python scripts/benchmark_3way_centroid_e2e.py',
         '',
         '# 3. Chạy kiểm toán đối soát toàn bộ JSON & tài liệu',
         'python scripts/reconcile_logs.py',
@@ -1676,9 +1679,95 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         'Trên giao diện Web (`http://127.0.0.1:8765/`, hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser`, hoặc truy cập trực tuyến 24/7 tại `https://startracker.agentlens.dpdns.org`), hệ thống cung cấp endpoint `GET /api/sky-catalog` nạp 5.023 sao thực Yale BSC5 (hệ J2000) để hiển thị **không gian 3D quỹ đạo Trái Đất & thiên cầu thực**, cho phép đối chiếu trực quan tư thế vệ tinh 3D (`Quỹ đạo Trái Đất` / `Góc nhìn Cảm biến 1:1`) ngay cạnh ảnh sao gốc không viền (lưu ý: mô phỏng trực quan trên máy tính, không phải phần cứng bay/ADCS). Người dùng có thể bấm trực tiếp các kịch bản nhanh:',
         '- **`Mẫu chuẩn Seed 42`**: minh họa CoG giải nhanh `0,446″` với `36/36` sao khớp (`SOLVED`) và đối chiếu 3D trực tiếp.',
         '- **`Bầu trời thật ESA`**: nạp ảnh 16-bit thật `Alt60` (`f=35,2911 mm`, `6,9 µm`), minh họa cả CoG và CNN giải `SOLVED` ở sai số vài giây cung.',
-        '- **`Núi St. Helens`**: minh họa preset CNN giải `54/79` sao (`Δ = 0,034°` vs UW LOST), và khi chuyển sang `Centroid cổ điển` hệ thống hiển thị trạng thái `LOST [INSUFFICIENT_INLIER_PAIRS]` kèm 16 byte `0x00`.',
+        '- **`Núi St. Helens`**: minh họa preset CNN-Hybrid giải `72/77` sao (`Δθ = 71,13″`, chỉ `2 FP`), đồng thời trên tab **`So sánh CoG / tetra3 ↔ CNN`** cho phép đối chiếu trực tiếp 3 lớp tâm sao trên cùng khung ảnh.',
         '- **`Ngược nắng lóa mạnh`**: minh họa xử lý ảnh nhiễu lóa mặt trời mạnh kèm mặt nạ `GlareMasker`.',
+        '- **Tab `So sánh CoG / tetra3 ↔ CNN` (`POST /api/compare` & `GET /api/benchmark-summary`)**: chạy đồng thời cả 3 thuật toán tách tâm sao trên cùng một mảng điểm ảnh, hiển thị lớp phủ màu trực quan (CoG vàng cam · Ngưỡng kiểu tetra3 tím · CNN-Hybrid xanh ngọc) cùng bảng đối chuẩn 566 khung hình.',
     ]
+
+    b3 = d.get('bench3')
+    t_b3_sim: list[list[str]] = []
+    t_b3_real: list[list[str]] = []
+    if isinstance(b3, dict):
+        be_order = ('classical', 'tetra3', 'cnn_raw', 'cnn')
+        be_lbl = {
+            'classical': 'CoG (Nhóm)',
+            'tetra3': 'Ngưỡng kiểu tetra3',
+            'cnn_raw': 'CNN gốc (Trước)',
+            'cnn': 'CNN-Hybrid (Sau)',
+        }
+        for s_title, s_key in (
+            ('500 sạch (hd1024)', 'sim_hd1024'),
+            ('40 lóa (hd1024_glare)', 'sim_glare'),
+            ('20 Rìa TĐ + Mây + 5 sao giả', 'sim_earth_clutter'),
+        ):
+            su = (b3.get(s_key) or {}).get('summary') or {}
+            for be in be_order:
+                s = su.get(be) or {}
+                dth = (s.get('attitude_error_arcsec') or {}).get('median')
+                prec = s.get('centroid_precision_micro')
+                rec = s.get('centroid_recall_micro')
+                fp = s.get('centroid_false_pos_5px_total')
+                rm5 = s.get('centroid_rmse_5px')
+                lat = (s.get('total_pipeline_ms') or {}).get('mean')
+                t_b3_sim.append([
+                    s_title,
+                    be_lbl[be],
+                    f"{s.get('n_correct', 0)}/{s.get('n_gt_frames', 0)}",
+                    str(s.get('n_false_lock', 0)),
+                    f"{_fv(dth, 2)}″",
+                    f"{_fv(100.0 * prec, 1)}% ({_fi(fp)} FP)" if prec is not None else 'N/A',
+                    f"{_fv(100.0 * rec, 1)}%" if rec is not None else 'N/A',
+                    f"{_fv(rm5, 4)} px" if rm5 is not None else 'N/A',
+                    f"{_fv(lat, 1)} ms" if lat is not None else 'N/A',
+                ])
+        rc = b3.get('real_calibrated') or {}
+        by_be = rc.get('calibrated_bsc5_frames') or {}
+        base_f = by_be.get('classical') or []
+        def _fmt_rc(rec_obj: dict | None) -> str:
+            if not rec_obj:
+                return 'N/A'
+            if rec_obj.get('status') == 'SOLVED':
+                err_v = rec_obj.get('attitude_error_arcsec')
+                err_s = f"{_fv(err_v, 2)}″" if err_v is not None else 'SOLVED'
+                return f"SOLVED {err_s} ({rec_obj.get('n_valid_pairs')}/{rec_obj.get('n_detected')})"
+            fp_v = rec_obj.get('centroid_n_false_pos')
+            fp_s = f", {fp_v} FP" if fp_v is not None else ''
+            return f"LOST ({rec_obj.get('n_detected')} tâm{fp_s})"
+        for idx, bf in enumerate(base_f):
+            t_b3_real.append([
+                str(bf.get('frame_id', f'Frame {idx+1}')),
+                *[_fmt_rc((by_be.get(be) or [])[idx] if idx < len(by_be.get(be) or []) else None) for be in be_order],
+            ])
+        a40 = rc.get('alt40_hipparcos_v7') or {}
+        if a40:
+            t_b3_real.append(['Alt40 (Hipparcos V≤7)', *[_fmt_rc(a40.get(be)) for be in be_order]])
+        nc = rc.get('ntnu_0006_detected_counts') or {}
+        if nc:
+            t_b3_real.append(['NTNU 0006.png (Số tâm)', *[f"{_fi(nc.get(be))} tâm" for be in be_order]])
+
+        md_parts.extend([
+            '',
+            '---',
+            '',
+            '## 6. Nâng cấp CNN-Hybrid & Đối chuẩn 4 phương pháp (CoG ↔ Ngưỡng kiểu ESA tetra3 ↔ CNN gốc ↔ CNN-Hybrid)',
+            '',
+            'Để trả lời định lượng câu hỏi **"CNN có vượt được thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 hay không?"** và khắc phục hai điểm yếu của `CNN gốc` (RMSE cao `0,43–0,47 px` do nội suy tam giác hóa bản đồ khoảng cách và `1.118 FP` do lệch miền 12-bit), nhóm triển khai hai nâng cấp lõi:',
+            '',
+            '- **Nâng cấp `CNN-Hybrid` (`src/centroid_cnn.py`, mặc định `refine_subpixel=True`):** Giữ MobileUNet làm bộ lọc ngữ nghĩa phân biệt sao với địa hình/mây/chói sáng; sau đó trừ nền cục bộ (`boxFilter 31×31`), lọc cổng SNR vòng khuyên rỗng (`hollow-annulus MAD`), loại điểm nóng/tia vũ trụ đơn pixel (`area < 3` trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel bằng trọng tâm cường độ cục bộ (Windowed Connected-Component CoG) kèm trọng số `sigma_px` theo SNR cho Wahba. Đồng thời bổ sung chốt kiểm tra góc 3D trong `StarTrackerPipeline._associate_remaining` nhằm chặn lỗi gập đa thức méo xuyên tâm trên ống kính góc siêu rộng (`mount_st_helens_1.png`) và ghi nhớ cạnh/tam giác trong `StarIdentifier.identify`.',
+            '- **Bộ so sánh ngưỡng truyền thống kiểu ESA `tetra3` (`src/centroid_tetra3.py`):** Cài đặt chuẩn `local_mean` (`filtsize=25`) + `global_root_square` (`σ=2,0`) + `binary_open` + lọc diện tích `5..100 px` + CoG quy đổi về gốc tọa độ tâm pixel `(0,0)`, chạy trực tiếp trong cùng `StarTrackerPipeline` (0% False Lock trên toàn bộ `566 × 4 = 2.264` lượt đo, lưu tại `data/outputs/benchmark_3way_comparison.json`).',
+            '',
+            '### 6.1. Bảng đối chuẩn 4 phương pháp trên 560 khung mô phỏng (PC/Laptop RTX 5070 CUDA)',
+            '',
+            md_table(['Tập kiểm thử', 'Phương pháp', 'Đúng / Tổng', 'Khóa sai', 'Δθ trung vị', 'Precision (FP)', 'Recall', 'RMSE (5 px)', 'Độ trễ TB'], t_b3_sim),
+            '',
+            '### 6.2. Bảng đối chuẩn 4 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn',
+            '',
+            md_table(['Khung ảnh thực', 'CoG (Nhóm)', 'Ngưỡng kiểu tetra3', 'CNN gốc (Trước)', 'CNN-Hybrid (Sau)'], t_b3_real),
+            '',
+            '### 6.3. Kết luận khoa học khách quan',
+            '- **Tác động cải tiến `CNN gốc → CNN-Hybrid`:** Giảm **-97,2% điểm giả FP** trên 500 khung sạch (`1.118 → 31 FP`, Precision `95,5% → 99,9%`) và **-98,7% FP** trên 40 khung lóa (`157 → 2 FP`); giảm sai số tư thế trung vị **4×** trên 500 khung sạch (`7,99″ → 2,02″`), **3,6×** trên 40 khung lóa (`9,82″ → 2,73″`), **-41%** trên `Mount St. Helens` (`120,26″ → 71,13″`, `72/77` cặp hợp lệ) và tăng tốc **38,6×** trên `Alt40 Hipparcos V≤7` (`21,2 s → 0,55 s`).',
+            '- **So sánh trực diện với ngưỡng truyền thống kiểu ESA `tetra3`:** `CNN-Hybrid` **vượt `tetra3` rõ rệt** về sai số góc trên 500 ảnh sạch (`2,02″` vs `2,34″`), vượt gần **2×** độ chính xác & `+18,6%` Recall trên 40 ảnh lóa mạnh (`2,73″ / 69,9%` vs `5,06″ / 51,3%`), vượt `tetra3` trên `ESA Alt60` (`6,77″ / 0,102 px` vs `8,68″ / 0,119 px`), và **giải đúng cả 2 ảnh thực địa phức tạp mà `tetra3` thất bại hoàn toàn (`LOST`)** là `Mount St. Helens` (`CNN-Hybrid 71,13″, 2 FP` vs `tetra3 LOST, 57 FP`) và `Zhao MT9V022` (`CNN-Hybrid 48,26″` vs `tetra3 LOST`). Đánh đổi được ghi nhận minh bạch: trên nền trời sạch, `CoG` và `tetra3` vẫn chạy nhanh hơn khoảng 2× (`~84–88 ms` vs `~171 ms` do chi phí suy luận MobileUNet) và không cần trọng số học sâu; do đó kiến trúc song song **CoG mặc định + CNN-Hybrid cho cảnh phức tạp/tiền cảnh/lóa** (có tab so sánh trực tiếp trên Web) là lựa chọn tối ưu.',
+        ])
 
     REPORT_MD.write_text('\n'.join(md_parts) + '\n', encoding='utf-8')
     print(f'wrote {REPORT_MD}')
@@ -1871,7 +1960,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     _docx_add_styled_table(doc, ['Mã reject_code', 'Điều kiện kích hoạt', 'Hành vi đầu ra'], t_reject_codes, col_widths_in=[2.34, 2.43, 2.00], font_size=8.3)
 
     add_h2('2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng')
-    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 127 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
+    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 129 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
     _docx_add_styled_table(
         doc,
         ['Nhóm thử nghiệm', 'Ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau sửa FL', 'Downlink 16B', 'reject_code'],
@@ -1940,19 +2029,44 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     cmd_block = (
         'pytest -v\n'
         'python scripts/benchmark_end_to_end.py --suites all\n'
+        'python scripts/benchmark_3way_centroid_e2e.py\n'
         'python scripts/reconcile_logs.py\n'
         'python scripts/update_national_slides_and_docs.py\n'
         'python scripts/fill_ai2026_dossier.py\n'
         'python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show\n'
-        'python app.py  # Web UI tối giản + 3D J2000 tại http://127.0.0.1:8765/ (--no-browser tùy chọn)'
+        'python app.py  # Web UI tối giản + 3D J2000 + Tab So sánh tại http://127.0.0.1:8765/'
     )
     add_callout('Lệnh tái lập chuẩn:', '\n' + cmd_block, bg_hex='F1F5F9', border_hex='133E68')
     add_p(
         'Giao diện Web (cục bộ tại http://127.0.0.1:8765/ hoặc trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org) tích hợp endpoint GET /api/sky-catalog dựng không gian 3D quỹ đạo Trái Đất và thiên cầu thực J2000 '
-        '(5.023 sao Yale BSC5) ở hai góc nhìn (Quỹ đạo Trái Đất và Góc nhìn Cảm biến 1:1), cho phép đối chiếu trực quan tư thế 3D ngay cạnh ảnh sao gốc không viền '
-        'cùng thanh kịch bản nhanh (Bầu trời chuẩn · Trời thực ESA · Núi St. Helens · Ngược nắng). '
-        'Lưu ý: không gian 3D là mô phỏng trực quan chạy trên máy tính, không phải phần cứng vệ tinh hay vòng điều khiển ADCS thực tế.'
+        '(5.023 sao Yale BSC5), cùng tab "So sánh CoG / tetra3 ↔ CNN" (POST /api/compare và GET /api/benchmark-summary) cho phép chạy đồng thời cả 3 thuật toán trên cùng một khung ảnh điểm ảnh với lớp phủ màu đối chiếu trực quan. '
+        'Lưu ý: không gian 3D và ứng dụng Web là mô phỏng trực quan chạy trên máy tính/VPS, không phải phần cứng vệ tinh hay vòng điều khiển ADCS thực tế.'
     )
+
+    if isinstance(b3, dict) and t_b3_sim:
+        add_h1('6. Nâng cấp CNN-Hybrid & Đối chuẩn 4 phương pháp (CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN gốc ↔ CNN-Hybrid)')
+        add_p(
+            'Nâng cấp lõi CNN-Hybrid (src/centroid_cnn.py, refine_subpixel=True) giữ MobileUNet làm bộ lọc ngữ nghĩa loại nền địa hình/mây/lóa, kết hợp trừ nền cục bộ (boxFilter 31×31), cổng SNR vòng khuyên rỗng, lọc điểm nóng đơn pixel (area < 3 trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel bằng Windowed Connected-Component CoG kèm trọng số sigma_px theo SNR cho Wahba. Đồng thời bổ sung bộ ngưỡng truyền thống kiểu ESA tetra3 (src/centroid_tetra3.py) và chốt kiểm tra góc 3D trong _associate_remaining để đối chuẩn công bằng 4 phương pháp qua chung StarTrackerPipeline (0% False Lock trên toàn bộ 2.264 lượt chạy).'
+        )
+        add_h2('6.1. Bảng đối chuẩn 4 phương pháp trên 560 khung mô phỏng (benchmark_3way_comparison.json)')
+        _docx_add_styled_table(
+            doc,
+            ['Tập kiểm thử', 'Phương pháp', 'Đúng/Tổng', 'FL', 'Δθ tv', 'Precision (FP)', 'Recall', 'RMSE 5px', 'Trễ TB'],
+            t_b3_sim,
+            col_widths_in=[1.06, 0.94, 0.62, 0.28, 0.56, 1.02, 0.52, 0.66, 0.62],
+            font_size=7.4,
+        )
+        add_h2('6.2. Bảng đối chuẩn 4 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn')
+        _docx_add_styled_table(
+            doc,
+            ['Khung ảnh thực', 'CoG (Nhóm)', 'Ngưỡng kiểu tetra3', 'CNN gốc (Trước)', 'CNN-Hybrid (Sau)'],
+            t_b3_real,
+            col_widths_in=[1.15, 1.40, 1.40, 1.40, 1.42],
+            font_size=7.4,
+        )
+        add_h2('6.3. Kết luận khoa học khách quan')
+        add_p('• Tác động cải tiến CNN gốc → CNN-Hybrid: giảm -97,2% điểm giả FP trên 500 khung sạch (1.118 → 31 FP, Precision 95,5% → 99,9%) và -98,7% FP trên 40 khung lóa (157 → 2 FP); giảm sai số Δθ trung vị 4× trên 500 khung sạch (7,99″ → 2,02″), 3,6× trên 40 khung lóa (9,82″ → 2,73″), -41% trên Mount St. Helens (120,26″ → 71,13″, 72/77 cặp hợp lệ), và tăng tốc 38,6× trên Alt40 Hipparcos V≤7 (21,2 s → 0,55 s).')
+        add_p('• So sánh với ngưỡng truyền thống kiểu ESA tetra3: CNN-Hybrid vượt tetra3 về sai số góc trên 500 khung sạch (2,02″ vs 2,34″), vượt gần 2× độ chính xác và +18,6% Recall trên 40 khung lóa (2,73″ / 69,9% vs 5,06″ / 51,3%), vượt tetra3 trên ảnh thực Alt60 (6,77″ / 0,102 px vs 8,68″ / 0,119 px), và giải đúng cả 2 ảnh thực địa mà tetra3 thất bại LOST là Mount St. Helens (71,13″, 2 FP vs tetra3 LOST 57 FP) và Zhao MT9V022 (48,26″ vs tetra3 LOST). Đánh đổi minh bạch: trên nền trời sạch, CoG và tetra3 vẫn nhanh hơn ~2× (~84–88 ms vs ~171 ms) nên mô hình song song CoG mặc định + CNN-Hybrid cho cảnh phức tạp/lóa là kiến trúc hợp lý nhất.')
 
     doc.save(str(REPORT_DOCX))
     print(f'wrote {REPORT_DOCX}')
@@ -1978,8 +2092,9 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
 
 def main() -> int:
     data = _load_all_data()
-    update_pptx(data)
-    sync_portfolio_hoso_docx(data)
+    if '--report-only' not in sys.argv:
+        update_pptx(data)
+        sync_portfolio_hoso_docx(data)
     build_report_md_and_docx_and_pdf(data)
     return 0
 

@@ -114,11 +114,13 @@ class StarIdentifier:
         ang_mat: object = arccos(clip(b_sub @ b_sub.T, -1.0, 1.0))
         n_sub: object = int(len(sel))
         tested: object = 0
+        adj_cache: dict = {}
+        tri_cache: dict = {}
         for i, j, k, r in _iter_pyramid_indices(n_sub):
             tested += 1
             if tested > self.cutoff:
                 return _empty_id_result(0)
-            pyr_hit: object = self._try_pyramid(b_sub, ang_mat, i, j, k, r)
+            pyr_hit: object = self._try_pyramid(b_sub, ang_mat, i, j, k, r, adj_cache=adj_cache, tri_cache=tri_cache)
             if pyr_hit is not None:
                 ci, cj, ck, cr, ef = pyr_hit
                 return self._pack_solution(sel, b_sub, ang_mat, {i: ci, j: cj, k: ck, r: cr}, tested, ef)
@@ -126,7 +128,7 @@ class StarIdentifier:
             tested += 1
             if tested > self.cutoff:
                 return _empty_id_result(0)
-            tri_hit: object = self._try_triangle(b_sub, ang_mat, i, j, k)
+            tri_hit: object = self._try_triangle(b_sub, ang_mat, i, j, k, adj_cache=adj_cache, tri_cache=tri_cache)
             if tri_hit is not None:
                 ci, cj, ck, ef = tri_hit
                 sol: object = self._pack_solution(sel, b_sub, ang_mat, {i: ci, j: cj, k: ck}, tested, ef)
@@ -144,18 +146,38 @@ class StarIdentifier:
         raw_pairs: object = self.kvector.query(float(theta_val), self._tol(theta_val))
         return _pair_map(raw_pairs) if len(raw_pairs) else None
 
-    def _triangle_matches(self, b: object, ang: object, i: object, j: object, k: object) -> object:
+    def _query_adj_cached(self, ang: object, a: int, b: int, adj_cache: dict | None) -> object:
+        if adj_cache is None:
+            return self._query_adj(ang[a, b])
+        key = (a, b) if a < b else (b, a)
+        if key not in adj_cache:
+            adj_cache[key] = self._query_adj(ang[a, b])
+        return adj_cache[key]
+
+    def _triangle_matches(self, b: object, ang: object, i: object, j: object, k: object, adj_cache: dict | None=None, tri_cache: dict | None=None) -> object:
+        if tri_cache is not None:
+            tkey = (int(i), int(j), int(k))
+            if tkey in tri_cache:
+                return tri_cache[tkey]
         if self._false_gate(b[i], b[j], b[k], float(ang[i, j])) is None:
+            if tri_cache is not None:
+                tri_cache[(int(i), int(j), int(k))] = None
             return None
         if abs(float(dot(b[i], cross(b[j], b[k])))) <= 1e-12:
+            if tri_cache is not None:
+                tri_cache[(int(i), int(j), int(k))] = None
             return None
         obs_hand: object = _chirality(b[i], b[j], b[k])
         if obs_hand == 0:
+            if tri_cache is not None:
+                tri_cache[(int(i), int(j), int(k))] = None
             return None
-        m_ij: object = self._query_adj(ang[i, j])
-        m_ik: object = self._query_adj(ang[i, k])
-        m_jk: object = self._query_adj(ang[j, k])
+        m_ij: object = self._query_adj_cached(ang, int(i), int(j), adj_cache)
+        m_ik: object = self._query_adj_cached(ang, int(i), int(k), adj_cache)
+        m_jk: object = self._query_adj_cached(ang, int(j), int(k), adj_cache)
         if m_ij is None or m_ik is None or m_jk is None:
+            if tri_cache is not None:
+                tri_cache[(int(i), int(j), int(k))] = None
             return None
         cat_vecs: object = self.catalog.vectors
         triplets: object = []
@@ -173,25 +195,27 @@ class StarIdentifier:
                     if ck != ci and ck != cj:
                         if abs(float(dot(cat_vecs[ci], cross(cat_vecs[cj], cat_vecs[ck])))) > 1e-12 and _chirality(cat_vecs[ci], cat_vecs[cj], cat_vecs[ck]) == obs_hand:
                             triplets.append((ci, cj, ck))
+        if tri_cache is not None:
+            tri_cache[(int(i), int(j), int(k))] = triplets
         return triplets
 
-    def _try_triangle(self, b: object, ang: object, i: object, j: object, k: object) -> object:
-        triplets: object = self._triangle_matches(b, ang, i, j, k)
+    def _try_triangle(self, b: object, ang: object, i: object, j: object, k: object, adj_cache: dict | None=None, tri_cache: dict | None=None) -> object:
+        triplets: object = self._triangle_matches(b, ang, i, j, k, adj_cache=adj_cache, tri_cache=tri_cache)
         if not triplets or len(triplets) != 1:
             return None
         ci, cj, ck = triplets[0]
         return (ci, cj, ck, self._false_gate(b[i], b[j], b[k], float(ang[i, j])))
 
-    def _try_pyramid(self, b: object, ang: object, i: object, j: object, k: object, r: object) -> object:
+    def _try_pyramid(self, b: object, ang: object, i: object, j: object, k: object, r: object, adj_cache: dict | None=None, tri_cache: dict | None=None) -> object:
         efalse: object = self._false_gate(b[i], b[j], b[k], float(ang[i, j]))
         if efalse is None:
             return None
-        triplets: object = self._triangle_matches(b, ang, i, j, k)
+        triplets: object = self._triangle_matches(b, ang, i, j, k, adj_cache=adj_cache, tri_cache=tri_cache)
         if not triplets:
             return None
-        m_ir: object = self._query_adj(ang[i, r]) or {}
-        m_jr: object = self._query_adj(ang[j, r]) or {}
-        m_kr: object = self._query_adj(ang[k, r]) or {}
+        m_ir: object = self._query_adj_cached(ang, int(i), int(r), adj_cache) or {}
+        m_jr: object = self._query_adj_cached(ang, int(j), int(r), adj_cache) or {}
+        m_kr: object = self._query_adj_cached(ang, int(k), int(r), adj_cache) or {}
         confirmed: object = []
         for ci, cj, ck in triplets:
             common_r: object = (m_ir.get(ci, set()) & m_jr.get(cj, set()) & m_kr.get(ck, set())) - {ci, cj, ck}

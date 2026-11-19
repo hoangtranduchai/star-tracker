@@ -135,6 +135,31 @@
   const btnClearRadec = document.getElementById("btn-clear-radec");
   const presetIndicator = document.getElementById("preset-active-indicator");
 
+  // Side-by-side Algorithm Comparison Tab (#tab-compare)
+  const btnCmpMount = document.getElementById("btn-cmp-mount");
+  const btnCmpTetra3 = document.getElementById("btn-cmp-tetra3");
+  const btnCmpGlare = document.getElementById("btn-cmp-glare");
+  const btnCmpSeed42 = document.getElementById("btn-cmp-seed42");
+  const btnCmpCurrent = document.getElementById("btn-cmp-current");
+  const btnCmpLayerCog = document.getElementById("btn-cmp-layer-cog");
+  const btnCmpLayerTetra3 = document.getElementById("btn-cmp-layer-tetra3");
+  const btnCmpLayerCnn = document.getElementById("btn-cmp-layer-cnn");
+  const btnCmpOnlyMatched = document.getElementById("btn-cmp-only-matched");
+  const cmpOnlyMatchedLabel = document.getElementById("cmp-only-matched-label");
+  const cmpVerdictBanner = document.getElementById("cmp-verdict-banner");
+  const cmpStageWrap = document.getElementById("cmp-stage-wrap");
+  const cmpPlaceholder = document.getElementById("cmp-placeholder");
+  const cmpCleanImg = document.getElementById("cmp-clean-img");
+  const cmpOverlayCanvas = document.getElementById("cmp-overlay-canvas");
+  const cmpStarTooltip = document.getElementById("cmp-star-tooltip");
+  const cmpFrameMeta = document.getElementById("cmp-frame-meta");
+  const cmpGtChip = document.getElementById("cmp-gt-chip");
+  const cmpLiveBody = document.querySelector("#cmp-live-table tbody");
+  const cmpBenchBody = document.querySelector("#cmp-bench-table tbody");
+  const cmpRealBody = document.querySelector("#cmp-real-table tbody");
+  const cmpBenchDevice = document.getElementById("cmp-bench-device");
+  const cmpBenchScope = document.getElementById("cmp-bench-scope");
+
   let modalZoomLevel = 1.0;
   let activePointHr = null;
   let activePointingMode = "target-seed";
@@ -227,7 +252,7 @@
   function applyImgBrightnessPreset(idx) {
     imgBrightIdx = ((idx % IMG_BRIGHT_PRESETS.length) + IMG_BRIGHT_PRESETS.length) % IMG_BRIGHT_PRESETS.length;
     const preset = IMG_BRIGHT_PRESETS[imgBrightIdx];
-    [compare3dImg, pipSensorImg, imgIn].forEach((el) => {
+    [compare3dImg, pipSensorImg, imgIn, cmpCleanImg].forEach((el) => {
       if (!el) return;
       el.classList.remove("img-bright-std", "img-bright-vivid", "img-bright-raw");
       el.classList.add(preset.cls);
@@ -336,7 +361,12 @@
       btnWelcomeRun,
       btnLoad,
       btnRadec,
-      btnUpload
+      btnUpload,
+      btnCmpMount,
+      btnCmpTetra3,
+      btnCmpGlare,
+      btnCmpSeed42,
+      btnCmpCurrent
     ].forEach((b) => {
       if (!b) return;
       b.disabled = on;
@@ -790,6 +820,15 @@
         drawSensorOverlay();
       });
     }
+    if (tabId === "tab-compare") {
+      loadBenchmarkSummary();
+      requestAnimationFrame(() => {
+        drawCompareOverlay();
+      });
+      if (!lastComparePayload && !compareLoading) {
+        runCompareScenario("mount");
+      }
+    }
   }
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -821,9 +860,12 @@
 
   function setCentroidBackend(mode) {
     const classical = document.getElementById("centroid-classical");
+    const tetra3 = document.getElementById("centroid-tetra3");
     const cnn = document.getElementById("centroid-cnn");
     if (mode === "cnn") {
       if (cnn) cnn.checked = true;
+    } else if (mode === "tetra3") {
+      if (tetra3) tetra3.checked = true;
     } else if (classical) {
       classical.checked = true;
     }
@@ -1758,8 +1800,10 @@
       setCompare3dSource("annotated");
       const body = gatherFormData();
       body.image = "uploads/mount_st_helens_1.png";
-      body.focal_mm = 4.2;
+      body.focal_mm = 4.163043225470905;
       body.pixel_um = 4.1;
+      body.k1 = 0.08897545958095043;
+      body.k2 = -0.09770961126729949;
       body.centroid_backend = "cnn";
       postRun(body);
     });
@@ -1785,8 +1829,9 @@
     setCompare3dSource("annotated");
     const body = gatherFormData();
     body.image = "tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff";
-    body.focal_mm = 35.2911;
+    body.focal_mm = 35.291113627236776;
     body.pixel_um = 6.9;
+    body.k1 = 0.10021753616812087;
     postRun(body);
   }
 
@@ -1906,6 +1951,647 @@
         setBusy(false);
       }
     });
+  }
+
+  /* =======================================================================
+     Side-by-Side Comparison Controller (CoG vs tetra3-Threshold vs CNN-Hybrid)
+     ======================================================================= */
+  let lastComparePayload = null;
+  let compareLoading = false;
+  let benchmarkLoaded = false;
+  let cmpLayers = { classical: true, tetra3: true, cnn: true };
+  let cmpOnlyMatched = false;
+  let cmpOverlayPoints = [];
+
+  const CMP_STYLE = {
+    classical: { label: "CoG (Nhóm)", color: "#F59E0B", radius: 6.5, shape: "circle" },
+    tetra3: { label: "Ngưỡng tetra3", color: "#C084FC", radius: 7.5, shape: "diamond" },
+    cnn: { label: "CNN-Hybrid", color: "#34D399", radius: 9.0, shape: "reticle" }
+  };
+
+  function drawCompareOverlay() {
+    if (!cmpOverlayCanvas || !cmpStageWrap) return;
+    const cw = cmpStageWrap.clientWidth;
+    const ch = cmpStageWrap.clientHeight;
+    if (cw < 8 || ch < 8) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.round(cw * dpr);
+    const targetH = Math.round(ch * dpr);
+    if (cmpOverlayCanvas.width !== targetW || cmpOverlayCanvas.height !== targetH) {
+      cmpOverlayCanvas.width = targetW;
+      cmpOverlayCanvas.height = targetH;
+    }
+    const ctx = cmpOverlayCanvas.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+
+    cmpOverlayPoints = [];
+    if (!lastComparePayload || !cmpCleanImg || cmpCleanImg.hidden) return;
+
+    const cam = lastComparePayload.camera || {};
+    const camW = Number(cam.width || cmpCleanImg.naturalWidth || 1024);
+    const camH = Number(cam.height || cmpCleanImg.naturalHeight || 768);
+    if (!(camW > 0 && camH > 0)) return;
+
+    const scale = Math.min(cw / camW, ch / camH);
+    const drawW = camW * scale;
+    const drawH = camH * scale;
+    const offX = (cw - drawW) * 0.5;
+    const offY = (ch - drawH) * 0.5;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(125, 211, 252, 0.28)";
+    ctx.lineWidth = 1.1;
+    ctx.strokeRect(offX + 0.5, offY + 0.5, Math.max(0, drawW - 1), Math.max(0, drawH - 1));
+    ctx.restore();
+
+    const methods = lastComparePayload.methods || {};
+    ["tetra3", "classical", "cnn"].forEach((key) => {
+      if (!cmpLayers[key]) return;
+      const m = methods[key];
+      if (!m) return;
+      const st = CMP_STYLE[key];
+      const ident = Array.isArray(m.identified_stars) ? m.identified_stars : [];
+      const det = Array.isArray(m.detected_uv) ? m.detected_uv : [];
+
+      const matchedCoords = [];
+      ident.forEach((s) => {
+        const u = Number(s.u_px);
+        const v = Number(s.v_px);
+        if (!Number.isFinite(u) || !Number.isFinite(v)) return;
+        const sx = offX + (u + 0.5) * scale;
+        const sy = offY + (v + 0.5) * scale;
+        matchedCoords.push({ u, v, sx, sy, star: s });
+        cmpOverlayPoints.push({
+          methodKey: key,
+          methodLabel: st.label,
+          matched: true,
+          name: s.iau_name || `${String(s.id_scheme || "HR").toUpperCase()} ${s.id}`,
+          mag: Number(s.mag),
+          u,
+          v,
+          sx,
+          sy
+        });
+      });
+
+      if (!cmpOnlyMatched) {
+        ctx.save();
+        ctx.strokeStyle = st.color;
+        ctx.globalAlpha = 0.72;
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([3, 2.5]);
+        det.forEach((pair) => {
+          if (!Array.isArray(pair) || pair.length < 2) return;
+          const u = Number(pair[0]);
+          const v = Number(pair[1]);
+          if (!Number.isFinite(u) || !Number.isFinite(v)) return;
+          for (let j = 0; j < matchedCoords.length; j++) {
+            if (Math.hypot(matchedCoords[j].u - u, matchedCoords[j].v - v) < 2.6) return;
+          }
+          const sx = offX + (u + 0.5) * scale;
+          const sy = offY + (v + 0.5) * scale;
+          cmpOverlayPoints.push({
+            methodKey: key,
+            methodLabel: st.label,
+            matched: false,
+            name: "Tâm chưa khớp / nhiễu",
+            mag: null,
+            u,
+            v,
+            sx,
+            sy
+          });
+          ctx.beginPath();
+          if (st.shape === "diamond") {
+            const r = st.radius * 0.88;
+            ctx.moveTo(sx, sy - r);
+            ctx.lineTo(sx + r, sy);
+            ctx.lineTo(sx, sy + r);
+            ctx.lineTo(sx - r, sy);
+            ctx.closePath();
+          } else {
+            ctx.arc(sx, sy, st.radius * 0.82, 0, Math.PI * 2);
+          }
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.strokeStyle = st.color;
+      ctx.lineWidth = key === "cnn" ? 2.0 : 1.7;
+      matchedCoords.forEach((p) => {
+        ctx.beginPath();
+        if (st.shape === "diamond") {
+          const r = st.radius;
+          ctx.moveTo(p.sx, p.sy - r);
+          ctx.lineTo(p.sx + r, p.sy);
+          ctx.lineTo(p.sx, p.sy + r);
+          ctx.lineTo(p.sx - r, p.sy);
+          ctx.closePath();
+        } else {
+          ctx.arc(p.sx, p.sy, st.radius, 0, Math.PI * 2);
+        }
+        ctx.stroke();
+        if (st.shape === "reticle") {
+          ctx.beginPath();
+          ctx.moveTo(p.sx - 12.5, p.sy);
+          ctx.lineTo(p.sx - 9.2, p.sy);
+          ctx.moveTo(p.sx + 9.2, p.sy);
+          ctx.lineTo(p.sx + 12.5, p.sy);
+          ctx.moveTo(p.sx, p.sy - 12.5);
+          ctx.lineTo(p.sx, p.sy - 9.2);
+          ctx.moveTo(p.sx, p.sy + 9.2);
+          ctx.lineTo(p.sx, p.sy + 12.5);
+          ctx.stroke();
+        }
+      });
+      ctx.restore();
+    });
+  }
+
+  if (cmpCleanImg) {
+    cmpCleanImg.addEventListener("load", drawCompareOverlay);
+  }
+  if (cmpOverlayCanvas && cmpStageWrap) {
+    cmpOverlayCanvas.addEventListener("pointermove", (ev) => {
+      if (!cmpOverlayPoints.length || !cmpStarTooltip) return;
+      const rect = cmpOverlayCanvas.getBoundingClientRect();
+      const mx = ev.clientX - rect.left;
+      const my = ev.clientY - rect.top;
+      const near = cmpOverlayPoints.filter((p) => Math.hypot(p.sx - mx, p.sy - my) <= 18);
+      if (!near.length) {
+        cmpStarTooltip.hidden = true;
+        return;
+      }
+      near.sort((a, b) => Math.hypot(a.sx - mx, a.sy - my) - Math.hypot(b.sx - mx, b.sy - my));
+      const top = near[0];
+      const byMethod = [];
+      const seenM = new Set();
+      near.forEach((p) => {
+        if (!seenM.has(p.methodKey)) {
+          seenM.add(p.methodKey);
+          byMethod.push(`${p.methodLabel}: ${p.matched ? p.name : "chưa khớp"}`);
+        }
+      });
+      cmpStarTooltip.innerHTML =
+        `<strong>(${top.u.toFixed(1)}, ${top.v.toFixed(1)}) px</strong>` +
+        `<span class="tt-mono"> · ${byMethod.join(" | ")}</span>`;
+      cmpStarTooltip.hidden = false;
+      const tw = cmpStarTooltip.offsetWidth || 220;
+      const th = cmpStarTooltip.offsetHeight || 28;
+      let tx = top.sx + 14;
+      let ty = top.sy - th - 10;
+      if (tx + tw > rect.width - 8) tx = Math.max(8, top.sx - tw - 14);
+      if (ty < 8) ty = Math.min(rect.height - th - 8, top.sy + 14);
+      cmpStarTooltip.style.transform = `translate3d(${Math.round(tx)}px, ${Math.round(ty)}px, 0)`;
+    });
+    cmpOverlayCanvas.addEventListener("pointerleave", () => {
+      if (cmpStarTooltip) cmpStarTooltip.hidden = true;
+    });
+    if (typeof ResizeObserver === "function") {
+      new ResizeObserver(() => drawCompareOverlay()).observe(cmpStageWrap);
+    }
+  }
+
+  function syncCompareLayerBtns() {
+    if (btnCmpLayerCog) btnCmpLayerCog.classList.toggle("active", cmpLayers.classical);
+    if (btnCmpLayerTetra3) btnCmpLayerTetra3.classList.toggle("active", cmpLayers.tetra3);
+    if (btnCmpLayerCnn) btnCmpLayerCnn.classList.toggle("active", cmpLayers.cnn);
+    if (btnCmpOnlyMatched) btnCmpOnlyMatched.classList.toggle("active", cmpOnlyMatched);
+    if (cmpOnlyMatchedLabel) {
+      cmpOnlyMatchedLabel.textContent = cmpOnlyMatched ? "Chỉ hiện sao đã khớp" : "Hiện mọi tâm phát hiện";
+    }
+    drawCompareOverlay();
+  }
+
+  if (btnCmpLayerCog) {
+    btnCmpLayerCog.addEventListener("click", () => {
+      cmpLayers.classical = !cmpLayers.classical;
+      syncCompareLayerBtns();
+    });
+  }
+  if (btnCmpLayerTetra3) {
+    btnCmpLayerTetra3.addEventListener("click", () => {
+      cmpLayers.tetra3 = !cmpLayers.tetra3;
+      syncCompareLayerBtns();
+    });
+  }
+  if (btnCmpLayerCnn) {
+    btnCmpLayerCnn.addEventListener("click", () => {
+      cmpLayers.cnn = !cmpLayers.cnn;
+      syncCompareLayerBtns();
+    });
+  }
+  if (btnCmpOnlyMatched) {
+    btnCmpOnlyMatched.addEventListener("click", () => {
+      cmpOnlyMatched = !cmpOnlyMatched;
+      syncCompareLayerBtns();
+    });
+  }
+
+  function fmtArc(v) {
+    return Number.isFinite(Number(v)) ? `${Number(v).toFixed(2)}″` : "—";
+  }
+  function fmtPct(v) {
+    return Number.isFinite(Number(v)) ? `${(Number(v) * 100).toFixed(1)}%` : "—";
+  }
+  function fmtMs(v) {
+    return Number.isFinite(Number(v)) ? `${Number(v).toFixed(1)} ms` : "—";
+  }
+
+  function renderComparePayload(data) {
+    lastComparePayload = data;
+    const methods = data.methods || {};
+    const keys = ["classical", "tetra3", "cnn"];
+
+    // 1. Update shared borderless starfield image
+    if (cmpCleanImg && data.clean_url) {
+      cmpCleanImg.hidden = false;
+      cmpCleanImg.src = `${data.clean_url}?t=${Date.now()}`;
+      if (cmpPlaceholder) cmpPlaceholder.classList.add("hidden");
+    }
+    if (cmpFrameMeta) {
+      const cam = data.camera || {};
+      const srcTxt = data.source_image ? data.source_image : `Mô phỏng Seed ${data.seed}${data.glare && data.glare !== "none" ? ` · Lóa ${data.glare}` : ""}`;
+      cmpFrameMeta.textContent = `${srcTxt} · ${cam.width || "--"}×${cam.height || "--"} px · FOV ${(cam.fov_deg?.[0] || 0).toFixed(1)}°×${(cam.fov_deg?.[1] || 0).toFixed(1)}°`;
+    }
+    if (cmpGtChip) {
+      cmpGtChip.textContent = data.have_gt ? `Có nhãn chuẩn (${data.n_gt_stars || 0} sao)` : "Ảnh thực không có nhãn chuẩn";
+    }
+
+    // Determine best solved method by lowest attitude error (or solved vs lost)
+    const solvedKeys = keys.filter((k) => methods[k] && methods[k].status === "SOLVED");
+    let bestKey = null;
+    if (solvedKeys.length === 1) {
+      bestKey = solvedKeys[0];
+    } else if (solvedKeys.length > 1) {
+      solvedKeys.sort((a, b) => {
+        const ea = Number.isFinite(Number(methods[a].attitude_error_arcsec)) ? Number(methods[a].attitude_error_arcsec) : Infinity;
+        const eb = Number.isFinite(Number(methods[b].attitude_error_arcsec)) ? Number(methods[b].attitude_error_arcsec) : Infinity;
+        return ea - eb;
+      });
+      bestKey = solvedKeys[0];
+    }
+
+    // 2. Update 3 Method Summary Cards
+    keys.forEach((k) => {
+      const m = methods[k] || {};
+      const card = document.getElementById(`cmp-card-${k}`);
+      const stEl = document.getElementById(`cmp-st-${k}`);
+      const mainEl = document.getElementById(`cmp-dth-${k}`);
+      const subEl = document.getElementById(`cmp-sub-${k}`);
+      const isSolved = m.status === "SOLVED";
+      if (card) {
+        card.classList.toggle("is-winner", k === bestKey && isSolved);
+        card.classList.toggle("is-lost", !isSolved);
+      }
+      if (stEl) {
+        stEl.textContent = m.status || "—";
+        stEl.className = `kpi-badge status-pill ${isSolved ? "SOLVED" : "LOST"}`;
+      }
+      if (mainEl) {
+        if (!isSolved) {
+          mainEl.textContent = "Từ chối (LOST)";
+        } else if (Number.isFinite(Number(m.attitude_error_arcsec))) {
+          mainEl.textContent = `Δθ ${Number(m.attitude_error_arcsec).toFixed(2)}″`;
+        } else {
+          mainEl.textContent = `${m.n_valid_pairs || 0} sao khớp`;
+        }
+      }
+      if (subEl) {
+        const tTot = m.timing_ms ? m.timing_ms.total_pipeline_ms : null;
+        const fpTxt = m.centroid_n_false_pos != null ? ` · FP ${m.centroid_n_false_pos}` : "";
+        subEl.textContent = `Hợp lệ: ${m.n_valid_pairs ?? 0}/${m.n_detected ?? 0}${fpTxt} · ${fmtMs(tTot)}`;
+      }
+    });
+
+    // 3. Verdict Summary Banner
+    if (cmpVerdictBanner) {
+      const mCog = methods.classical || {};
+      const mT3 = methods.tetra3 || {};
+      const mCnn = methods.cnn || {};
+      if (mCnn.status === "SOLVED" && mCog.status !== "SOLVED" && mT3.status !== "SOLVED") {
+        cmpVerdictBanner.className = "cmp-verdict-banner is-highlight";
+        cmpVerdictBanner.innerHTML =
+          `<strong>CNN-Hybrid vượt trội trên nền phức tạp:</strong> chỉ riêng <strong>CNN-Hybrid</strong> khóa tư thế thành công ` +
+          `(${mCnn.n_valid_pairs}/${mCnn.n_detected} cặp hợp lệ${Number.isFinite(Number(mCnn.attitude_error_arcsec)) ? `, Δθ = ${Number(mCnn.attitude_error_arcsec).toFixed(2)}″` : ""}), ` +
+          `trong khi cả <strong>CoG</strong> và <strong>Ngưỡng kiểu tetra3</strong> bị nhiễu tiền cảnh và chủ động trả <code>LOST</code>.`;
+      } else if (mCnn.status === "SOLVED" && mT3.status !== "SOLVED") {
+        cmpVerdictBanner.className = "cmp-verdict-banner is-highlight";
+        const cnnFp = mCnn.centroid_n_false_pos != null ? `, ${mCnn.centroid_n_false_pos} FP` : "";
+        const t3Fp = mT3.centroid_n_false_pos != null ? ` (${mT3.centroid_n_false_pos} tâm nhiễu FP)` : "";
+        const cogNote = mCog.status === "SOLVED"
+          ? `CoG cũng khóa được (${fmtArc(mCog.attitude_error_arcsec)}${mCog.centroid_n_false_pos != null ? `, ${mCog.centroid_n_false_pos} FP` : ""})`
+          : "CoG trả LOST";
+        cmpVerdictBanner.innerHTML =
+          `<strong>Vượt ngưỡng truyền thống kiểu tetra3:</strong> <strong>Ngưỡng kiểu tetra3</strong> thất bại <code>LOST</code>${t3Fp}, ` +
+          `trong khi <strong>CNN-Hybrid</strong> khóa sạch (${mCnn.n_valid_pairs}/${mCnn.n_detected} hợp lệ, ${fmtArc(mCnn.attitude_error_arcsec)}${cnnFp}); ${cogNote}.`;
+      } else if (solvedKeys.length === 3) {
+        cmpVerdictBanner.className = "cmp-verdict-banner is-highlight";
+        cmpVerdictBanner.innerHTML =
+          `<strong>Cả 3 phương pháp đều khóa đúng trên cùng khung ảnh:</strong> ` +
+          `CoG (${fmtArc(mCog.attitude_error_arcsec)}, ${fmtMs(mCog.timing_ms?.total_pipeline_ms)}), ` +
+          `tetra3 (${fmtArc(mT3.attitude_error_arcsec)}, ${fmtMs(mT3.timing_ms?.total_pipeline_ms)}), ` +
+          `CNN-Hybrid (${fmtArc(mCnn.attitude_error_arcsec)}, ${fmtMs(mCnn.timing_ms?.total_pipeline_ms)}).`;
+      } else {
+        cmpVerdictBanner.className = "cmp-verdict-banner";
+        cmpVerdictBanner.innerHTML =
+          `Kết quả trên cùng khung ảnh: CoG = <strong>${mCog.status || "—"}</strong>, ` +
+          `tetra3 = <strong>${mT3.status || "—"}</strong>, CNN-Hybrid = <strong>${mCnn.status || "—"}</strong>.`;
+      }
+    }
+
+    // 4. Populate Live Comparison Table
+    if (cmpLiveBody) {
+      const rows = [
+        {
+          label: "Trạng thái khóa tư thế",
+          vals: keys.map((k) => {
+            const m = methods[k] || {};
+            return m.status === "SOLVED" ? "SOLVED" : `LOST (${m.reject_code || "REJECTED"})`;
+          }),
+          cls: keys.map((k) => ((methods[k] || {}).status === "SOLVED" ? "cmp-cell-best" : "cmp-cell-lost"))
+        },
+        {
+          label: "Sai số tư thế 3 trục (Δθ)",
+          vals: keys.map((k) => fmtArc((methods[k] || {}).attitude_error_arcsec)),
+          num: keys.map((k) => Number((methods[k] || {}).attitude_error_arcsec)),
+          prefer: "min"
+        },
+        {
+          label: "Cặp sao hợp lệ / Tổng tâm phát hiện",
+          vals: keys.map((k) => `${(methods[k] || {}).n_valid_pairs ?? 0} / ${(methods[k] || {}).n_detected ?? 0}`),
+          num: keys.map((k) => Number((methods[k] || {}).n_valid_pairs ?? -1)),
+          prefer: "max"
+        },
+        {
+          label: "Ngoại lai đã loại (Req 1)",
+          vals: keys.map((k) => `${(methods[k] || {}).n_rejected_outliers ?? 0}`)
+        },
+        {
+          label: "Phần dư khớp sao (RMS / Max)",
+          vals: keys.map((k) => {
+            const m = methods[k] || {};
+            return Number.isFinite(Number(m.rms_residual_arcsec))
+              ? `${Number(m.rms_residual_arcsec).toFixed(2)}″ / ${Number(m.max_residual_arcsec).toFixed(2)}″`
+              : "—";
+          }),
+          num: keys.map((k) => Number((methods[k] || {}).rms_residual_arcsec)),
+          prefer: "min"
+        },
+        {
+          label: "Precision / Recall tâm sao (≤ 5 px)",
+          vals: keys.map((k) => {
+            const m = methods[k] || {};
+            return m.centroid_precision != null ? `${fmtPct(m.centroid_precision)} / ${fmtPct(m.centroid_recall)}` : "—";
+          }),
+          num: keys.map((k) => Number((methods[k] || {}).centroid_precision)),
+          prefer: "max"
+        },
+        {
+          label: "Tâm sáng nhiễu (FP, ≤ 5 px)",
+          vals: keys.map((k) => ((methods[k] || {}).centroid_n_false_pos != null ? String(methods[k].centroid_n_false_pos) : "—")),
+          num: keys.map((k) => ((methods[k] || {}).centroid_n_false_pos != null ? Number(methods[k].centroid_n_false_pos) : NaN)),
+          prefer: "min"
+        },
+        {
+          label: "Độ lệch tâm sao RMSE (5 px)",
+          vals: keys.map((k) => (Number.isFinite(Number((methods[k] || {}).centroid_rms_5px)) ? `${Number(methods[k].centroid_rms_5px).toFixed(3)} px` : "—")),
+          num: keys.map((k) => Number((methods[k] || {}).centroid_rms_5px)),
+          prefer: "min"
+        },
+        {
+          label: "Thời gian tách tâm / Tổng luồng",
+          vals: keys.map((k) => {
+            const t = (methods[k] || {}).timing_ms || {};
+            return `${fmtMs(t.centroiding_ms)} / ${fmtMs(t.total_pipeline_ms)}`;
+          }),
+          num: keys.map((k) => Number(((methods[k] || {}).timing_ms || {}).total_pipeline_ms)),
+          prefer: "min"
+        }
+      ];
+
+      cmpLiveBody.innerHTML = rows
+        .map((r) => {
+          let bestIdx = -1;
+          if (r.prefer && Array.isArray(r.num)) {
+            const finiteNums = r.num.map((v, i) => ({ v, i })).filter((x) => Number.isFinite(x.v));
+            if (finiteNums.length >= 2) {
+              finiteNums.sort((a, b) => (r.prefer === "min" ? a.v - b.v : b.v - a.v));
+              bestIdx = finiteNums[0].i;
+            }
+          }
+          const cells = r.vals
+            .map((val, i) => {
+              const c = r.cls ? r.cls[i] : i === bestIdx ? "cmp-cell-best" : "";
+              return `<td class="${c}">${val}</td>`;
+            })
+            .join("");
+          return `<tr><td>${r.label}</td>${cells}</tr>`;
+        })
+        .join("");
+    }
+
+    drawCompareOverlay();
+  }
+
+  async function runCompare(body, labelText) {
+    compareLoading = true;
+    const msg = labelText || "Đang chạy đồng thời CoG, Ngưỡng kiểu tetra3 và CNN-Hybrid trên cùng khung ảnh...";
+    setBusy(true, msg);
+    if (cmpVerdictBanner) {
+      cmpVerdictBanner.className = "cmp-verdict-banner";
+      cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${msg}`;
+    }
+    try {
+      const data = await fetchJson(
+        "/api/compare",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        },
+        180000
+      );
+      renderComparePayload(data);
+      if (statusEl) {
+        statusEl.className = "status-banner ok";
+        statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên cùng khung ảnh (${data.source_image || `Seed ${data.seed}`}).`;
+      }
+    } catch (err) {
+      if (cmpVerdictBanner) {
+        cmpVerdictBanner.className = "cmp-verdict-banner";
+        cmpVerdictBanner.innerHTML = `<strong>Không thể chạy so sánh:</strong> ${err.message || err}`;
+      }
+      if (statusEl) {
+        statusEl.className = "status-banner err";
+        statusEl.innerHTML = `<strong>Lỗi so sánh:</strong> ${err.message || err}`;
+      }
+    } finally {
+      compareLoading = false;
+      setBusy(false);
+    }
+  }
+
+  function runCompareScenario(kind) {
+    if (kind === "mount") {
+      runCompare(
+        {
+          image: "uploads/mount_st_helens_1.png",
+          focal_mm: 4.163043225470905,
+          pixel_um: 4.1,
+          k1: 0.08897545958095043,
+          k2: -0.09770961126729949,
+          catalog: "bsc5",
+          solver: "svd"
+        },
+        "Đang đối chiếu CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN-Hybrid trên ảnh thực Núi St. Helens..."
+      );
+    } else if (kind === "tetra3") {
+      runCompare(
+        {
+          image: "tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff",
+          focal_mm: 35.291113627236776,
+          pixel_um: 6.9,
+          k1: 0.10021753616812087,
+          catalog: "bsc5",
+          solver: "svd"
+        },
+        "Đang đối chiếu CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN-Hybrid trên ảnh trời thực ESA Alt60..."
+      );
+    } else if (kind === "glare") {
+      runCompare(
+        { mode: "fast", seed: 11, glare: "sun_strong", omega: 0.06, omega_axis: "y", exposure: 0.15, catalog: "bsc5", solver: "svd" },
+        "Đang đối chiếu 3 thuật toán trong điều kiện ngược nắng lóa mạnh..."
+      );
+    } else if (kind === "seed42") {
+      runCompare(
+        { mode: "fast", seed: 42, glare: "none", omega: 0.06, omega_axis: "y", exposure: 0.15, catalog: "bsc5", solver: "svd" },
+        "Đang đối chiếu 3 thuật toán trên bầu trời chuẩn 12-bit (Seed 42)..."
+      );
+    } else {
+      const body = gatherFormData();
+      delete body.centroid_backend;
+      runCompare(body, "Đang đối chiếu 3 thuật toán theo cấu hình hiện tại...");
+    }
+  }
+
+  if (btnCmpMount) btnCmpMount.addEventListener("click", () => runCompareScenario("mount"));
+  if (btnCmpTetra3) btnCmpTetra3.addEventListener("click", () => runCompareScenario("tetra3"));
+  if (btnCmpGlare) btnCmpGlare.addEventListener("click", () => runCompareScenario("glare"));
+  if (btnCmpSeed42) btnCmpSeed42.addEventListener("click", () => runCompareScenario("seed42"));
+  if (btnCmpCurrent) btnCmpCurrent.addEventListener("click", () => runCompareScenario("current"));
+
+  async function loadBenchmarkSummary() {
+    if (benchmarkLoaded) return;
+    try {
+      const res = await fetch("/api/benchmark-summary");
+      const data = await res.json();
+      if (!data || !data.available) {
+        if (cmpBenchDevice) cmpBenchDevice.textContent = "Đang cập nhật số liệu benchmark...";
+        return;
+      }
+      benchmarkLoaded = true;
+      if (cmpBenchDevice) {
+        cmpBenchDevice.textContent = `Thiết bị đo: ${data.device || "PC"} · Phạm vi PC/Laptop`;
+      }
+      if (cmpBenchScope) {
+        cmpBenchScope.textContent =
+          "Số liệu đo tự động từ benchmark_3way_comparison.json trên PC/laptop (chưa kiểm định phần cứng bay vệ tinh), đối chiếu đầy đủ cả CNN gốc trước nâng cấp (Ablation).";
+      }
+
+      const beOrder = ["classical", "tetra3", "cnn_raw", "cnn"];
+      const beNames = {
+        classical: "CoG (Nhóm)",
+        tetra3: "Ngưỡng kiểu tetra3",
+        cnn_raw: "CNN gốc (Trước)",
+        cnn: "CNN-Hybrid (Sau nâng cấp)"
+      };
+      const suites = [
+        { title: "500 ảnh sạch (hd1024)", obj: data.sim_hd1024?.summary },
+        { title: "40 ảnh lóa (hd1024_glare)", obj: data.sim_glare?.summary },
+        { title: "20 ảnh Rìa Trái Đất + Mây nền", obj: data.sim_earth_clutter?.summary },
+        { title: "Trời thực hiệu chuẩn (5 ảnh BSC5)", obj: data.real_calibrated?.calibrated_bsc5_summary }
+      ];
+
+      if (cmpBenchBody) {
+        const htmlRows = [];
+        suites.forEach((su) => {
+          if (!su.obj) return;
+          beOrder.forEach((be, idx) => {
+            const s = su.obj[be];
+            if (!s) return;
+            const rowCls = be === "cnn" ? "cmp-row-hybrid" : "";
+            const dth = s.attitude_error_arcsec?.median;
+            const precM = s.centroid_precision_micro;
+            const recM = s.centroid_recall_micro;
+            const fp = s.centroid_false_pos_5px_total;
+            const rmse5 = s.centroid_rmse_5px;
+            const lat = s.total_pipeline_ms?.mean;
+            const solvedTxt = s.n_gt_frames > 0 ? `${s.n_solved_gt}/${s.n_gt_frames} (${s.n_correct} đúng)` : `${s.n_solved}/${s.n_frames}`;
+            htmlRows.push(
+              `<tr class="${rowCls}">` +
+                (idx === 0 ? `<td rowspan="${beOrder.length}"><strong>${su.title}</strong></td>` : "") +
+                `<td>${be === "cnn" ? `<strong>${beNames[be]}</strong>` : beNames[be]}</td>` +
+                `<td>${solvedTxt}</td>` +
+                `<td class="${(s.n_false_lock || 0) === 0 ? "cmp-cell-best" : "cmp-cell-lost"}">${s.n_false_lock ?? 0}</td>` +
+                `<td>${fmtArc(dth)}</td>` +
+                `<td>${precM != null ? `${(precM * 100).toFixed(1)}% (${fp ?? 0} FP)` : "—"}</td>` +
+                `<td>${recM != null ? `${(recM * 100).toFixed(1)}%` : "—"}</td>` +
+                `<td>${Number.isFinite(Number(rmse5)) ? `${Number(rmse5).toFixed(3)} px` : "—"}</td>` +
+                `<td>${fmtMs(lat)}</td>` +
+                `</tr>`
+            );
+          });
+        });
+        if (htmlRows.length) cmpBenchBody.innerHTML = htmlRows.join("");
+      }
+
+      if (cmpRealBody && data.real_calibrated?.calibrated_bsc5_frames) {
+        const byBe = data.real_calibrated.calibrated_bsc5_frames;
+        const baseFrames = byBe.classical || [];
+        const fmtRealCell = (rec) => {
+          if (!rec) return "<td>—</td>";
+          if (rec.status === "SOLVED") {
+            const errStr = Number.isFinite(Number(rec.attitude_error_arcsec)) ? `Δθ ${Number(rec.attitude_error_arcsec).toFixed(1)}″` : "SOLVED";
+            return `<td class="cmp-cell-best">SOLVED · ${errStr} (${rec.n_valid_pairs}/${rec.n_detected})</td>`;
+          }
+          const fpStr = rec.centroid_n_false_pos != null ? `, ${rec.centroid_n_false_pos} FP` : "";
+          return `<td class="cmp-cell-lost">LOST (${rec.n_detected} tâm${fpStr})</td>`;
+        };
+        const rRows = baseFrames.map((bf, i) => {
+          const fname = bf.frame_id || `Frame ${i + 1}`;
+          return (
+            `<tr><td><strong>${fname}</strong></td>` +
+            beOrder.map((be) => fmtRealCell((byBe[be] || [])[i])).join("") +
+            `</tr>`
+          );
+        });
+        if (data.real_calibrated.alt40_hipparcos_v7) {
+          const a40 = data.real_calibrated.alt40_hipparcos_v7;
+          rRows.push(
+            `<tr><td><strong>Alt40 (Hipparcos V ≤ 7.0)</strong></td>` +
+              beOrder.map((be) => fmtRealCell(a40[be])).join("") +
+              `</tr>`
+          );
+        }
+        if (data.real_calibrated.ntnu_0006_detected_counts) {
+          const nc = data.real_calibrated.ntnu_0006_detected_counts;
+          rRows.push(
+            `<tr><td><strong>NTNU 0006.png (Địa hình đô thị)</strong></td>` +
+              beOrder.map((be) => `<td>${nc[be] != null ? `${nc[be]} tâm phát hiện` : "—"}</td>`).join("") +
+              `</tr>`
+          );
+        }
+        cmpRealBody.innerHTML = rRows.join("");
+      }
+    } catch (_) {
+      // Ignore silent preload failures
+    }
   }
 
   // Initialize full-screen 3D Earth-orbit & real 5,023-star J2000 sky immediately

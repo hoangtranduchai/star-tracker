@@ -1,4 +1,5 @@
 """Flask web interface for the star tracker simulator and lost-in-space attitude solver."""
+from json import loads as json_loads
 from math import isfinite
 import os
 from pathlib import Path
@@ -22,7 +23,7 @@ ENGINE = DemoEngine(BASE)
 LOCK = Lock()
 _SKY_CATALOG_CACHE = {}
 _SKY_CACHE_LOCK = Lock()
-_VALID_BACKENDS = ('classical', 'cnn', 'cnn_zhao2024', 'zhao', 'mobileunet')
+_VALID_BACKENDS = ('classical', 'tetra3', 'tetra3_threshold', 'cnn', 'cnn_hybrid', 'cnn_raw', 'cnn_zhao2024', 'zhao', 'mobileunet')
 _UPLOAD_EXTS = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.webp')
 _FAVICON_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
@@ -52,7 +53,7 @@ def _opt_int(getter: object, key: object) -> object:
     return None if _is_blank(raw) else int(float(raw))
 
 def _optics_from(getter: object) -> object:
-    return dict(focal_mm=_opt_float(getter, 'focal_mm'), pixel_um=_opt_float(getter, 'pixel_um'), image_width=_opt_int(getter, 'image_width'), image_height=_opt_int(getter, 'image_height'), angular_tol_arcsec=_opt_float(getter, 'angular_tol_arcsec'))
+    return dict(focal_mm=_opt_float(getter, 'focal_mm'), pixel_um=_opt_float(getter, 'pixel_um'), image_width=_opt_int(getter, 'image_width'), image_height=_opt_int(getter, 'image_height'), angular_tol_arcsec=_opt_float(getter, 'angular_tol_arcsec'), k1=_opt_float(getter, 'k1'), k2=_opt_float(getter, 'k2'))
 
 def _body_radec(body: object) -> object:
     pasted: object = body.get('radec_paste')
@@ -180,12 +181,84 @@ def api_run() -> object:
         if req.mode not in ('fast', 'full'):
             return (jsonify(dict(error='mode must be fast or full')), 400)
         if req.centroid_backend not in _VALID_BACKENDS:
-            return (jsonify(dict(error='centroid_backend must be classical or cnn')), 400)
+            return (jsonify(dict(error='centroid_backend must be classical, tetra3, or cnn')), 400)
         return jsonify(_run_locked(req))
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
     except Exception as err:
         return (jsonify(dict(error=str(err))), 400)
+
+@app.post('/api/compare')
+def api_compare() -> object:
+    body: object = request.get_json(silent=True) or {}
+    try:
+        rel_img: object = body.get('image')
+        resolved_img: object = ENGINE.resolve_dataset_image(str(rel_img)) if rel_img else None
+        ra_val, dec_val = _body_radec(body)
+        hr_val: object = int(body['point_hr']) if body.get('point_hr') else None
+        raw_backends: object = body.get('backends')
+        if isinstance(raw_backends, list) and raw_backends:
+            backends_tuple = tuple(str(b).strip().lower() for b in raw_backends if str(b).strip().lower() in _VALID_BACKENDS)
+            if not backends_tuple:
+                backends_tuple = ('classical', 'tetra3', 'cnn')
+        else:
+            backends_tuple = ('classical', 'tetra3', 'cnn')
+        req: object = RunRequest(
+            mode=str(body.get('mode') or 'fast'),
+            seed=int(_body_float(body, 'seed', 42.0)),
+            catalog=str(body.get('catalog') or 'bsc5'),
+            max_mag=float(_body_float(body, 'max_mag', 6.0)),
+            omega=float(_body_float(body, 'omega', 0.06)),
+            omega_axis=str(body.get('omega_axis') or 'y'),
+            exposure=float(_body_float(body, 'exposure', 0.15)),
+            glare=str(body.get('glare') or 'none'),
+            sky_clutter=str(body.get('sky_clutter') or 'none'),
+            false_stars=int(_body_float(body, 'false_stars', 0.0)),
+            solver=str(body.get('solver') or 'svd'),
+            point_hr=hr_val,
+            ra_deg=ra_val,
+            dec_deg=dec_val,
+            image=resolved_img,
+            out_dir=BASE.joinpath('data', 'outputs'),
+            lookup=True,
+            save_png=False,
+            **_optics_from(body.get),
+        )
+        if req.mode not in ('fast', 'full'):
+            return (jsonify(dict(error='mode must be fast or full')), 400)
+        if not LOCK.acquire(timeout=0.15):
+            raise EngineBusy('Hệ thống đang xử lý khung ảnh trước đó. Vui lòng đợi giây lát rồi thử lại.')
+        try:
+            comp_payload = ENGINE.compare(req, backends=backends_tuple)
+        finally:
+            LOCK.release()
+        return jsonify(comp_payload)
+    except EngineBusy as busy_err:
+        return (jsonify(dict(error=str(busy_err), busy=True)), 409)
+    except Exception as err:
+        return (jsonify(dict(error=str(err))), 400)
+
+@app.get('/api/benchmark-summary')
+def api_benchmark_summary() -> object:
+    bench_p: Path = BASE.joinpath('data', 'outputs', 'benchmark_3way_comparison.json')
+    rej_p: Path = BASE.joinpath('data', 'outputs', 'benchmark_rejection_stress.json')
+    out: dict = dict(available=False, evaluation_scope='PC/laptop software benchmark (not flight-qualified spacecraft hardware)')
+    if bench_p.is_file():
+        try:
+            data = json_loads(bench_p.read_text(encoding='utf-8'))
+            out['available'] = True
+            for k in ('generated_at', 'device', 'backends', 'sim_hd1024', 'sim_glare', 'sim_earth_clutter', 'real_calibrated'):
+                if k in data:
+                    out[k] = data[k]
+        except Exception as err:
+            out['error'] = str(err)
+    if rej_p.is_file():
+        try:
+            rej_data = json_loads(rej_p.read_text(encoding='utf-8'))
+            out['rejection_stress'] = rej_data.get('summary') or rej_data
+        except Exception:
+            pass
+    return jsonify(out)
 
 @app.post('/api/run-upload')
 def api_run_upload() -> object:

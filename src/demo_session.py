@@ -22,7 +22,7 @@ THETA_MIN_DEG = 0.02
 THETA_MAX_LOCKED_DEG = 30.5
 MAX_SIM_PIXELS = 20000000
 _RAD_DEFAULTS = dict(e_per_s_v0=3300000.0, qe=1.0, read_noise_e=5.0, dark_e_per_s=10.0, gain_dn_per_e=1.0, full_well_e=12000.0, bit_depth=12, bias_dn=64.0, hot_pixel_frac=1e-05, cosmic_rate_per_frame=2.0)
-_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None)
+_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None, k1=None, k2=None)
 
 def load_specs(root: object=None) -> object:
     cfg_file: object = Path(root or ROOT).joinpath('config', 'camera_specs.json')
@@ -139,10 +139,10 @@ def camera_for_image(img: object, cam_full: object) -> object:
         hd_cam: object = CameraModel(width=1024, height=683, pixel_um=cam_full.pixel_um * (cam_full.width / 1024.0), focal_mm=cam_full.focal_mm)
         return (hd_cam, 6, 'fast')
     if (w_px, h_px) == (1024, 1024):
-        mnt_cam: object = CameraModel(width=1024, height=1024, pixel_um=4.1, focal_mm=4.2)
+        mnt_cam: object = CameraModel(width=1024, height=1024, pixel_um=4.1, focal_mm=4.163043225470905, k1=0.08897545958095043, k2=-0.09770961126729949)
         return (mnt_cam, 1, 'custom')
     if (w_px, h_px) == (1024, 768):
-        tetra_cam: object = CameraModel(width=1024, height=768, pixel_um=6.9, focal_mm=35.2911)
+        tetra_cam: object = CameraModel(width=1024, height=768, pixel_um=6.9, focal_mm=35.291113627236776, k1=0.10021753616812087)
         return (tetra_cam, 1, 'custom')
     raise ValueError(f'Ảnh {w_px}×{h_px} không khớp kích thước mẫu {cam_full.width}×{cam_full.height} (FULL) hay {fast_cam.width}×{fast_cam.height} (FAST). Vui lòng nhập tiêu cự (mm) và kích thước pixel (µm) của máy ảnh.')
 
@@ -157,7 +157,7 @@ def theta_max_deg_for_fov(diag_deg: object) -> object:
     rounded_half: object = math_ceil((d_val + 0.5) * 2.0 - 1e-09) * 0.5
     return float(min(180.0, rounded_half))
 
-def _camera_from_numbers(width: object, height: object, pixel_um: object, focal_mm: object) -> object:
+def _camera_from_numbers(width: object, height: object, pixel_um: object, focal_mm: object, k1: object=None, k2: object=None) -> object:
     w_i, h_i = (int(width), int(height))
     px_f, fl_f = (float(pixel_um), float(focal_mm))
     if w_i < 16 or h_i < 16:
@@ -166,7 +166,7 @@ def _camera_from_numbers(width: object, height: object, pixel_um: object, focal_
         raise ValueError('Tiêu cự (mm) và cạnh pixel (µm) phải là số dương.')
     if fl_f > 5000.0 or px_f > 200.0:
         raise ValueError('Tiêu cự hoặc cạnh pixel nằm ngoài khoảng dùng để giải.')
-    return CameraModel(width=w_i, height=h_i, pixel_um=px_f, focal_mm=fl_f)
+    return CameraModel(width=w_i, height=h_i, pixel_um=px_f, focal_mm=fl_f, k1=0.0 if k1 is None else float(k1), k2=0.0 if k2 is None else float(k2))
 
 def _locked_camera_for_size(width: object, height: object, cam_full: object) -> object:
     if (width, height) == (cam_full.width, cam_full.height):
@@ -191,7 +191,7 @@ def resolve_run_camera(req: object, image: object, cam_full: object) -> object:
         if fl is None or px is None:
             fast_c: object = cam_full.downscaled(4)
             raise ValueError(f'Ảnh {w_px}×{h_px} không khớp kích thước mẫu {cam_full.width}×{cam_full.height} hoặc {fast_c.width}×{fast_c.height}. Vui lòng nhập tiêu cự (mm) và kích thước pixel (µm) của máy ảnh.')
-        return (_camera_from_numbers(w_px, h_px, px, fl), 1, 'custom', False)
+        return (_camera_from_numbers(w_px, h_px, px, fl, k1=getattr(req, 'k1', None), k2=getattr(req, 'k2', None)), 1, 'custom', False)
     sc: object = int(req.scale) if req.scale is not None else 4 if req.mode == 'fast' else 1
     if sc < 1:
         raise ValueError('scale phải ≥ 1')
@@ -363,7 +363,7 @@ def _extract_match_verification(result: object, metrics: object, cfg: object) ->
     return (status_val, reject_val, match_stats)
 
 class DemoEngine:
-    """Stateful runner caching star catalogs and K-vector indices across runs."""
+    """Stateful runner caching star catalogs, K-vector indices, and MobileUNet weights across runs."""
 
     def __init__(self, root: object=None) -> object:
         self.root = Path(root) if root else ROOT
@@ -371,7 +371,61 @@ class DemoEngine:
         self.cam_full = demo_camera()
         self.radiometry = radiometry_from_specs(self.specs)
         self._stack = {}
+        self._cnn_cache = None
         self.last_angle_build = False
+
+    def _normalize_backend(self, raw_be: object) -> str:
+        be_key: str = str(raw_be or 'classical').lower().strip()
+        if be_key in ('cnn', 'cnn_hybrid', 'cnn_zhao2024', 'zhao', 'mobileunet'):
+            return 'cnn'
+        if be_key in ('cnn_raw', 'cnn_trilateration'):
+            return 'cnn_raw'
+        if be_key in ('tetra3', 'tetra3_threshold'):
+            return 'tetra3'
+        return 'classical'
+
+    def _build_pipeline(self, camera: object, catalog: object, kvector: object, cfg: object) -> object:
+        pipe: object = StarTrackerPipeline(camera, catalog, kvector, cfg)
+        if cfg.centroid_backend in ('cnn', 'cnn_raw'):
+            det = pipe.centroid_detector
+            if self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
+                det._model = self._cnn_cache._model
+                det._torch = self._cnn_cache._torch
+                det._normalize = self._cnn_cache._normalize
+                det._device = self._cnn_cache._device
+                det.device_name = self._cnn_cache.device_name
+            else:
+                self._cnn_cache = det
+        return pipe
+
+    def _manifest_truth_for(self, image_path: object) -> tuple:
+        """Look up calibrated ground-truth metadata for known real-sky demo frames."""
+        if image_path is None:
+            return (None, None)
+        manifest_p: object = self.root.joinpath('data', 'real_calibrated', 'manifest_real_calibrated.json')
+        if not manifest_p.is_file():
+            return (None, None)
+        try:
+            m_data: object = json_loads(manifest_p.read_text(encoding='utf-8'))
+            fname: str = Path(image_path).name.lower()
+            for entry in (m_data.get('frames') or []):
+                if Path(str(entry.get('path', ''))).name.lower() == fname and entry.get('q_gt') is not None:
+                    q_gt = asarray(entry['q_gt'], dtype=float64)
+                    stars = entry.get('stars_in_fov') or []
+                    uv_pts = asarray([[s['u_px'], s['v_px']] for s in stars], dtype=float64) if stars else zeros((0, 2), dtype=float64)
+                    mags = asarray([float(s.get('mag', 0.0)) for s in stars], dtype=float64) if stars else zeros(0, dtype=float64)
+                    truth = RenderTruth(
+                        q_gt=q_gt,
+                        uv_mid=uv_pts,
+                        cat_idx=zeros(len(stars), dtype=int),
+                        streak_px=zeros(len(stars), dtype=float64),
+                        omega_deg_s=zeros(3, dtype=float64),
+                        vis_mags=mags,
+                    )
+                    return (truth, str(entry.get('gt_source') or 'manifest_real_calibrated'))
+        except Exception:
+            return (None, None)
+        return (None, None)
 
     def stack(self, kind: object, max_mag: object, theta_max_deg: object=THETA_MAX_LOCKED_DEG) -> object:
         cache_key: object = (kind, float(max_mag), float(theta_max_deg))
@@ -474,12 +528,15 @@ class DemoEngine:
         if tol_arc is not None:
             cfg.angular_tol_rad = float(tol_arc) / ARCSEC_PER_RAD
             cfg.attitude_error_limit_arcsec = float(tol_arc)
-            cfg.tol_frac = 0.008
+            cfg.tol_frac = 0.0 if (camera.has_distortion and float(camera.fov_deg[2]) > 40.0) else 0.008
+        if float(camera.fov_deg[2]) > 40.0:
+            cfg.cutoff = min(int(cfg.cutoff), 400)
         cfg.solver = req.solver
-        be_key: object = str(req.centroid_backend or 'classical').lower().strip()
-        cfg.centroid_backend = 'cnn' if be_key in ('cnn', 'cnn_zhao2024', 'zhao', 'mobileunet') else 'classical'
-        pipe: object = StarTrackerPipeline(camera, catalog, kvector, cfg)
+        cfg.centroid_backend = self._normalize_backend(req.centroid_backend)
+        pipe: object = self._build_pipeline(camera, catalog, kvector, cfg)
         result: object = pipe.process_frame(image)
+        if cfg.centroid_backend in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
+            self._cnn_cache = pipe.centroid_detector
         metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
         status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
         fov_rows: object = star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
@@ -521,3 +578,127 @@ class DemoEngine:
             raw_meta: object = dict(q_gt=q_gt.tolist(), omega_deg_s=asarray(omega).tolist(), t_exp_s=req.exposure, stars_in_fov=fov_rows)
             out_dir.joinpath('demo_raw.json').write_text(json_dumps(raw_meta, indent=2), encoding='utf-8')
         return RunOutcome(success=bool(result.success), payload=payload, image=image, result=result, truth=truth, metrics=metrics, catalog=catalog, camera=camera, png_path=png_path if req.save_png else None, have_gt=have_gt, error=result.error)
+
+    def compare(self, req: object, backends: tuple[str, ...]=('classical', 'tetra3', 'cnn')) -> dict:
+        """Run multiple centroid backends on the exact same pixel frame for live head-to-head comparison."""
+        loaded_img: object = load_frame(Path(req.image)) if req.image is not None else None
+        camera, scale, mode, locked = resolve_run_camera(req, loaded_img, self.cam_full)
+        t_max: object = theta_max_deg_for_fov(float(camera.fov_deg[2]))
+        catalog, synthetic, kvector = self.stack(req.catalog, req.max_mag, t_max)
+        image, truth, q_gt, _, have_gt = self._prepare_frame(req, loaded_img, camera, catalog)
+        gt_source: str = 'simulator_ground_truth' if (req.image is None) else ('sidecar_json' if have_gt else 'none')
+        if not have_gt and req.image is not None:
+            m_truth, m_src = self._manifest_truth_for(req.image)
+            if m_truth is not None:
+                truth = m_truth
+                q_gt = m_truth.q_gt
+                have_gt = True
+                gt_source = str(m_src)
+
+        out_dir: object = Path(req.out_dir) if req.out_dir else self.root.joinpath('data', 'outputs')
+        out_dir.mkdir(parents=True, exist_ok=True)
+        clean_png: object = out_dir / 'demo_compare_clean.png'
+        save_clean_png(image, clean_png)
+        stats: object = image_stats(image)
+        fov: object = camera.fov_deg
+        is_small: object = locked and scale > 1 or (not locked and camera.width * camera.height < 4000000)
+
+        labels = {
+            'classical': 'CoG (Nhóm)',
+            'tetra3': 'Ngưỡng kiểu tetra3',
+            'cnn': 'CNN-Hybrid (MobileUNet + CoG)',
+            'cnn_raw': 'CNN gốc (Trilateration)',
+        }
+        methods_out: dict = {}
+        for raw_be in backends:
+            be_norm = self._normalize_backend(raw_be)
+            cfg: object = load_pipeline_cfg('fast' if is_small else 'full', self.root)
+            tol_arc: object = None if locked else match_tolerance_arcsec(camera, req.angular_tol_arcsec)
+            if tol_arc is not None:
+                cfg.angular_tol_rad = float(tol_arc) / ARCSEC_PER_RAD
+                cfg.attitude_error_limit_arcsec = float(tol_arc)
+                cfg.tol_frac = 0.0 if (camera.has_distortion and float(camera.fov_deg[2]) > 40.0) else 0.008
+            if float(camera.fov_deg[2]) > 40.0:
+                cfg.cutoff = min(int(cfg.cutoff), 400)
+            cfg.solver = req.solver
+            cfg.centroid_backend = be_norm
+            pipe: object = self._build_pipeline(camera, catalog, kvector, cfg)
+            result: object = pipe.process_frame(image)
+            if be_norm in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
+                self._cnn_cache = pipe.centroid_detector
+            metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
+            status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
+            ident_rows: object = []
+            if result.ident is not None and len(result.ident.cat_idx):
+                obs_indices: object = result.ident.obs_idx
+                id_uv: object = result.centroids.uv[obs_indices] if result.centroids is not None and result.centroids.uv is not None else None
+                ident_rows = star_rows_from_indices(catalog, result.ident.cat_idx, uv=id_uv)
+                for row_rec, obs_i in zip(ident_rows, obs_indices):
+                    row_rec['obs_idx'] = int(obs_i)
+            det_uv_list: object = [[round(float(u), 2), round(float(v), 2)] for u, v in asarray(result.centroids.uv, dtype=float64)] if result.centroids is not None and getattr(result.centroids, 'uv', None) is not None and len(result.centroids.uv) else []
+            bore_est = None if metrics.get('boresight_est_ra_deg') is None else dict(
+                ra_deg=metrics['boresight_est_ra_deg'],
+                dec_deg=metrics['boresight_est_dec_deg'],
+                ra_hms=metrics['boresight_est_ra_hms'],
+                dec_dms=metrics['boresight_est_dec_dms'],
+            )
+            det_obj = pipe.centroid_detector
+            methods_out[be_norm] = _jsonable(dict(
+                key=be_norm,
+                label=labels.get(be_norm, be_norm),
+                status=status_val,
+                success=bool(result.success),
+                reject_code=reject_val,
+                verdict=metrics.get('verdict'),
+                e2e_outcome=metrics.get('e2e_outcome'),
+                attitude_error_arcsec=metrics.get('attitude_error_arcsec'),
+                limit_arcsec=float(cfg.attitude_error_limit_arcsec),
+                n_detected=int(metrics.get('n_detected') or 0),
+                n_initial_matched=match_stats.get('n_initial_matched'),
+                n_valid_pairs=int(match_stats.get('n_valid_pairs') or 0),
+                n_rejected_outliers=int(match_stats.get('n_rejected_outliers') or 0),
+                rms_residual_arcsec=match_stats.get('rms_residual_arcsec'),
+                max_residual_arcsec=match_stats.get('max_residual_arcsec'),
+                centroid_precision=metrics.get('centroid_precision'),
+                centroid_recall=metrics.get('centroid_recall'),
+                centroid_f1=metrics.get('centroid_f1'),
+                centroid_n_false_pos=metrics.get('centroid_n_false_pos'),
+                centroid_rms_5px=metrics.get('centroid_rms_5px'),
+                timing_ms=result.timing_ms,
+                boresight_est=bore_est,
+                centroid_detector=getattr(det_obj, 'last_backend', be_norm),
+                centroid_mode=getattr(det_obj, 'last_mode', be_norm),
+                centroid_fallback=bool(getattr(det_obj, 'last_fallback', False)),
+                detected_uv=det_uv_list,
+                identified_stars=ident_rows,
+                error=result.error,
+            ))
+
+        gt_uv_list = [[round(float(u), 2), round(float(v), 2)] for u, v in asarray(truth.uv_mid, dtype=float64)] if have_gt and len(truth.uv_mid) else []
+        return _jsonable(dict(
+            clean_url='/output/demo_compare_clean.png',
+            source='dataset' if req.image is not None else 'simulator',
+            source_image=None if req.image is None else str(Path(req.image).name),
+            seed=None if req.image is not None else req.seed,
+            glare=req.glare,
+            sky_clutter=req.sky_clutter,
+            have_gt=have_gt,
+            gt_source=gt_source,
+            n_gt_stars=len(gt_uv_list),
+            gt_uv=gt_uv_list,
+            catalog_source=catalog.source,
+            synthetic_catalog=synthetic,
+            camera=dict(
+                width=camera.width,
+                height=camera.height,
+                pixel_um=float(camera.pixel_um),
+                focal_mm=float(camera.focal_mm),
+                fov_deg=[float(fov[0]), float(fov[1])],
+                fov_diag_deg=float(fov[2]),
+                ifov_arcsec=float(camera.ifov_arcsec),
+                has_distortion=bool(camera.has_distortion),
+            ),
+            input_stats=stats,
+            order=[self._normalize_backend(b) for b in backends],
+            methods=methods_out,
+        ))

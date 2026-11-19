@@ -330,3 +330,34 @@ def test_api_run_clean_url_borderless_png_and_detected_uv(
         assert int(msh_png.max()) >= 210
 
 
+def test_api_compare_and_benchmark_summary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client = web_app.app.test_client()
+
+    cmp_res = client.post(
+        '/api/compare',
+        json={'seed': 42, 'mode': 'fast', 'backends': ['classical', 'tetra3']},
+    )
+    assert cmp_res.status_code == 200
+    payload = cmp_res.get_json()
+    assert payload['clean_url'] == '/output/demo_compare_clean.png'
+    assert payload['have_gt'] is True
+    assert set(payload['methods'].keys()) == {'classical', 'tetra3'}
+    for k in ('classical', 'tetra3'):
+        m = payload['methods'][k]
+        assert m['status'] == 'SOLVED'
+        assert m['attitude_error_arcsec'] is not None and m['attitude_error_arcsec'] < 15.0
+        assert m['n_valid_pairs'] >= 15
+        assert len(m['detected_uv']) >= 15
+
+    png_res = client.get('/output/demo_compare_clean.png')
+    assert png_res.status_code == 200
+    assert len(png_res.data) > 500
+
+    bench_res = client.get('/api/benchmark-summary')
+    assert bench_res.status_code == 200
+    bench_json = bench_res.get_json()
+    assert 'available' in bench_json and 'evaluation_scope' in bench_json
+
+
+
