@@ -13,7 +13,7 @@
 | Thành viên thực hiện | Hoàng Trần Đức Hải (Đội trưởng) · Nguyễn Tiến · Mai Tạ Trúc Vy |
 | Đơn vị đào tạo | Khoa Công nghệ thông tin — Trường Đại học Bách khoa, Đại học Đà Nẵng |
 | Nhánh mã nguồn cải tiến | https://github.com/hoangtranduchai/star-tracker (nhánh feat/national-round-stage1) |
-| Môi trường đo kiểm chuẩn | PC Laptop · NVIDIA GeForce RTX 5070 Laptop GPU · PyTorch CUDA · pytest (127 passed, 2 skipped) |
+| Môi trường đo kiểm chuẩn | PC Laptop · NVIDIA GeForce RTX 5070 Laptop GPU · PyTorch CUDA · pytest (130 passed, 2 skipped) |
 
 ### 1.1. Tóm tắt bằng chứng sai sót trước cải tiến & Ma trận khắc phục 3 yêu cầu
 
@@ -22,8 +22,8 @@ Qua quá trình rà soát mã nguồn gốc (`HEAD`), dữ liệu đo kiểm và
 | Yêu cầu Chặng 1 | Bằng chứng lỗ hổng / sai lệch trước cải tiến | Giải pháp kỹ thuật đã triển khai | Kết quả xác minh sau cải tiến |
 | --- | --- | --- | --- |
 | Yêu cầu 1<br>Ngăn trả tư thế từ khớp không hợp lệ | • HEAD:src/pipeline.py (dòng 98–100) có lỗi break khi <3 inlier làm giữ nguyên cặp ngoại lai.<br>• Giải lại sau _associate_remaining không lọc dư.<br>• HEAD:src/attitude.py không kiểm tra suy biến thẳng hàng.<br>• Thiếu status LOST, reject_code, match_stats. | • Sửa src/pipeline.py: _dedup_pairs 1-1; _refine_inliers lặp cả TRƯỚC và SAU _associate_remaining; kiểm RMS hậu kiểm, min_stars ≥ 4 và FOV consistency.<br>• Sửa src/attitude.py: kiểm SVD s_obs[-1] ≥ 1e-6 và s_ref[-1] ≥ 1e-6.<br>• Trả status="LOST", q=None, 16 byte 0x00, reject_code rõ ràng.<br>• Bổ sung tests/test_invalid_match_rejection.py & benchmark 100 ca đối kháng. | 0/100 False Lock (0,0%) vs 41/100 (41,0%) ở mã cũ; 100/100 downlink 0x00. |
-| Yêu cầu 2<br>Đánh giá End-to-End (ảnh thật hiệu chuẩn & sim lớn) | • Hồ sơ cũ mới chấm centroid trên 500 khung hd1024; attitude Δθ mới kiểm 1 khung Seed 42.<br>• CNN chưa xử lý chuẩn ảnh 16-bit thật; CameraModel chưa hỗ trợ tâm (cx, cy) hiệu chuẩn.<br>• src/metrics.py chưa phân loại FALSE_LOCK/LOST/Precision/Recall. | • Mở rộng src/camera.py (cx, cy) và src/centroid_cnn.py (chia thang 8/12/16-bit + contrast SNR).<br>• Mở rộng src/metrics.py (Precision/Recall/F1, Cross-Boresight/Roll, SOLVED_CORRECT/WARN/FALSE_LOCK/LOST).<br>• Tạo manifest_real_calibrated.json (ESA tetra3, Zhao MT9V022, UW LOST MSH, NTNU 0006.png) & benchmark_end_to_end.py (500 hd1024 + 40 lóa + 6 ảnh thật + Seed 42). | E2E 500 khung hd1024 (CoG 100,0%, CNN 99,6% <40″), 40 lóa, 6 ảnh thật hiệu chuẩn; 0% False Lock. |
-| Yêu cầu 3<br>Đối soát Log–Tài liệu–Slide & Phạm vi PC Demo | • Slide 7 ghi sai 25206/27017 (100%) & 25050/27017 (98,4%).<br>• Slide 12 chứa số ma 12.592/12.592.<br>• Chưa giải thích 111 vs 106 trên MSH; Seed 42 ~1,65″ chưa log.<br>• Còn câu overclaim "sẵn sàng tích hợp vệ tinh", "ADCS", "sát quỹ đạo". | • Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).<br>• Sửa toàn bộ PPTX (nâng lên 17 slide), MD, DOCX, Kịch bản, BGK, README.<br>• Phân định rạch ròi kết quả đo trên PC Laptop vs kỳ vọng phần cứng bay chưa kiểm chứng. | 0 sai lệch còn sót; 100% số liệu trích từ JSON đã kiểm toán. |
+| Yêu cầu 2<br>Đánh giá End-to-End (ảnh thật hiệu chuẩn & sim lớn) | • Hồ sơ cũ mới chấm centroid trên 500 khung hd1024; attitude Δθ mới kiểm 1 khung Seed 42.<br>• CNN chưa xử lý chuẩn ảnh 16-bit thật; CameraModel chưa hỗ trợ tâm (cx, cy) hiệu chuẩn.<br>• src/metrics.py chưa phân loại FALSE_LOCK/LOST/Precision/Recall. | • Mở rộng src/camera.py (cx, cy) và src/centroid_cnn.py (chia thang 8/12/16-bit + CNN-Hybrid Windowed CoG).<br>• Mở rộng src/metrics.py (Precision/Recall/F1, Cross-Boresight/Roll, SOLVED_CORRECT/WARN/FALSE_LOCK/LOST).<br>• Tạo manifest_real_calibrated.json (ESA tetra3, Zhao MT9V022, UW LOST MSH, NTNU 0006.png) & đối chuẩn 5 phương pháp + stress. | E2E 566 khung × 5 phương pháp + 600 ca stress = 3.430 lượt chạy; 0% False Lock. |
+| Yêu cầu 3<br>Đối soát Log–Tài liệu–Slide & Phạm vi PC Demo | • Slide 7 ghi sai 25206/27017 (100%) & 25050/27017 (98,4%).<br>• Slide 12 chứa số ma 12.592/12.592.<br>• Chưa giải thích 111 vs 106 trên MSH; Seed 42 ~1,65″ chưa log.<br>• Còn câu overclaim "sẵn sàng tích hợp vệ tinh", "ADCS", "sát quỹ đạo". | • Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).<br>• Sửa toàn bộ PPTX (nâng lên 18 slide), MD, DOCX, PDF, Kịch bản, BGK, README.<br>• Phân định rạch ròi kết quả đo trên PC Laptop vs kỳ vọng phần cứng bay chưa kiểm chứng. | 0 sai lệch còn sót; 100% số liệu trích từ JSON đã kiểm toán. |
 
 ---
 
@@ -57,7 +57,7 @@ Kiểm tra lại mã nguồn gốc `HEAD:src/pipeline.py` và `HEAD:src/attitude
 
 ### 2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng
 
-- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **129 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `POST /api/compare` và `GET /api/benchmark-summary`.
+- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **130 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `Auto-Router`, `POST /api/compare`, `POST /api/compare-upload` và `GET /api/benchmark-summary`.
 - Chạy đối kháng 100 thử nghiệm (`data/outputs/benchmark_rejection_stress.json`): hệ thống **sau cải tiến đạt 0/100 (0,0% False Lock)**, 100/100 ca trả về `LOST` và 16 byte `0x00`, trong khi **logic cũ trước sửa bị 41/100 (41,0% False Lock)**:
 
 | Nhóm thử nghiệm (25 ca/nhóm) | Số ca | Legacy False Lock | Sai số giả Legacy | Sau cải tiến False Lock | Downlink 16B | Phân bố reject_code |
@@ -97,7 +97,9 @@ Kiểm tra lại mã nguồn gốc `HEAD:src/pipeline.py` và `HEAD:src/attitude
 | mount_st_helens_1.png | UW LOST Outdoor | 1024×1024 · 4,1 µm · f_nom=4,2 mm → f_cal=4,163 mm, k1=0,089, k2=-0,098 | Sky-only CoG + Hipparcos (sep 0,0533° vs UW LOST) · ref_rms=0,477 px |
 | 0006.png | NTNU Wide-Angle Stress | 5320×4600 · 2,74 µm · f_nom=12,0 mm (FOV chéo 77,5°) | Không có q_gt (méo kính góc rộng chưa hiệu chuẩn → stress test âm tính) |
 
-### 3.2. Kết quả End-to-End trên tập ảnh trời thật (`benchmark_real_calibrated_e2e.json`)
+### 3.2. Kết quả End-to-End nền tảng trên tập ảnh trời thật (`benchmark_real_calibrated_e2e.json`)
+
+> **Lưu ý đối chiếu hai mốc đo (Mục 3 vs Mục 6):** Mục 3 trình bày mốc đo nền tảng của `CoG` và `CNN gốc` (`refine_subpixel=False`, trước khi bổ sung chốt nón góc 3D chống gập đa thức méo xuyên tâm trong `_associate_remaining`) để đối soát trực tiếp với các nhật ký lịch sử trong `log_reconciliation_audit.json`. Mục 6 tiếp nối với mốc nâng cấp hoàn thiện (`CNN-Hybrid` `refine_subpixel=True`, `Auto-Router` và chốt nón góc 3D), giải thích rõ vì sao trên `mount_st_helens_1.png` khi có hiệu chuẩn `(k1, k2)`, chốt nón góc 3D giúp `CoG` không còn bị gập đa thức ở rìa FOV 68° và chuyển từ `LOST` (Bảng 3.2) sang `SOLVED 49,51″` (`83/106` cặp ở Bảng 6.2), trong khi ở cấu hình danh nghĩa chưa hiệu chuẩn méo `CoG` vẫn bị chặn an toàn `LOST`.
 
 Đánh giá trên catalog mặc định `bsc5_v6.0` cho thấy tác động rõ rệt của hiệu chuẩn quang học và hỗ trợ 16-bit cho CNN (đạt **0,0% False Lock** trên toàn bộ các lượt chạy):
 - **Quang học danh nghĩa (6 khung):** CoG giải `0/6` (`5 INSUFFICIENT_INLIER_PAIRS`, `1 IDENTIFICATION_FAILED`); CNN giải `1/6` (`mount_st_helens_1.png` đạt `110,05″`).
@@ -193,7 +195,7 @@ Kiểm tra độ nhạy tham số góc trên `hd1024` (`custom_088ifov_tol_frac_
 
 | Khía cạnh | Đã kiểm chứng trên PC Demo (Laptop RTX 5070 / CPU) | Kỳ vọng hướng phát triển (Chưa kiểm chứng bay) |
 | --- | --- | --- |
-| Ngăn trả tư thế từ khớp sai (0% False Lock) | Đã kiểm chứng bằng 127 pytest & 100 ca stress đối kháng (0% vs 41% legacy) trên PC. | Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay. |
+| Ngăn trả tư thế từ khớp sai (0% False Lock) | Đã kiểm chứng bằng 130 pytest & 100 ca stress đối kháng + 3.430 lượt E2E/Stress (0% vs 41% legacy) trên PC. | Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay. |
 | Độ chính xác 3-DOF Quaternion | Đã kiểm chứng trên 500 khung hd1024 (CoG tv 2,00″ / CNN 7,94″), 40 khung lóa và 4 ảnh thật hiệu chuẩn có GT. | Chưa đo kiểm trên cảm biến sao bay vật lý ngoài trời của nhóm hay buồng mô phỏng phần cứng (HIL). |
 | Tốc độ suy luận & Độ trễ | Đo thực tế trên Laptop RTX 5070 CUDA + CPU (CoG ~87,2 ms, CNN ~123,9 ms trên 1024×683). | Chưa đo trên chip nhúng chịu bức xạ (ví dụ LEON3/RTG4/Coral TPU); số ~20 ms / ~266 ms chỉ trích dẫn Zhao et al. |
 | Độ bền môi trường quang học & bức xạ | Đã xử lý ảnh 8-bit/12-bit/16-bit thật (ESA tetra3, Zhao, UW LOST) và từ chối an toàn méo góc rộng (0006.png). | Chưa thử nghiệm bức xạ ion hóa (TID/SEE), sốc nhiệt, chân không, rung động cơ học phóng hoặc điều khiển ADCS vòng kín. |
@@ -208,7 +210,7 @@ Ban Giám khảo và Hội đồng thẩm định có thể tái lập 100% kế
 ```powershell
 # 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai
 pytest -v
-# Kỳ vọng: 130+ passed, 2 skipped (test cache tùy chọn không có sẵn)
+# Kỳ vọng: 130 passed, 2 skipped (test cache tùy chọn không có sẵn)
 
 # 2. Chạy benchmark End-to-End, đối chuẩn 5 phương pháp & đường cong stress khắc nghiệt
 python scripts/benchmark_end_to_end.py --suites all

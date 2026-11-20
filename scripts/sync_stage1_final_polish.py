@@ -46,11 +46,21 @@ def _remove_pptx_slide(prs: Presentation, idx: int) -> None:
     sld_id_lst.remove(sld_id)
 
 
+def _replace_in_tf(tf: Any, old: str, new: str) -> bool:
+    changed = False
+    for p in tf.paragraphs:
+        for r in p.runs:
+            if old in r.text:
+                r.text = r.text.replace(old, new)
+                changed = True
+    return changed
+
+
 def sync_pptx_in_place() -> None:
     b3 = json.loads((OUT_DIR / 'benchmark_3way_comparison.json').read_text(encoding='utf-8'))
     prs = Presentation(str(PPTX_PATH))
 
-    # Idempotency: if Slide 14 already exists, skip re-insertion to prevent python-pptx ZIP part collision
+    # Idempotency: if Slide 14 already exists, still normalize run counts and save cleanly
     existing_idx = next(
         (
             idx
@@ -60,7 +70,17 @@ def sync_pptx_in_place() -> None:
         None,
     )
     if existing_idx is not None:
-        print(f'[OK] {PPTX_PATH} already contains "{SLIDE_MARKER}" at Slide {existing_idx + 1} ({len(prs.slides)} slides)')
+        for sl in prs.slides:
+            for sh in sl.shapes:
+                if sh.has_text_frame:
+                    _replace_in_tf(sh.text_frame, '127 passed', '130 passed')
+                    _replace_in_tf(sh.text_frame, '17 slide', '18 slide')
+                if sh.has_table:
+                    for row in sh.table.rows:
+                        for cell in row.cells:
+                            _replace_in_tf(cell.text_frame, '17 slide', '18 slide')
+        prs.save(str(PPTX_PATH))
+        print(f'[OK] Normalized counts in {PPTX_PATH} ({len(prs.slides)} slides)')
         return
 
     # Add new Slide (CNN-Hybrid + ESA tetra3 + Auto-Router + Speedup + Stress Curves)
@@ -160,17 +180,23 @@ def sync_pptx_in_place() -> None:
                 head_size=16.0, head_color=base.P_NAVY, body_size=11.0, body_color=base.P_DARK,
             )
 
-    # Renumber ALL slide footers 2 / 18 .. 18 / 18 and verify zero banned terms
+    # Renumber ALL slide footers 2 / 18 .. 18 / 18, normalize counts, and verify zero banned terms
     total = len(prs.slides)
     for idx, slide in enumerate(prs.slides, 1):
         for sh in slide.shapes:
             if sh.has_text_frame:
+                _replace_in_tf(sh.text_frame, '127 passed', '130 passed')
+                _replace_in_tf(sh.text_frame, '17 slide', f'{total} slide')
                 if idx > 1 and re.fullmatch(r'\s*\d+\s*/\s*\d+\s*', sh.text_frame.text.strip()):
                     base._set_single_text(sh, f'{idx} / {total}', size=10.0, color=base.P_NAVY, bold=True)
                 low = sh.text_frame.text.lower()
                 for bt in BANNED_TERMS:
                     if bt in low:
                         raise AssertionError(f'Banned term "{bt}" found on Slide {idx}: {sh.text_frame.text[:120]}')
+            if sh.has_table:
+                for row in sh.table.rows:
+                    for cell in row.cells:
+                        _replace_in_tf(cell.text_frame, '17 slide', f'{total} slide')
 
     prs.save(str(PPTX_PATH))
     print(f'[OK] Updated {PPTX_PATH} ({total} slides)')
@@ -179,6 +205,16 @@ def sync_pptx_in_place() -> None:
 def sync_hoso_docx_in_place() -> None:
     b3 = json.loads((OUT_DIR / 'benchmark_3way_comparison.json').read_text(encoding='utf-8'))
     doc = Document(str(HOSO_DOCX))
+
+    for tbl in doc.tables:
+        for row in tbl.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    for r in p.runs:
+                        if '17 slide' in r.text:
+                            r.text = r.text.replace('17 slide', '18 slide')
+                        if '127 passed' in r.text:
+                            r.text = r.text.replace('127 passed', '130 passed')
 
     # Idempotency: strip any previous run's appended extension block
     marker_idx = None

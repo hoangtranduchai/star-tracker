@@ -1277,7 +1277,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         ['Thành viên thực hiện', 'Hoàng Trần Đức Hải (Đội trưởng) · Nguyễn Tiến · Mai Tạ Trúc Vy'],
         ['Đơn vị đào tạo', 'Khoa Công nghệ thông tin — Trường Đại học Bách khoa, Đại học Đà Nẵng'],
         ['Nhánh mã nguồn cải tiến', f'{gh_url} (nhánh feat/national-round-stage1)'],
-        ['Môi trường đo kiểm chuẩn', f"PC Laptop · {d['hd_e2e']['device']} · PyTorch CUDA · pytest (127 passed, 2 skipped)"],
+        ['Môi trường đo kiểm chuẩn', f"PC Laptop · {d['hd_e2e']['device']} · PyTorch CUDA · pytest (130 passed, 2 skipped)"],
     ]
 
     t_gap_map = [
@@ -1290,13 +1290,13 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         [
             'Yêu cầu 2\nĐánh giá End-to-End (ảnh thật hiệu chuẩn & sim lớn)',
             '• Hồ sơ cũ mới chấm centroid trên 500 khung hd1024; attitude Δθ mới kiểm 1 khung Seed 42.\n• CNN chưa xử lý chuẩn ảnh 16-bit thật; CameraModel chưa hỗ trợ tâm (cx, cy) hiệu chuẩn.\n• src/metrics.py chưa phân loại FALSE_LOCK/LOST/Precision/Recall.',
-            '• Mở rộng src/camera.py (cx, cy) và src/centroid_cnn.py (chia thang 8/12/16-bit + contrast SNR).\n• Mở rộng src/metrics.py (Precision/Recall/F1, Cross-Boresight/Roll, SOLVED_CORRECT/WARN/FALSE_LOCK/LOST).\n• Tạo manifest_real_calibrated.json (ESA tetra3, Zhao MT9V022, UW LOST MSH, NTNU 0006.png) & benchmark_end_to_end.py (500 hd1024 + 40 lóa + 6 ảnh thật + Seed 42).',
-            'E2E 500 khung hd1024 (CoG 100,0%, CNN 99,6% <40″), 40 lóa, 6 ảnh thật hiệu chuẩn; 0% False Lock.',
+            '• Mở rộng src/camera.py (cx, cy) và src/centroid_cnn.py (chia thang 8/12/16-bit + CNN-Hybrid Windowed CoG).\n• Mở rộng src/metrics.py (Precision/Recall/F1, Cross-Boresight/Roll, SOLVED_CORRECT/WARN/FALSE_LOCK/LOST).\n• Tạo manifest_real_calibrated.json (ESA tetra3, Zhao MT9V022, UW LOST MSH, NTNU 0006.png) & đối chuẩn 5 phương pháp + stress.',
+            'E2E 566 khung × 5 phương pháp + 600 ca stress = 3.430 lượt chạy; 0% False Lock.',
         ],
         [
             'Yêu cầu 3\nĐối soát Log–Tài liệu–Slide & Phạm vi PC Demo',
             '• Slide 7 ghi sai 25206/27017 (100%) & 25050/27017 (98,4%).\n• Slide 12 chứa số ma 12.592/12.592.\n• Chưa giải thích 111 vs 106 trên MSH; Seed 42 ~1,65″ chưa log.\n• Còn câu overclaim "sẵn sàng tích hợp vệ tinh", "ADCS", "sát quỹ đạo".',
-            '• Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).\n• Sửa toàn bộ PPTX (nâng lên 17 slide), MD, DOCX, Kịch bản, BGK, README.\n• Phân định rạch ròi kết quả đo trên PC Laptop vs kỳ vọng phần cứng bay chưa kiểm chứng.',
+            '• Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).\n• Sửa toàn bộ PPTX (nâng lên 18 slide), MD, DOCX, PDF, Kịch bản, BGK, README.\n• Phân định rạch ròi kết quả đo trên PC Laptop vs kỳ vọng phần cứng bay chưa kiểm chứng.',
             '0 sai lệch còn sót; 100% số liệu trích từ JSON đã kiểm toán.',
         ],
     ]
@@ -1499,7 +1499,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     ]
 
     t_scope = [
-        ['Ngăn trả tư thế từ khớp sai (0% False Lock)', 'Đã kiểm chứng bằng 127 pytest & 100 ca stress đối kháng (0% vs 41% legacy) trên PC.', 'Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay.'],
+        ['Ngăn trả tư thế từ khớp sai (0% False Lock)', 'Đã kiểm chứng bằng 130 pytest & 100 ca stress đối kháng + 3.430 lượt E2E/Stress (0% vs 41% legacy) trên PC.', 'Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay.'],
         ['Độ chính xác 3-DOF Quaternion', 'Đã kiểm chứng trên 500 khung hd1024 (CoG tv 2,00″ / CNN 7,94″), 40 khung lóa và 4 ảnh thật hiệu chuẩn có GT.', 'Chưa đo kiểm trên cảm biến sao bay vật lý ngoài trời của nhóm hay buồng mô phỏng phần cứng (HIL).'],
         ['Tốc độ suy luận & Độ trễ', 'Đo thực tế trên Laptop RTX 5070 CUDA + CPU (CoG ~87,2 ms, CNN ~123,9 ms trên 1024×683).', 'Chưa đo trên chip nhúng chịu bức xạ (ví dụ LEON3/RTG4/Coral TPU); số ~20 ms / ~266 ms chỉ trích dẫn Zhao et al.'],
         ['Độ bền môi trường quang học & bức xạ', 'Đã xử lý ảnh 8-bit/12-bit/16-bit thật (ESA tetra3, Zhao, UW LOST) và từ chối an toàn méo góc rộng (0006.png).', 'Chưa thử nghiệm bức xạ ion hóa (TID/SEE), sốc nhiệt, chân không, rung động cơ học phóng hoặc điều khiển ADCS vòng kín.'],
@@ -1557,7 +1557,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '',
         '### 2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng',
         '',
-        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **129 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `POST /api/compare` và `GET /api/benchmark-summary`.',
+        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **130 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `Auto-Router`, `POST /api/compare`, `POST /api/compare-upload` và `GET /api/benchmark-summary`.',
         f"- Chạy đối kháng 100 thử nghiệm (`data/outputs/benchmark_rejection_stress.json`): hệ thống **sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock)**, 100/100 ca trả về `LOST` và 16 byte `0x00`, trong khi **logic cũ trước sửa bị {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock)**:",
         '',
         md_table(['Nhóm thử nghiệm (25 ca/nhóm)', 'Số ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau cải tiến False Lock', 'Downlink 16B', 'Phân bố reject_code'], t_stress_rows),
@@ -1584,7 +1584,9 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '',
         md_table(['Tập / Khung ảnh thật', 'Nguồn', 'Thông số quang học (Danh nghĩa → Hiệu chuẩn)', 'Nguồn Ground-Truth & Kiểm chứng chéo'], t_real_meta),
         '',
-        '### 3.2. Kết quả End-to-End trên tập ảnh trời thật (`benchmark_real_calibrated_e2e.json`)',
+        '### 3.2. Kết quả End-to-End nền tảng trên tập ảnh trời thật (`benchmark_real_calibrated_e2e.json`)',
+        '',
+        '> **Lưu ý đối chiếu hai mốc đo (Mục 3 vs Mục 6):** Mục 3 trình bày mốc đo nền tảng của `CoG` và `CNN gốc` (`refine_subpixel=False`, trước khi bổ sung chốt nón góc 3D chống gập đa thức méo xuyên tâm trong `_associate_remaining`) để đối soát trực tiếp với các nhật ký lịch sử trong `log_reconciliation_audit.json`. Mục 6 tiếp nối với mốc nâng cấp hoàn thiện (`CNN-Hybrid` `refine_subpixel=True`, `Auto-Router` và chốt nón góc 3D), giải thích rõ vì sao trên `mount_st_helens_1.png` khi có hiệu chuẩn `(k1, k2)`, chốt nón góc 3D giúp `CoG` không còn bị gập đa thức ở rìa FOV 68° và chuyển từ `LOST` (Bảng 3.2) sang `SOLVED 49,51″` (`83/106` cặp ở Bảng 6.2), trong khi ở cấu hình danh nghĩa chưa hiệu chuẩn méo `CoG` vẫn bị chặn an toàn `LOST`.',
         '',
         'Đánh giá trên catalog mặc định `bsc5_v6.0` cho thấy tác động rõ rệt của hiệu chuẩn quang học và hỗ trợ 16-bit cho CNN (đạt **0,0% False Lock** trên toàn bộ các lượt chạy):',
         f"- **Quang học danh nghĩa (6 khung):** CoG giải `0/6` (`5 INSUFFICIENT_INLIER_PAIRS`, `1 IDENTIFICATION_FAILED`); CNN giải `1/6` (`mount_st_helens_1.png` đạt `{_fv(nom_nn['mount_st_helens_1.png']['attitude_error_arcsec'], 2)}″`).",
@@ -1660,7 +1662,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '```powershell',
         '# 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai',
         'pytest -v',
-        '# Kỳ vọng: 130+ passed, 2 skipped (test cache tùy chọn không có sẵn)',
+        '# Kỳ vọng: 130 passed, 2 skipped (test cache tùy chọn không có sẵn)',
         '',
         '# 2. Chạy benchmark End-to-End, đối chuẩn 5 phương pháp & đường cong stress khắc nghiệt',
         'python scripts/benchmark_end_to_end.py --suites all',
@@ -2000,7 +2002,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     _docx_add_styled_table(doc, ['Mã reject_code', 'Điều kiện kích hoạt', 'Hành vi đầu ra'], t_reject_codes, col_widths_in=[2.34, 2.43, 2.00], font_size=8.3)
 
     add_h2('2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng')
-    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 129 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
+    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 130 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
     _docx_add_styled_table(
         doc,
         ['Nhóm thử nghiệm', 'Ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau sửa FL', 'Downlink 16B', 'reject_code'],
@@ -2020,7 +2022,13 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     add_p('• Hỗ trợ ảnh thật 16-bit & tâm hiệu chuẩn: src/camera.py hỗ trợ (cx, cy) tùy chỉnh; src/centroid_cnn.py chia thang 8/12/16-bit (/16 với 12-bit, /256 với 16-bit) và xếp hạng hạt giống contrast SNR trên 16-bit.')
     _docx_add_styled_table(doc, ['Khung ảnh thật', 'Nguồn', 'Quang học (Danh nghĩa → Hiệu chuẩn)', 'Ground-Truth & Kiểm chứng chéo'], t_real_meta, col_widths_in=[1.50, 1.05, 2.02, 2.20], font_size=8.3)
 
-    add_h2('3.2. Kết quả End-to-End trên tập ảnh trời thật (benchmark_real_calibrated_e2e.json)')
+    add_h2('3.2. Kết quả End-to-End nền tảng trên tập ảnh trời thật (benchmark_real_calibrated_e2e.json)')
+    add_callout(
+        'Lưu ý đối chiếu hai mốc đo (Mục 3 vs Mục 6):',
+        'Mục 3 ghi nhận mốc đo nền tảng của CoG và CNN gốc (refine_subpixel=False, trước khi thêm chốt nón góc 3D trong _associate_remaining) để đối soát trực tiếp với log_reconciliation_audit.json. Mục 6 trình bày mốc nâng cấp hoàn thiện (CNN-Hybrid refine_subpixel=True, Auto-Router và chốt nón góc 3D): nhờ chốt nón góc 3D chặn lỗi gập đa thức méo xuyên tâm (k1, k2) ở rìa FOV rộng 68° trên mount_st_helens_1.png, nhánh CoG hiệu chuẩn chuyển từ LOST (Bảng 3.2) sang SOLVED 49,51″ (83/106 cặp tại Bảng 6.2), trong khi CoG danh nghĩa chưa hiệu chuẩn méo vẫn bị chặn an toàn LOST.',
+        bg_hex='EFF6FF',
+        border_hex='133E68',
+    )
     add_p(f"Trên catalog mặc định bsc5_v6.0 (0,0% False Lock trên mọi lượt chạy): với quang học danh nghĩa CoG đạt 0/6 và CNN đạt 1/6 (Mount St. Helens 110,05″); với quang học hiệu chuẩn CoG đạt 1/5 (Alt60 2,26″) và CNN đạt 3/5 (Alt60 4,65″, Zhao MT9V022 54,70″, MSH 120,26″ vs manifest / 0,034° vs UW LOST). Bổ sung Hipparcos V≤7 giúp cả CoG (39,51″) và CNN (26,60″) giải đúng Alt40.")
     _docx_add_styled_table(doc, ['Khung ảnh thật', 'CoG · Danh nghĩa', 'CNN · Danh nghĩa', 'CoG · Hiệu chuẩn', 'CNN · Hiệu chuẩn'], t_real_e2e_rows, col_widths_in=[1.05, 1.42, 1.44, 1.42, 1.44], font_size=7.6)
     add_fig('data/outputs/e2e_figures/real_sky_e2e_summary.png', 'Hình 3. Đánh giá End-to-End trên tập ảnh trời thật (Danh nghĩa vs Hiệu chuẩn, 0% False Lock).')
