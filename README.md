@@ -61,6 +61,10 @@ Chi tiết đầy đủ nằm tại `data/outputs/benchmark_3way_comparison.json
 | **`Auto (CoG → CNN)`** *(Mặc định Web)* | **`500/500`**, **`1,91″`**, **`0 FP`**, **`85,8 ms`** | **`40/40`**, **`1,54″`**, **`0 FP`**, **`77,8 ms`** | **`20/20`**, **`2,46″`** | **`4/4`** (`Alt60 2,3″`, `Zhao 48,3″`, `MSH 49,5″`) | **`100%`** / **`100%`** |
 
 - **Tối ưu tốc độ 5×–11× không giảm độ phân giải:** Bộ tiền lọc góc 2 tầng BLAS `float32 SGEMM` trong `StarIdentifier.identify_wide` (`Mount St. Helens tetra3`: `11,3 s → 1,43 s`; `Zhao CoG`: `2,7 s → 0,25 s`), vector hóa NumPy `trilateration_centroids`, vẽ đồ thị Matplotlib nền bất đồng bộ trên `app.py` và tải sẵn trọng số CNN (`STAR_TRACKER_PRELOAD=1`).
+- **Kiểm toán khả thi nhúng CubeSat & Tiêm lỗi vũ trụ mô phỏng (`benchmark_embedded_cubesat.json`, NASA TRL 3–4 — chưa kiểm chứng bay):**
+  - **1 nhân ARM64 (`aarch64`, `--cpus=1.0`, `OMP=1`):** `CoG` **`58,8 ms` (`17,0 Hz`)**, `Auto` **`59,2 ms` (`16,9 Hz`)**, `ESA Alt60` **`62,5 ms` (`16,0 Hz`)**, Peak RSS `328,2 MB`; `PyTorch CNN` `4.782,7 ms` / `1.119,2 MB` RSS (OOM ở `768 MB` → MCU chỉ chạy `CoG` port C; SoC Linux ≥ 2 GB chạy `Auto`). Xuất **ONNX FP32 (1 luồng)** tăng tốc **`4,75×`** (`6.678 → 1.405 ms`, `12,5 MB`, FP16 `6,3 MB`).
+  - **Mưa hạt Proton vùng SAA (`0–100` vệt xiên/khung):** `CoG` & `Auto` giữ **`100,0%`** (`2,2″`, `0% FL`) ở cả `100` vệt/khung (khi `tetra3` giảm còn `0,0%` từ `50` vệt).
+  - **Gói Telemetry 32 byte bảo vệ bằng `CRC-16-CCITT` (`src/telemetry.py`):** phát hiện **`10.512 / 10.512` (`100,0000%`)** lỗi lật bit SEU (`512` 1-bit vét cạn + `5.000` 2-bit + `5.000` burst 4–16 bit).
 
 ## Chạy & Tái lập kiểm thử
 
@@ -70,6 +74,7 @@ pytest -v
 python scripts/benchmark_end_to_end.py --suites all
 python scripts/benchmark_3way_centroid_e2e.py
 python scripts/benchmark_stress_curves.py
+python scripts/benchmark_embedded_cubesat.py
 python scripts/make_stage1_upgrade_figures.py
 python scripts/reconcile_logs.py
 python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show

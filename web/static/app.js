@@ -1703,7 +1703,7 @@
       ? "Đang trích xuất tâm sao và giải tư thế trên khung ảnh thực..."
       : body.focal_mm
         ? "Đang dựng khung sao theo hệ quang học tùy chỉnh..."
-        : "Đang mô phỏng bầu trời sao và định hướng vệ tinh J2000...";
+        : "Đang mô phỏng bầu trời sao và định hướng camera J2000...";
     setBusy(true, wide ? `${busy} (khởi tạo bảng góc rộng > 30,5°)` : busy);
     try {
       const data = await fetchJson(
@@ -2211,14 +2211,22 @@
     });
   }
 
+  function toFiniteNum(v) {
+    if (v === null || v === undefined || v === "") return NaN;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : NaN;
+  }
   function fmtArc(v) {
-    return Number.isFinite(Number(v)) ? `${Number(v).toFixed(2)}″` : "—";
+    const n = toFiniteNum(v);
+    return Number.isFinite(n) ? `${n.toFixed(2)}″` : "—";
   }
   function fmtPct(v) {
-    return Number.isFinite(Number(v)) ? `${(Number(v) * 100).toFixed(1)}%` : "—";
+    const n = toFiniteNum(v);
+    return Number.isFinite(n) ? `${(n * 100).toFixed(1)}%` : "—";
   }
   function fmtMs(v) {
-    return Number.isFinite(Number(v)) ? `${Number(v).toFixed(1)} ms` : "—";
+    const n = toFiniteNum(v);
+    return Number.isFinite(n) ? `${n.toFixed(1)} ms` : "—";
   }
 
   function renderComparePayload(data) {
@@ -2248,9 +2256,9 @@
       bestKey = solvedKeys[0];
     } else if (solvedKeys.length > 1) {
       solvedKeys.sort((a, b) => {
-        const ea = Number.isFinite(Number(methods[a].attitude_error_arcsec)) ? Number(methods[a].attitude_error_arcsec) : Infinity;
-        const eb = Number.isFinite(Number(methods[b].attitude_error_arcsec)) ? Number(methods[b].attitude_error_arcsec) : Infinity;
-        return ea - eb;
+        const ea = toFiniteNum(methods[a].attitude_error_arcsec);
+        const eb = toFiniteNum(methods[b].attitude_error_arcsec);
+        return (Number.isFinite(ea) ? ea : Infinity) - (Number.isFinite(eb) ? eb : Infinity);
       });
       bestKey = solvedKeys[0];
     }
@@ -2272,10 +2280,11 @@
         stEl.className = `kpi-badge status-pill ${isSolved ? "SOLVED" : "LOST"}`;
       }
       if (mainEl) {
+        const dthVal = toFiniteNum(m.attitude_error_arcsec);
         if (!isSolved) {
           mainEl.textContent = "Từ chối (LOST)";
-        } else if (Number.isFinite(Number(m.attitude_error_arcsec))) {
-          mainEl.textContent = `Δθ ${Number(m.attitude_error_arcsec).toFixed(2)}″`;
+        } else if (Number.isFinite(dthVal)) {
+          mainEl.textContent = `Δθ ${dthVal.toFixed(2)}″`;
         } else {
           mainEl.textContent = `${m.n_valid_pairs || 0} sao khớp`;
         }
@@ -2294,9 +2303,10 @@
       const mCnn = methods.cnn || {};
       if (mCnn.status === "SOLVED" && mCog.status !== "SOLVED" && mT3.status !== "SOLVED") {
         cmpVerdictBanner.className = "cmp-verdict-banner is-highlight";
+        const cnnDth = toFiniteNum(mCnn.attitude_error_arcsec);
         cmpVerdictBanner.innerHTML =
           `<strong>CNN-Hybrid vượt trội trên nền phức tạp:</strong> chỉ riêng <strong>CNN-Hybrid</strong> khóa tư thế thành công ` +
-          `(${mCnn.n_valid_pairs}/${mCnn.n_detected} cặp hợp lệ${Number.isFinite(Number(mCnn.attitude_error_arcsec)) ? `, Δθ = ${Number(mCnn.attitude_error_arcsec).toFixed(2)}″` : ""}), ` +
+          `(${mCnn.n_valid_pairs}/${mCnn.n_detected} cặp hợp lệ${Number.isFinite(cnnDth) ? `, Δθ = ${cnnDth.toFixed(2)}″` : ""}), ` +
           `trong khi cả <strong>CoG</strong> và <strong>Ngưỡng kiểu tetra3</strong> bị nhiễu tiền cảnh và chủ động trả <code>LOST</code>.`;
       } else if (mCnn.status === "SOLVED" && mT3.status !== "SOLVED") {
         cmpVerdictBanner.className = "cmp-verdict-banner is-highlight";
@@ -2330,20 +2340,30 @@
           label: "Trạng thái khóa tư thế",
           vals: keys.map((k) => {
             const m = methods[k] || {};
-            return m.status === "SOLVED" ? "SOLVED" : `LOST (${m.reject_code || "REJECTED"})`;
+            if (m.status === "SOLVED") {
+              return `<span class="cmp-st-main">SOLVED</span>`;
+            }
+            const code = String(m.reject_code || "REJECTED");
+            return `<span class="cmp-st-main">LOST</span><span class="cmp-st-code">${code}</span>`;
           }),
           cls: keys.map((k) => ((methods[k] || {}).status === "SOLVED" ? "cmp-cell-best" : "cmp-cell-lost"))
         },
         {
           label: "Sai số tư thế 3 trục (Δθ)",
-          vals: keys.map((k) => fmtArc((methods[k] || {}).attitude_error_arcsec)),
-          num: keys.map((k) => Number((methods[k] || {}).attitude_error_arcsec)),
+          vals: keys.map((k) => {
+            const m = methods[k] || {};
+            return m.status === "SOLVED" ? fmtArc(m.attitude_error_arcsec) : "—";
+          }),
+          num: keys.map((k) => {
+            const m = methods[k] || {};
+            return m.status === "SOLVED" ? toFiniteNum(m.attitude_error_arcsec) : NaN;
+          }),
           prefer: "min"
         },
         {
           label: "Cặp sao hợp lệ / Tổng tâm phát hiện",
           vals: keys.map((k) => `${(methods[k] || {}).n_valid_pairs ?? 0} / ${(methods[k] || {}).n_detected ?? 0}`),
-          num: keys.map((k) => Number((methods[k] || {}).n_valid_pairs ?? -1)),
+          num: keys.map((k) => toFiniteNum((methods[k] || {}).n_valid_pairs)),
           prefer: "max"
         },
         {
@@ -2354,32 +2374,44 @@
           label: "Phần dư khớp sao (RMS / Max)",
           vals: keys.map((k) => {
             const m = methods[k] || {};
-            return Number.isFinite(Number(m.rms_residual_arcsec))
-              ? `${Number(m.rms_residual_arcsec).toFixed(2)}″ / ${Number(m.max_residual_arcsec).toFixed(2)}″`
+            const rmsV = toFiniteNum(m.rms_residual_arcsec);
+            const maxV = toFiniteNum(m.max_residual_arcsec);
+            return Number.isFinite(rmsV) && Number.isFinite(maxV)
+              ? `${rmsV.toFixed(2)}″ / ${maxV.toFixed(2)}″`
               : "—";
           }),
-          num: keys.map((k) => Number((methods[k] || {}).rms_residual_arcsec)),
+          num: keys.map((k) => {
+            const m = methods[k] || {};
+            return m.status === "SOLVED" ? toFiniteNum(m.rms_residual_arcsec) : NaN;
+          }),
           prefer: "min"
         },
         {
           label: "Precision / Recall tâm sao (≤ 5 px)",
           vals: keys.map((k) => {
             const m = methods[k] || {};
-            return m.centroid_precision != null ? `${fmtPct(m.centroid_precision)} / ${fmtPct(m.centroid_recall)}` : "—";
+            const pV = toFiniteNum(m.centroid_precision);
+            return Number.isFinite(pV) ? `${fmtPct(pV)} / ${fmtPct(m.centroid_recall)}` : "—";
           }),
-          num: keys.map((k) => Number((methods[k] || {}).centroid_precision)),
+          num: keys.map((k) => toFiniteNum((methods[k] || {}).centroid_recall)),
           prefer: "max"
         },
         {
           label: "Tâm sáng nhiễu (FP, ≤ 5 px)",
-          vals: keys.map((k) => ((methods[k] || {}).centroid_n_false_pos != null ? String(methods[k].centroid_n_false_pos) : "—")),
-          num: keys.map((k) => ((methods[k] || {}).centroid_n_false_pos != null ? Number(methods[k].centroid_n_false_pos) : NaN)),
+          vals: keys.map((k) => {
+            const fpV = toFiniteNum((methods[k] || {}).centroid_n_false_pos);
+            return Number.isFinite(fpV) ? String(fpV) : "—";
+          }),
+          num: keys.map((k) => toFiniteNum((methods[k] || {}).centroid_n_false_pos)),
           prefer: "min"
         },
         {
           label: "Độ lệch tâm sao RMSE (5 px)",
-          vals: keys.map((k) => (Number.isFinite(Number((methods[k] || {}).centroid_rms_5px)) ? `${Number(methods[k].centroid_rms_5px).toFixed(3)} px` : "—")),
-          num: keys.map((k) => Number((methods[k] || {}).centroid_rms_5px)),
+          vals: keys.map((k) => {
+            const rV = toFiniteNum((methods[k] || {}).centroid_rms_5px);
+            return Number.isFinite(rV) ? `${rV.toFixed(3)} px` : "—";
+          }),
+          num: keys.map((k) => toFiniteNum((methods[k] || {}).centroid_rms_5px)),
           prefer: "min"
         },
         {
@@ -2388,7 +2420,7 @@
             const t = (methods[k] || {}).timing_ms || {};
             return `${fmtMs(t.centroiding_ms)} / ${fmtMs(t.total_pipeline_ms)}`;
           }),
-          num: keys.map((k) => Number(((methods[k] || {}).timing_ms || {}).total_pipeline_ms)),
+          num: keys.map((k) => toFiniteNum(((methods[k] || {}).timing_ms || {}).total_pipeline_ms)),
           prefer: "min"
         }
       ];
@@ -2398,9 +2430,14 @@
           let bestIdx = -1;
           if (r.prefer && Array.isArray(r.num)) {
             const finiteNums = r.num.map((v, i) => ({ v, i })).filter((x) => Number.isFinite(x.v));
-            if (finiteNums.length >= 2) {
+            if (finiteNums.length >= 1) {
               finiteNums.sort((a, b) => (r.prefer === "min" ? a.v - b.v : b.v - a.v));
-              bestIdx = finiteNums[0].i;
+              const bestVal = finiteNums[0].v;
+              // Highlight only when strictly unique winner (avoid arbitrary tie coloring on 0 FP / 100% Prec)
+              const tied = finiteNums.filter((x) => Math.abs(x.v - bestVal) < 1e-9);
+              if (tied.length === 1 || finiteNums.length === 1) {
+                bestIdx = finiteNums[0].i;
+              }
             }
           }
           const cells = r.vals

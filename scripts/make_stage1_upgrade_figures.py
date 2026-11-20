@@ -209,6 +209,119 @@ def make_fig11() -> Path:
     return out_p
 
 
+def make_fig12() -> Path:
+    emb_path = OUT_DIR / 'benchmark_embedded_cubesat.json'
+    d = json.loads(emb_path.read_text(encoding='utf-8'))
+
+    fig, axes = plt.subplots(1, 3, figsize=(16.5, 5.1), dpi=240)
+    fig.suptitle(
+        'Kiểm toán Khả thi Phần cứng Nhúng CubeSat (1-Core ARM64), Tiêm lỗi Proton SAA & Lật bit SEU (NASA TRL 3–4 · Chưa kiểm chứng bay)',
+        fontsize=11.6, fontweight='bold', color='#0F172A', y=0.98,
+    )
+
+    # Panel A: 1-Core ARM64 (aarch64) & ONNX 1-Thread CPU Latency (log scale)
+    ax = axes[0]
+    arm = (d.get('arm64_1core_constrained_vps') or {}).get('backends_1024x683') or {}
+    arm_real = (d.get('arm64_1core_constrained_vps') or {}).get('real_sky_1core') or {}
+    onnx_d = d.get('onnx_single_thread_cpu') or {}
+
+    bar_labels = [
+        'ARM64 1-Core\nCoG (1024×683)',
+        'ARM64 1-Core\nAuto (1024×683)',
+        'ARM64 1-Core\nESA Alt60 (16-bit)',
+        'ARM64 1-Core\nCNN PyTorch',
+        '1-Thread CPU\nPyTorch FP32',
+        '1-Thread CPU\nONNX FP32 (4,75×)',
+    ]
+    bar_vals = [
+        float((arm.get('classical') or {}).get('median_ms', 58.8)),
+        float((arm.get('auto') or {}).get('median_ms', 59.2)),
+        float((arm_real.get('esa_alt60_cog') or {}).get('latency_ms', 62.5)),
+        float((arm.get('cnn') or {}).get('median_ms', 4782.7)),
+        float(onnx_d.get('pytorch_fp32_ms', 6677.8)),
+        float(onnx_d.get('onnx_fp32_ms', 1404.7)),
+    ]
+    bar_cols = ['#2563EB', '#0F172A', '#0284C7', '#F97316', '#DC2626', '#059669']
+    y_pos = np.arange(len(bar_labels))
+    bars = ax.barh(y_pos, bar_vals, color=bar_cols, alpha=0.92, height=0.62)
+    ax.set_xscale('log')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(bar_labels, fontsize=8.0, fontweight='bold')
+    ax.invert_yaxis()
+    ax.set_xlabel('Độ trễ trung vị (ms, thang log · thấp hơn là tốt hơn)', fontsize=8.8, fontweight='bold', color='#1E293B')
+    ax.set_title('A. Hiệu năng 1 nhân ARM64 & Tối ưu ONNX (4,75×)', fontsize=10.0, fontweight='bold', color='#133E68', pad=8)
+    ax.set_xlim(20, 28000)
+    for bar, val in zip(bars, bar_vals):
+        hz_txt = f' ({1000.0/val:.1f} Hz)' if val < 100 else ''
+        ax.text(val * 1.15, bar.get_y() + bar.get_height() / 2.0, f'{val:.1f} ms{hz_txt}', va='center', ha='left', fontsize=7.6, fontweight='bold', color='#0F172A')
+
+    # Panel B: SAA High-Energy Proton Shower Survival Curve
+    ax = axes[1]
+    saa = d.get('saa_proton_shower_sweep') or []
+    xs = [p['n_proton_tracks'] for p in saa]
+    markers = {'classical': 'o', 'tetra3': 's', 'cnn': '^', 'auto': 'D'}
+    styles = {'classical': '-', 'tetra3': '--', 'cnn': '-', 'auto': ':'}
+    for be in ('classical', 'tetra3', 'cnn', 'auto'):
+        ys = [p['results'][be]['solve_rate_pct'] for p in saa]
+        ax.plot(
+            xs, ys,
+            marker=markers[be], linestyle=styles[be], linewidth=2.3, markersize=6.5,
+            color=COLORS[be], label=LABELS[be], alpha=0.93,
+        )
+    ax.set_title('B. Mưa hạt Proton vùng SAA (0–100 vệt/khung · 0% FL)', fontsize=10.0, fontweight='bold', color='#133E68', pad=8)
+    ax.set_xlabel('Số vệt proton xiên & điểm nóng bão hòa / khung', fontsize=8.8, fontweight='bold', color='#1E293B')
+    ax.set_ylabel('Tỷ lệ giải đúng < 40″ (%)', fontsize=8.8, fontweight='bold', color='#1E293B')
+    ax.set_ylim(-5, 110)
+    ax.legend(fontsize=8.0, loc='lower left', frameon=True, facecolor='#F8FAFC')
+    ax.annotate(
+        'CoG & Auto: 100%\n(2,2″ · 0% FL)',
+        xy=(100, 100), xytext=(62, 82),
+        arrowprops=dict(arrowstyle='->', color='#0F172A', lw=1.2),
+        fontsize=7.8, fontweight='bold', color='#0F172A',
+        bbox=dict(boxstyle='round,pad=0.3', fc='#ECFEFF', ec='#0284C7', lw=0.9),
+    )
+
+    # Panel C: SEU Bit-Flip Detection (CRC-16-CCITT) + Embedded RAM / Flash Budget
+    ax = axes[2]
+    seu = d.get('seu_telemetry_bitflip_audit') or {}
+    cats = ['SEU 1-bit\n(vét cạn 512)', 'SEU 2-bit\n(5.000 ca)', 'Burst 4–16 bit\n(5.000 ca)']
+    rates = [
+        float((seu.get('single_bit_exhaustive') or {}).get('rate_pct', 100.0)),
+        float((seu.get('double_bit_random') or {}).get('rate_pct', 100.0)),
+        float((seu.get('burst_4_to_16bit_random') or {}).get('rate_pct', 100.0)),
+    ]
+    bars_c = ax.bar(np.arange(len(cats)), rates, width=0.52, color=['#059669', '#0D9488', '#0284C7'], alpha=0.92)
+    for bar, r_v in zip(bars_c, rates):
+        ax.text(bar.get_x() + bar.get_width() / 2.0, r_v + 1.8, f'{r_v:.1f}%', ha='center', va='bottom', fontsize=8.5, fontweight='bold', color='#065F46')
+    ax.set_xticks(np.arange(len(cats)))
+    ax.set_xticklabels(cats, fontsize=8.0, fontweight='bold')
+    ax.set_ylim(0, 128)
+    ax.set_ylabel('Tỷ lệ phát hiện gói hỏng (%)', fontsize=8.8, fontweight='bold', color='#1E293B')
+    ax.set_title('C. Chống lật bit SEU (CRC-16) & Ràng buộc RAM ARM64', fontsize=9.8, fontweight='bold', color='#133E68', pad=8)
+
+    note_txt = (
+        'Gói Telemetry 32B (Sync 0x1ACFFC1D + CRC-16):\n'
+        '• 10.512 / 10.512 lỗi SEU bị chặn (0 gói hỏng lọt ADCS)\n'
+        '• Flash: BSC5 80 KB · K-Vec 9,8 MB · ONNX 12,5 MB (FP16 6,3 MB)\n'
+        '• Peak RAM ARM64: CoG 328 MB vs PyTorch CNN 1.119 MB\n'
+        '  (OOM ở 768 MB → MCU chạy CoG; SoC ≥2 GB chạy Auto)'
+    )
+    ax.text(
+        0.5, 0.34, note_txt,
+        transform=ax.transAxes, ha='center', va='center', fontsize=7.3,
+        color='#0F172A',
+        bbox=dict(boxstyle='round,pad=0.45', fc='#F8FAFC', ec='#94A3B8', lw=1.0),
+    )
+
+    plt.tight_layout(rect=(0.0, 0.0, 0.99, 0.93))
+    out_p = FIG_DIR / 'fig12_cubesat_feasibility_seu_saa.png'
+    fig.savefig(out_p, dpi=240)
+    plt.close(fig)
+    print(f'wrote {out_p}')
+    return out_p
+
+
 if __name__ == '__main__':
     make_fig10()
     make_fig11()
+    make_fig12()

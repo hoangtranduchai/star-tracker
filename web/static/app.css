@@ -2820,17 +2820,57 @@ input[type="range"] {
   flex-direction: column;
 }
 
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 .cmp-table th,
 .cmp-table td {
-  font-size: 0.79rem;
-  padding: 0.48rem 0.62rem;
+  font-size: 0.78rem;
+  padding: 0.48rem 0.56rem;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .cmp-table td:first-child {
   font-weight: 600;
   color: var(--text-main);
   white-space: normal;
+}
+
+#cmp-live-table {
+  table-layout: fixed;
+}
+
+#cmp-live-table th,
+#cmp-live-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#cmp-live-table th:first-child,
+#cmp-live-table td:first-child {
+  width: 28%;
+}
+
+.cmp-st-main {
+  display: block;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cmp-st-code {
+  display: inline-block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  line-height: 1.25;
+  opacity: 0.85;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .cmp-cell-best {

@@ -1,0 +1,349 @@
+{
+  "benchmark": "embedded_cubesat_feasibility_and_space_fault_injection",
+  "generated_at": "2026-11-20T16:41:47",
+  "nasa_trl_level": "TRL 3-4 (Analytical & Laboratory Software / Commercial ARM64 Constrained Profiling — NOT flight-qualified)",
+  "host_platform": "Windows AMD64 (NVIDIA GeForce RTX 5070 Laptop GPU)",
+  "storage_footprint": {
+    "bsc5_compact_binary_bytes": 80368,
+    "mobileunet_pt_fp32_bytes": 18572762,
+    "mobileunet_onnx_fp32_bytes": 12487586,
+    "mobileunet_fp16_weights_bytes": 6268730,
+    "bsc5_npz_bytes": 212679,
+    "kvector_30deg_npz_file": "kvec_BSC5+filt_63820c6d967da643_0.02_30.5.npz",
+    "kvector_30deg_npz_bytes": 9837700,
+    "kvector_19deg_npz_bytes": 4299192
+  },
+  "onnx_single_thread_cpu": {
+    "available": true,
+    "input_shape": [
+      1,
+      1,
+      704,
+      1024
+    ],
+    "cpu_threads": 1,
+    "pytorch_fp32_ms": 6677.77,
+    "onnx_fp32_ms": 1404.69,
+    "speedup_onnx_fp32_vs_pt": 4.75,
+    "fp32_seg_max_abs_diff": 1.8477439880371094e-06,
+    "int8_available": false,
+    "int8_note": "ValueError: Expected onnx::Conv_816 to be an initializer"
+  },
+  "local_memory_profile": {
+    "classical": {
+      "peak_python_heap_mb": 14.93,
+      "process_rss_mb": 2670.0,
+      "latency_ms": 55.99
+    },
+    "tetra3": {
+      "peak_python_heap_mb": 14.93,
+      "process_rss_mb": 2670.1,
+      "latency_ms": 51.53
+    },
+    "cnn": {
+      "peak_python_heap_mb": 30.79,
+      "process_rss_mb": 3108.3,
+      "latency_ms": 124.14
+    },
+    "auto": {
+      "peak_python_heap_mb": 14.93,
+      "process_rss_mb": 3108.3,
+      "latency_ms": 55.89
+    }
+  },
+  "arm64_1core_constrained_vps": {
+    "arch": "aarch64",
+    "cpu_info": "0xd0c",
+    "docker_limits": "--cpus=1.0 --memory=2g OMP_NUM_THREADS=1 (note: --memory=768m OOM-killed PyTorch CNN; CoG fits <250MB)",
+    "os": "Linux-6.12.57+deb13-arm64-aarch64-with-glibc2.41",
+    "backends_1024x683": {
+      "classical": {
+        "n_frames": 5,
+        "n_solved": 5,
+        "median_ms": 58.8,
+        "throughput_hz": 17.01,
+        "peak_rss_mb_so_far": 328.2
+      },
+      "tetra3": {
+        "n_frames": 5,
+        "n_solved": 5,
+        "median_ms": 62.8,
+        "throughput_hz": 15.92,
+        "peak_rss_mb_so_far": 328.2
+      },
+      "cnn": {
+        "n_frames": 3,
+        "n_solved": 3,
+        "median_ms": 4782.7,
+        "throughput_hz": 0.21,
+        "peak_rss_mb_so_far": 1119.2
+      },
+      "auto": {
+        "n_frames": 3,
+        "n_solved": 3,
+        "median_ms": 59.2,
+        "throughput_hz": 16.9,
+        "peak_rss_mb_so_far": 1119.2
+      }
+    },
+    "real_sky_1core": {
+      "esa_alt60_cog": {
+        "status": "SOLVED",
+        "latency_ms": 62.5,
+        "n_valid_pairs": 9
+      },
+      "zhao_nightsky_auto_cnn": {
+        "status": "SOLVED",
+        "selected": "cnn",
+        "latency_ms": 2452.8,
+        "n_valid_pairs": 8,
+        "peak_rss_mb": 1119.2
+      }
+    }
+  },
+  "saa_proton_shower_sweep": [
+    {
+      "n_proton_tracks": 0,
+      "results": {
+        "classical": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 1.39,
+          "auto_cnn_escalations": 0
+        },
+        "tetra3": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 1.59,
+          "auto_cnn_escalations": 0
+        },
+        "cnn": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 0.98,
+          "auto_cnn_escalations": 0
+        },
+        "auto": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 1.39,
+          "auto_cnn_escalations": 0
+        }
+      }
+    },
+    {
+      "n_proton_tracks": 10,
+      "results": {
+        "classical": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 1.49,
+          "auto_cnn_escalations": 0
+        },
+        "tetra3": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.57,
+          "auto_cnn_escalations": 0
+        },
+        "cnn": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 0.94,
+          "auto_cnn_escalations": 0
+        },
+        "auto": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 1.49,
+          "auto_cnn_escalations": 0
+        }
+      }
+    },
+    {
+      "n_proton_tracks": 25,
+      "results": {
+        "classical": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.15,
+          "auto_cnn_escalations": 0
+        },
+        "tetra3": {
+          "n_frames": 10,
+          "n_solved": 9,
+          "n_correct": 9,
+          "n_false_lock": 0,
+          "solve_rate_pct": 90.0,
+          "median_err_arcsec": 3.86,
+          "auto_cnn_escalations": 0
+        },
+        "cnn": {
+          "n_frames": 10,
+          "n_solved": 6,
+          "n_correct": 6,
+          "n_false_lock": 0,
+          "solve_rate_pct": 60.0,
+          "median_err_arcsec": 1.38,
+          "auto_cnn_escalations": 0
+        },
+        "auto": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.15,
+          "auto_cnn_escalations": 0
+        }
+      }
+    },
+    {
+      "n_proton_tracks": 50,
+      "results": {
+        "classical": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.52,
+          "auto_cnn_escalations": 0
+        },
+        "tetra3": {
+          "n_frames": 10,
+          "n_solved": 0,
+          "n_correct": 0,
+          "n_false_lock": 0,
+          "solve_rate_pct": 0.0,
+          "median_err_arcsec": null,
+          "auto_cnn_escalations": 0
+        },
+        "cnn": {
+          "n_frames": 10,
+          "n_solved": 2,
+          "n_correct": 2,
+          "n_false_lock": 0,
+          "solve_rate_pct": 20.0,
+          "median_err_arcsec": 2.51,
+          "auto_cnn_escalations": 0
+        },
+        "auto": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.52,
+          "auto_cnn_escalations": 0
+        }
+      }
+    },
+    {
+      "n_proton_tracks": 100,
+      "results": {
+        "classical": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.19,
+          "auto_cnn_escalations": 0
+        },
+        "tetra3": {
+          "n_frames": 10,
+          "n_solved": 0,
+          "n_correct": 0,
+          "n_false_lock": 0,
+          "solve_rate_pct": 0.0,
+          "median_err_arcsec": null,
+          "auto_cnn_escalations": 0
+        },
+        "cnn": {
+          "n_frames": 10,
+          "n_solved": 0,
+          "n_correct": 0,
+          "n_false_lock": 0,
+          "solve_rate_pct": 0.0,
+          "median_err_arcsec": null,
+          "auto_cnn_escalations": 0
+        },
+        "auto": {
+          "n_frames": 10,
+          "n_solved": 10,
+          "n_correct": 10,
+          "n_false_lock": 0,
+          "solve_rate_pct": 100.0,
+          "median_err_arcsec": 2.19,
+          "auto_cnn_escalations": 0
+        }
+      }
+    }
+  ],
+  "seu_telemetry_bitflip_audit": {
+    "frame_bytes": 32,
+    "sync_word": "0x1ACFFC1D",
+    "crc_algorithm": "CRC-16-CCITT (poly=0x1021, init=0xFFFF) + Sync + Unit-Quaternion Norm Guard",
+    "single_bit_exhaustive": {
+      "trials": 512,
+      "detected": 512,
+      "rate_pct": 100.0
+    },
+    "double_bit_random": {
+      "trials": 5000,
+      "detected": 5000,
+      "rate_pct": 100.0
+    },
+    "burst_4_to_16bit_random": {
+      "trials": 5000,
+      "detected": 5000,
+      "rate_pct": 100.0
+    },
+    "total_trials": 10512,
+    "total_detected": 10512,
+    "total_detection_rate_pct": 100.0,
+    "silent_corruptions": 0
+  },
+  "cubesat_obc_tier_mapping": [
+    {
+      "tier": "Tier 1 — MCU Rad-Hard / FreeRTOS (STM32H7, LEON3, 1-16 MB SRAM)",
+      "supported_branch": "CoG + BSC5 nhị phân (80 KB) + K-Vector (port sang C/MISRA-C)",
+      "cnn_feasible": false,
+      "note": "PyTorch/MobileUNet không vừa SRAM MCU; chỉ triển khai nhánh CoG thuần C."
+    },
+    {
+      "tier": "Tier 2 — Linux CubeSat Payload SoC (Zynq-7000/UltraScale+, Cortex-A53/A72, 512 MB-2 GB RAM)",
+      "supported_branch": "Auto (CoG -> CNN-Hybrid ONNX INT8)",
+      "cnn_feasible": true,
+      "note": "Chạy vừa ngân sách <512 MB RAM trên 1 nhân ARM64; vẫn cần TVAC, TID/SEE và HIL quang học để lên TRL 6-8."
+    }
+  ]
+}

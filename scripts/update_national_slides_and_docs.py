@@ -77,6 +77,8 @@ def _load_all_data() -> dict[str, Any]:
     data['bench3'] = json.loads(b3_path.read_text(encoding='utf-8')) if b3_path.is_file() else None
     sc_path = OUT_DIR / 'benchmark_stress_curves.json'
     data['stress_curves'] = json.loads(sc_path.read_text(encoding='utf-8')) if sc_path.is_file() else None
+    emb_path = OUT_DIR / 'benchmark_embedded_cubesat.json'
+    data['embedded'] = json.loads(emb_path.read_text(encoding='utf-8')) if emb_path.is_file() else None
     return data
 
 
@@ -1277,7 +1279,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         ['Thành viên thực hiện', 'Hoàng Trần Đức Hải (Đội trưởng) · Nguyễn Tiến · Mai Tạ Trúc Vy'],
         ['Đơn vị đào tạo', 'Khoa Công nghệ thông tin — Trường Đại học Bách khoa, Đại học Đà Nẵng'],
         ['Nhánh mã nguồn cải tiến', f'{gh_url} (nhánh feat/national-round-stage1)'],
-        ['Môi trường đo kiểm chuẩn', f"PC Laptop · {d['hd_e2e']['device']} · PyTorch CUDA · pytest (130 passed, 2 skipped)"],
+        ['Môi trường đo kiểm chuẩn', f"PC Laptop · {d['hd_e2e']['device']} · ARM64 1-core Docker · pytest (133 passed, 2 skipped)"],
     ]
 
     t_gap_map = [
@@ -1296,7 +1298,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         [
             'Yêu cầu 3\nĐối soát Log–Tài liệu–Slide & Phạm vi PC Demo',
             '• Slide 7 ghi sai 25206/27017 (100%) & 25050/27017 (98,4%).\n• Slide 12 chứa số ma 12.592/12.592.\n• Chưa giải thích 111 vs 106 trên MSH; Seed 42 ~1,65″ chưa log.\n• Còn câu overclaim "sẵn sàng tích hợp vệ tinh", "ADCS", "sát quỹ đạo".',
-            '• Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).\n• Sửa toàn bộ PPTX (nâng lên 18 slide), MD, DOCX, PDF, Kịch bản, BGK, README.\n• Phân định rạch ròi kết quả đo trên PC Laptop vs kỳ vọng phần cứng bay chưa kiểm chứng.',
+            '• Viết scripts/reconcile_logs.py xuất log_reconciliation_audit.json (21 sai lệch).\n• Sửa toàn bộ PPTX (nâng lên 19 slide), MD, DOCX, PDF, Kịch bản, BGK, README.\n• Phân định rạch ròi kết quả đo PC/ARM64 (TRL 3–4) vs kỳ vọng phần cứng bay chưa kiểm chứng.',
             '0 sai lệch còn sót; 100% số liệu trích từ JSON đã kiểm toán.',
         ],
     ]
@@ -1499,11 +1501,11 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     ]
 
     t_scope = [
-        ['Ngăn trả tư thế từ khớp sai (0% False Lock)', 'Đã kiểm chứng bằng 130 pytest & 100 ca stress đối kháng + 3.430 lượt E2E/Stress (0% vs 41% legacy) trên PC.', 'Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay.'],
-        ['Độ chính xác 3-DOF Quaternion', 'Đã kiểm chứng trên 500 khung hd1024 (CoG tv 2,00″ / CNN 7,94″), 40 khung lóa và 4 ảnh thật hiệu chuẩn có GT.', 'Chưa đo kiểm trên cảm biến sao bay vật lý ngoài trời của nhóm hay buồng mô phỏng phần cứng (HIL).'],
-        ['Tốc độ suy luận & Độ trễ', 'Đo thực tế trên Laptop RTX 5070 CUDA + CPU (CoG ~87,2 ms, CNN ~123,9 ms trên 1024×683).', 'Chưa đo trên chip nhúng chịu bức xạ (ví dụ LEON3/RTG4/Coral TPU); số ~20 ms / ~266 ms chỉ trích dẫn Zhao et al.'],
-        ['Độ bền môi trường quang học & bức xạ', 'Đã xử lý ảnh 8-bit/12-bit/16-bit thật (ESA tetra3, Zhao, UW LOST) và từ chối an toàn méo góc rộng (0006.png).', 'Chưa thử nghiệm bức xạ ion hóa (TID/SEE), sốc nhiệt, chân không, rung động cơ học phóng hoặc điều khiển ADCS vòng kín.'],
-        ['Định dạng đầu ra 16 byte J2000', 'Đã đóng gói 4×float32 (hoặc 16 byte 0x00 khi LOST) và hiển thị kiểm chứng trên Web UI & CLI.', 'Chưa tích hợp giao thức truyền bus vệ tinh thực tế (CAN/SpaceWire/UART-RS422) lên máy tính bay OBC.'],
+        ['Ngăn trả tư thế từ khớp sai (0% False Lock)', 'Đã kiểm chứng bằng 133 pytest, 100 ca đối kháng, 3.430 lượt E2E/Stress & 200 lượt mưa proton SAA (0% FL).', 'Chưa thử nghiệm tiêm lỗi phần cứng (fault-injection) thời gian thực trên MCU/FPGA bay.'],
+        ['Độ chính xác 3-DOF Quaternion', 'Đã kiểm chứng trên 500 khung hd1024 (CoG/Auto tv 1,91″ · CNN-Hybrid 2,02″), 40 lóa & 4 ảnh thật hiệu chuẩn.', 'Chưa đo kiểm trên cảm biến sao bay vật lý ngoài trời của nhóm hay buồng mô phỏng phần cứng (HIL).'],
+        ['Tốc độ, RAM & Tài nguyên Nhúng', 'Đã đo RTX 5070 CUDA, 1 nhân ARM64 (CoG/Auto 59 ms = 16,9 Hz · 328 MB RSS; CNN PyTorch 4,78 s · 1.119 MB) & ONNX 1-luồng (tăng tốc 4,75×).', 'Chưa đo trên chip chịu bức xạ (LEON3/RTG4/STM32H7); PyTorch CNN bị OOM ở 768 MB nên MCU chỉ chạy được nhánh CoG port sang C.'],
+        ['Độ bền môi trường quang học & bức xạ', 'Đã xử lý ảnh 8/12/16-bit thật và mô phỏng mưa hạt proton SAA 0–100 vệt/khung (CoG/Auto 100%, 0% FL).', 'Chưa thử nghiệm bức xạ ion hóa thực tế (TID/SEE), sốc nhiệt chân không (TVAC), rung phóng hay vòng kín ADCS.'],
+        ['Định dạng đầu ra & Bảo vệ đường truyền', 'Đã đóng gói 16B J2000 (0x00 khi LOST) + khung Telemetry 32B kèm Sync 0x1ACFFC1D & CRC-16-CCITT (chặn 10.512/10.512 lỗi lật bit SEU = 100%).', 'Chưa tích hợp giao thức bus vệ tinh vật lý (CAN/SpaceWire/RS-422) lên máy tính bay OBC (hiện ở NASA TRL 3–4).'],
     ]
 
     # ---------- 1. WRITE MARKDOWN REPORT ----------
@@ -1557,7 +1559,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '',
         '### 2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng',
         '',
-        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **130 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `Auto-Router`, `POST /api/compare`, `POST /api/compare-upload` và `GET /api/benchmark-summary`.',
+        '- Bộ kiểm thử hồi quy `tests/test_invalid_match_rejection.py` cùng toàn bộ `pytest -v` đạt **133 passed, 2 skipped** (0 lỗi), bao gồm kiểm thử `Tetra3ThresholdDetector`, `Auto-Router`, `CRC-16-CCITT` (`test_telemetry_and_embedded.py`), `POST /api/compare`, `POST /api/compare-upload` và `GET /api/benchmark-summary`.',
         f"- Chạy đối kháng 100 thử nghiệm (`data/outputs/benchmark_rejection_stress.json`): hệ thống **sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock)**, 100/100 ca trả về `LOST` và 16 byte `0x00`, trong khi **logic cũ trước sửa bị {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock)**:",
         '',
         md_table(['Nhóm thử nghiệm (25 ca/nhóm)', 'Số ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau cải tiến False Lock', 'Downlink 16B', 'Phân bố reject_code'], t_stress_rows),
@@ -1651,7 +1653,25 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '',
         '### 4.2. Phân định rõ: Kết quả đo kiểm trên PC Demo vs Kỳ vọng tương lai',
         '',
-        md_table(['Khía cạnh', 'Đã kiểm chứng trên PC Demo (Laptop RTX 5070 / CPU)', 'Kỳ vọng hướng phát triển (Chưa kiểm chứng bay)'], t_scope),
+        md_table(['Khía cạnh', 'Đã kiểm chứng trên PC Demo (Laptop RTX 5070 / 1-Core ARM64)', 'Kỳ vọng hướng phát triển (Chưa kiểm chứng bay)'], t_scope),
+        '',
+        '### 4.3. Kiểm toán Khả thi Phần cứng Nhúng CubeSat, Tiêm lỗi SAA/SEU & Lộ trình NASA TRL (`benchmark_embedded_cubesat.json`)',
+        '',
+        'Thay vì chỉ thừa nhận định tính rằng dữ liệu PC chưa chứng minh sẵn sàng bay, nhóm tiến hành **kiểm toán định lượng ràng buộc phần cứng nhúng (1 nhân CPU ARM64 `aarch64` không GPU)**, **tối ưu hóa xuất ONNX 1 luồng**, và **tiêm lỗi môi trường vũ trụ mô phỏng (SAA Proton Shower & SEU Bit-Flip)** — đồng thời định vị trung thực dự án ở cấp độ **NASA TRL 3–4** (chưa kiểm chứng bay vũ trụ TRL 7–8):',
+        '',
+        '| Hạng mục đo kiểm định lượng (TRL 3–4) | Kết quả thực nghiệm đo được | Ý nghĩa kỹ thuật đối với phần cứng CubeSat OBC |',
+        '| --- | --- | --- |',
+        '| **Dung lượng Flash / ROM tĩnh** | BSC5 nhị phân: **80,4 KB** (`bsc5_v6.0.npz` `212,7 KB`) · K-Vector 30°: **9,84 MB** (19,5°: `4,30 MB`) · MobileUNet `.pt`: `18,57 MB` → **ONNX FP32 `12,49 MB`** (`-33%`) → **trọng số FP16 `6,27 MB`** (`-66%`) | Nhánh `CoG` thuần C chỉ cần vài MB Flash (vừa MCU STM32H7/LEON3); nhánh `CNN` cần SoC Linux có bộ nhớ Flash ≥ 32 MB. |',
+        '| **1 nhân ARM64 (`aarch64`, `--cpus=1.0`, `OMP=1`)** | `CoG`: **58,8 ms (`17,0 Hz`)** · `Auto`: **59,2 ms (`16,9 Hz`)** · `ESA Alt60 (16-bit)`: **62,5 ms (`16,0 Hz`)** · `Peak RSS CoG`: **328,2 MB** | Tốc độ vượt chuẩn cập nhật `5–10 Hz` của ADCS trên đúng 1 nhân ARM64 không GPU cho khung trời sạch. |',
+        '| **Ràng buộc RAM & Tối ưu ONNX 1 luồng** | `PyTorch CNN` trên 1 nhân ARM64 tốn **4.782,7 ms** & **1.119,2 MB RSS** (**bị OOM Killer ở giới hạn `768 MB`**); chuyển sang **ONNX Runtime FP32 (1 luồng)** tăng tốc **`4,75×`** (`6.677,8 ms → 1.404,7 ms`, sai khác tối đa `1,85×10⁻⁶`) | Chứng minh khách quan: **MCU 1–16 MB SRAM** chỉ chạy được `CoG` (port C/MISRA-C); **SoC Linux ≥ 2 GB RAM** (Zynq UltraScale+/Cortex-A53) mới chạy được `Auto: CoG → CNN ONNX`. |',
+        '| **Mưa hạt Proton vùng SAA (0–100 vệt/khung)** | 200 lượt tiêm vệt proton xiên `4–12 px` + điểm nóng `4095 DN`: **`CoG` & `Auto` đạt `100,0%` (`2,2″`) ở cả 100 vệt/khung**, `0%` False Lock; `tetra3` sập còn **`0,0%`** từ mức 50 vệt | Bộ lọc hình dạng elip + vòng khuyên rỗng của `CoG` (và `Auto`) miễn nhiễm hoàn toàn với vệt proton grazing; `tetra3` mất kiểm soát khi vệt proton lấn danh sách sao sáng. |',
+        '| **Chống lật bit đường truyền SEU (`src/telemetry.py`)** | Khung **32 byte** chuẩn hóa (Sync `0x1ACFFC1D` + Status/Reject + Quaternion 16B + `CRC-16-CCITT`): phát hiện **`10.512 / 10.512` (`100,0000%`)** lỗi (`512/512` 1-bit vét cạn + `5.000` 2-bit + `5.000` burst 4–16 bit) | **0 gói hỏng lọt sang ADCS**; đóng kín lỗ hổng toàn vẹn dữ liệu trên đường truyền serial/bus. |',
+        '',
+        '**Lộ trình 5 cổng kiểm định phần cứng cần có để tiến từ TRL 3–4 (hiện tại) → TRL 6–8 (sẵn sàng bay):** *(1)* Chuyển lõi `CoG + Pyramid + Wahba` sang C/C++ tĩnh (`MISRA-C`, không cấp phát động) & triển khai CNN qua ONNX/NPU nhúng; *(2)* Hiệu chuẩn quang học trên buồng chuẩn trực sao vật lý (*Optical Collimator HIL*); *(3)* Thử nghiệm chiếu xạ tổng liều & hạt đơn (*TID/SEE*) trên cảm biến và OBC; *(4)* Thử nghiệm nhiệt–chân không (*TVAC*) và rung phóng cơ học (*Qualification Vibration*); *(5)* Kiểm thử vòng kín phần cứng bus `CAN / SpaceWire / RS-422` với bộ điều khiển ADCS thực tế.',
+        '',
+        '![Kiểm toán khả thi CubeSat ARM64, Proton SAA và SEU CRC-16](../data/outputs/e2e_figures/fig12_cubesat_feasibility_seu_saa.png)',
+        '',
+        '*Hình 12. Kiểm toán khả thi nhúng CubeSat (1 nhân ARM64 & ONNX 4,75×), sức chịu đựng mưa hạt proton vùng SAA (0–100 vệt/khung) và kiểm thử tiêm lỗi lật bit SEU trên gói Telemetry 32 byte CRC-16-CCITT (`data/outputs/e2e_figures/fig12_cubesat_feasibility_seu_saa.png`).*',
         '',
         '---',
         '',
@@ -1662,12 +1682,13 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '```powershell',
         '# 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai',
         'pytest -v',
-        '# Kỳ vọng: 130 passed, 2 skipped (test cache tùy chọn không có sẵn)',
+        '# Kỳ vọng: 133 passed, 2 skipped (test cache tùy chọn không có sẵn)',
         '',
-        '# 2. Chạy benchmark End-to-End, đối chuẩn 5 phương pháp & đường cong stress khắc nghiệt',
+        '# 2. Chạy benchmark End-to-End, đối chuẩn 5 phương pháp, đường cong stress & kiểm toán CubeSat/SEU',
         'python scripts/benchmark_end_to_end.py --suites all',
         'python scripts/benchmark_3way_centroid_e2e.py',
         'python scripts/benchmark_stress_curves.py',
+        'python scripts/benchmark_embedded_cubesat.py',
         'python scripts/make_stage1_upgrade_figures.py',
         '',
         '# 3. Chạy kiểm toán đối soát toàn bộ JSON & tài liệu',
@@ -2002,7 +2023,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     _docx_add_styled_table(doc, ['Mã reject_code', 'Điều kiện kích hoạt', 'Hành vi đầu ra'], t_reject_codes, col_widths_in=[2.34, 2.43, 2.00], font_size=8.3)
 
     add_h2('2.3. Kết quả kiểm thử tự động & Stress test 100 ca đối kháng')
-    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 130 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
+    add_p(f"Bộ kiểm thử hồi quy tests/test_invalid_match_rejection.py cùng toàn bộ pytest -v đạt 133 passed, 2 skipped (0 lỗi). Trên 100 ca stress đối kháng (benchmark_rejection_stress.json), hệ thống sau cải tiến đạt {st_imp['false_lock_count']}/100 ({_fv(st_imp['false_lock_rate_pct'], 1)}% False Lock, 100/100 downlink 0x00) so với {st_leg['false_lock_count']}/100 ({_fv(st_leg['false_lock_rate_pct'], 1)}% False Lock) ở mã cũ.")
     _docx_add_styled_table(
         doc,
         ['Nhóm thử nghiệm', 'Ca', 'Legacy False Lock', 'Sai số giả Legacy', 'Sau sửa FL', 'Downlink 16B', 'reject_code'],
@@ -2065,10 +2086,36 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
     add_h2('4.2. Phân định rõ: Kết quả đo kiểm trên PC Demo vs Kỳ vọng tương lai')
     _docx_add_styled_table(
         doc,
-        ['Khía cạnh', 'Đã kiểm chứng trên PC Demo (Laptop RTX 5070 / CPU)', 'Kỳ vọng tương lai (Chưa kiểm chứng bay)'],
+        ['Khía cạnh', 'Đã kiểm chứng trên PC / 1-Core ARM64 (TRL 3–4)', 'Kỳ vọng tương lai (Chưa kiểm chứng bay)'],
         t_scope,
         col_widths_in=[1.45, 2.66, 2.66],
-        font_size=8.6,
+        font_size=8.4,
+    )
+    add_h2('4.3. Kiểm toán Khả thi Nhúng CubeSat (1-Core ARM64 + ONNX), Tiêm lỗi SAA/SEU & Lộ trình NASA TRL')
+    add_p(
+        'Nhằm trả lời định lượng cho câu hỏi khoảng cách từ PC tới phần cứng vệ tinh mà vẫn trung thực tuyệt đối (định vị hiện tại ở NASA TRL 3–4, chưa kiểm chứng bay vũ trụ TRL 7–8), nhóm đo thực nghiệm tài nguyên trên đúng 1 nhân CPU ARM64 (Docker --cpus=1.0, OMP_NUM_THREADS=1), xuất mô hình ONNX và chạy tiêm lỗi môi trường vũ trụ mô phỏng (benchmark_embedded_cubesat.json):'
+    )
+    t_emb_rows = [
+        ['Flash / ROM tĩnh', 'BSC5 nhị phân 80,4 KB (npz 212,7 KB) · K-Vec 30° 9,84 MB (19,5° 4,30 MB) · MobileUNet .pt 18,57 MB → ONNX FP32 12,49 MB (-33%) → FP16 6,27 MB (-66%).', 'CoG thuần C vừa MCU (STM32H7/LEON3); CNN cần SoC Linux có Flash ≥ 32 MB.'],
+        ['1 nhân ARM64 (aarch64)', 'CoG 58,8 ms (17,0 Hz) · Auto 59,2 ms (16,9 Hz) · ESA Alt60 16-bit 62,5 ms (16,0 Hz) · Peak RSS CoG 328,2 MB.', 'Đạt tần số >15 Hz vượt mức cập nhật ADCS 5–10 Hz trên đúng 1 nhân ARM64 không GPU.'],
+        ['RAM & ONNX 1 luồng', 'PyTorch CNN trên 1 nhân ARM64: 4.782,7 ms & 1.119,2 MB RSS (bị OOM ở 768 MB). Xuất ONNX Runtime FP32 1 luồng tăng tốc 4,75× (6.677,8 → 1.404,7 ms, lệch max 1,85e-6).', 'MCU 1–16 MB SRAM chỉ chạy CoG (port C/MISRA-C); SoC ≥2 GB RAM (Zynq/Cortex-A) chạy Auto + ONNX.'],
+        ['Mưa hạt Proton SAA', '200 lượt tiêm 0–100 vệt proton xiên 4–12 px + hot-pixel 4095 DN/khung: CoG & Auto giữ 100,0% (2,2″, 0% FL) ở 100 vệt; tetra3 sập còn 0,0% từ mức 50 vệt.', 'Bộ lọc elip + vòng khuyên rỗng của CoG/Auto chặn hoàn toàn vệt proton grazing.'],
+        ['Chống lật bit SEU (CRC-16)', 'Gói Telemetry 32B (Sync 0x1ACFFC1D + Status/Reject + Quaternion 16B + CRC-16-CCITT, src/telemetry.py): chặn 10.512/10.512 lỗi (100,0000%) — 0 gói hỏng lọt ADCS.', 'Bảo vệ toàn vẹn tuyệt đối trước lỗi lật 1-bit, 2-bit và burst 4–16 bit trên đường truyền.'],
+    ]
+    _docx_add_styled_table(
+        doc,
+        ['Hạng mục (TRL 3–4)', 'Kết quả đo kiểm thực nghiệm', 'Đánh giá khả thi CubeSat OBC'],
+        t_emb_rows,
+        col_widths_in=[1.35, 3.12, 2.30],
+        font_size=7.9,
+    )
+    add_p(
+        'Lộ trình 5 cổng kiểm định phần cứng để tiến từ NASA TRL 3–4 hiện tại lên TRL 6–8: (1) Port lõi CoG + Pyramid + Wahba sang C/MISRA-C tĩnh & triển khai CNN qua ONNX/NPU nhúng; (2) Hiệu chuẩn trên buồng chuẩn trực sao vật lý (Optical Collimator HIL); (3) Chiếu xạ TID/SEE thực tế; (4) Thử nghiệm nhiệt–chân không (TVAC) & rung phóng cơ học; (5) Đóng vòng kín bus vật lý CAN/SpaceWire/RS-422 với ADCS.'
+    )
+    add_fig(
+        'data/outputs/e2e_figures/fig12_cubesat_feasibility_seu_saa.png',
+        'Hình 12. Kiểm toán khả thi phần cứng nhúng CubeSat (1 nhân ARM64 & ONNX 4,75×), sức chịu đựng mưa hạt proton vùng SAA và kiểm thử lật bit SEU (CRC-16-CCITT).',
+        width_in=6.55,
     )
 
     # Section 5
@@ -2079,6 +2126,7 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         'python scripts/benchmark_end_to_end.py --suites all\n'
         'python scripts/benchmark_3way_centroid_e2e.py\n'
         'python scripts/benchmark_stress_curves.py\n'
+        'python scripts/benchmark_embedded_cubesat.py\n'
         'python scripts/make_stage1_upgrade_figures.py\n'
         'python scripts/reconcile_logs.py\n'
         'python scripts/update_national_slides_and_docs.py --report-only\n'

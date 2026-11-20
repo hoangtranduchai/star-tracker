@@ -71,6 +71,10 @@ class TrackerResult:
         w, x, y, z = normalize(self.q)
         return pack('<4f', float(w), float(x), float(y), float(z))
 
+    def to_telemetry_frame(self, seq_id: int = 0) -> bytes:
+        from .telemetry import pack_telemetry_frame
+        return pack_telemetry_frame(self, seq_id=seq_id)
+
 class StarTrackerPipeline:
     """Full lost-in-space star tracker execution pipeline."""
 

@@ -149,5 +149,5 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 □ 🏔 Ảnh núi thật Mount St. Helens → CNN-Hybrid SOLVED (72/77, 71,13″, 2 FP) vs tetra3 LOST (57 FP)
 □ 🌌 Ảnh trời thật (ESA tetra3 Alt60) → giải ảnh 16-bit thực tế (2,26″)
 □ Tab Đối chiếu tư thế & Downlink 16 byte + nêu rõ phạm vi Demo PC/VPS (chưa kiểm chứng bay)
-□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (18 slide đã đối soát, có Hình 10 & Hình 11)
+□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (19 slide đã đối soát, có Hình 10, 11 & 12 — Kiểm toán CubeSat ARM64/SAA/SEU)
 ```

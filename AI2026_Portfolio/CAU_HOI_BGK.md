@@ -107,6 +107,10 @@ Số đo chỉ lấy từ `data/outputs/log_reconciliation_audit.json` và các 
 
 **Trả lời:** Giảm độ phân giải (downsample) sẽ phá hỏng độ chính xác cận pixel của tâm sao (`σ_centroid`) và mất sao mờ. Thay vào đó, nhóm xử lý đúng nút thắt cổ chai bằng thuật toán: (1) bộ tiền lọc góc 2 tầng dùng nhân ma trận BLAS `float32 SGEMM` trong `StarIdentifier.identify_wide` (`Mount St. Helens tetra3`: `11,3 s → 1,43 s`; `Zhao CoG`: `2,7 s → 0,25 s`), (2) vector hóa NumPy vòng lặp tinh chỉnh `trilateration_centroids`, (3) vẽ biểu đồ Matplotlib tĩnh trên luồng nền bất đồng bộ để Web UI phản hồi ngay với ảnh sạch không viền, và (4) tải sẵn trọng số CNN khi khởi động server (`STAR_TRACKER_PRELOAD=1`).
 
+### 23. Dữ liệu PC chưa chứng minh sẵn sàng dùng trên vệ tinh — đội giải quyết câu này ra sao?
+
+**Trả lời:** Nhóm giải quyết theo 2 tầng minh bạch: (1) **Gỡ bỏ 100% tuyên bố quá đà** (*sẵn sàng vệ tinh / ADCS*) ở toàn bộ slide, hồ sơ, báo cáo và Web UI, định vị trung thực dự án hiện ở mức **NASA TRL 3–4**; (2) **Đo kiểm định lượng ràng buộc phần cứng nhúng & môi trường vũ trụ mô phỏng** (`benchmark_embedded_cubesat.json`): trên đúng **1 nhân ARM64 (`aarch64`, không GPU)** nhánh `CoG/Auto` đạt **`59,2 ms` (`16,9 Hz`)**, `ESA Alt60` đạt **`62,5 ms` (`16,0 Hz`)**; chỉ rõ trung thực rằng `PyTorch CNN` chiếm `1.119 MB` RSS (bị OOM ở `768 MB` nên **MCU 1–16 MB SRAM chỉ chạy `CoG` port C/MISRA-C**, còn **SoC Linux ≥ 2 GB** mới chạy `Auto + ONNX` nhanh hơn **`4,75×`**); tiêm thử **100 vệt proton SAA/khung** (`CoG/Auto` giữ `100%`, `0% FL` trong khi `tetra3` sập còn `0%`) và tiêm **10.512 lỗi lật bit SEU** vào gói Telemetry 32 byte **`CRC-16-CCITT`** (`src/telemetry.py`, phát hiện `100,00%`). Nhóm cũng nêu rõ 5 cổng kiểm định phần cứng bắt buộc (MISRA-C, Collimator HIL, chiếu xạ TID/SEE, TVAC/rung phóng, bus CAN/SpaceWire ADCS) để lên TRL 6–8.
+
 ---
 
 ## Không được nói

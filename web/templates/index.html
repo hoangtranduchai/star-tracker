@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta http-equiv="Cache-Control" content="no-store" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Star Tracker — Định hướng vệ tinh J2000</title>
+  <title>Star Tracker — Định hướng Camera Sao J2000 (Demo PC)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=34" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=35" />
   <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=34" />
 </head>
 <body>
@@ -25,7 +25,7 @@
       <div class="brand-titles">
         <h1 class="brand-name">Star Tracker</h1>
         <span class="brand-sep" aria-hidden="true"></span>
-        <span class="brand-sub">Định hướng vệ tinh J2000</span>
+        <span class="brand-sub">Định hướng Camera Sao J2000 (Demo PC)</span>
       </div>
     </div>
 
@@ -163,7 +163,7 @@
     </nav>
 
     <div id="status" class="status-banner" title="Trạng thái xử lý định hướng sao">
-      Sẵn sàng quan sát · Chọn một kịch bản phía trên hoặc bấm <strong>Giải tư thế</strong> để khóa hướng vệ tinh.
+      Sẵn sàng quan sát · Chọn một kịch bản phía trên hoặc bấm <strong>Giải tư thế</strong> để khóa hướng camera sao.
     </div>
   </div>
 
@@ -258,7 +258,7 @@
               <span class="welcome-pulse"></span>
               <span>ĐÀI QUAN SÁT ĐỊNH HƯỚNG SAO J2000</span>
             </div>
-            <p class="welcome-text">Chọn một kịch bản trên thanh đầu trang hoặc bấm <strong>Giải tư thế</strong> để định hướng vệ tinh từ bầu trời sao thực.</p>
+            <p class="welcome-text">Chọn một kịch bản trên thanh đầu trang hoặc bấm <strong>Giải tư thế</strong> để định hướng camera từ bầu trời sao thực (mô phỏng PC).</p>
             <button type="button" id="btn-welcome-run" class="welcome-cta-btn">
               <span>Thử ngay bầu trời thực ESA</span>
               <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -556,7 +556,7 @@
               <h3>Gói tin Tư thế Quaternion 16-Byte</h3>
               <span class="glass-chip">IEEE 754 Float32 · J2000</span>
             </div>
-            <p class="card-desc">Tư thế vệ tinh được đóng gói thành 4 số thực 32-bit chuẩn hóa <code>[q0, q1, q2, q3]</code> (16 byte; tự động xuất toàn bộ byte <code>00</code> khi từ chối khóa sai).</p>
+            <p class="card-desc">Tư thế camera J2000 được đóng gói thành 4 số thực 32-bit chuẩn hóa <code>[q0, q1, q2, q3]</code> (16 byte; tự động xuất toàn bộ byte <code>00</code> khi từ chối khóa sai, kèm khung Telemetry 32 byte bảo vệ bằng <code>CRC-16-CCITT</code> ở mức mô phỏng PC).</p>
             <div class="hex-dump-box">
               <div class="hex-title">DÒNG BYTE HEX (16 BYTE)</div>
               <div class="hex-bytes" id="downlink-hex-display">-- -- -- --  -- -- -- --  -- -- -- --  -- -- -- --</div>
@@ -1181,6 +1181,6 @@
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
   <script src="{{ url_for('static', filename='orbit3d.js') }}?v=34"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=34"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=35"></script>
 </body>
 </html>
