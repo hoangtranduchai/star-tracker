@@ -55,12 +55,13 @@ from src.pipeline import PipelineConfig, StarTrackerPipeline  # noqa: E402
 from src.quaternion import ARCSEC_PER_RAD  # noqa: E402
 from src.simulator import GlareSpec, SkySimulator  # noqa: E402
 
-BACKENDS = ('classical', 'tetra3', 'cnn_raw', 'cnn')
+BACKENDS = ('classical', 'tetra3', 'cnn_raw', 'cnn', 'auto')
 BACKEND_LABELS = {
     'classical': 'CoG (Nhóm)',
     'tetra3': 'Ngưỡng kiểu tetra3 (ESA)',
     'cnn_raw': 'CNN gốc (Trilateration)',
     'cnn': 'CNN-Hybrid (MobileUNet + Local CoG)',
+    'auto': 'Auto (CoG → CNN-Hybrid)',
 }
 
 
@@ -85,6 +86,18 @@ def _make_4way_pipeline(
         det._device = cnn_template._device
         det.device_name = cnn_template.device_name
         pipe.centroid_detector = det
+    elif be == 'auto' and cnn_template is not None and cnn_template._model is not None:
+        det = CNNCentroidDetector(
+            camera,
+            classical=pipe._base_det,
+            refine_subpixel=True,
+        )
+        det._model = cnn_template._model
+        det._torch = cnn_template._torch
+        det._normalize = cnn_template._normalize
+        det._device = cnn_template._device
+        det.device_name = cnn_template.device_name
+        pipe._auto_cnn_detector = det
     return pipe
 
 

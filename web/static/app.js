@@ -136,11 +136,17 @@
   const presetIndicator = document.getElementById("preset-active-indicator");
 
   // Side-by-side Algorithm Comparison Tab (#tab-compare)
+  const btnCmpZhao = document.getElementById("btn-cmp-zhao");
   const btnCmpMount = document.getElementById("btn-cmp-mount");
   const btnCmpTetra3 = document.getElementById("btn-cmp-tetra3");
   const btnCmpGlare = document.getElementById("btn-cmp-glare");
   const btnCmpSeed42 = document.getElementById("btn-cmp-seed42");
   const btnCmpCurrent = document.getElementById("btn-cmp-current");
+  const cmpUploadFile = document.getElementById("cmp-upload-file");
+  const cmpUploadFocal = document.getElementById("cmp-upload-focal");
+  const cmpUploadPixel = document.getElementById("cmp-upload-pixel");
+  const btnCmpUpload = document.getElementById("btn-cmp-upload");
+  const btnCmpExportJson = document.getElementById("btn-cmp-export-json");
   const btnCmpLayerCog = document.getElementById("btn-cmp-layer-cog");
   const btnCmpLayerTetra3 = document.getElementById("btn-cmp-layer-tetra3");
   const btnCmpLayerCnn = document.getElementById("btn-cmp-layer-cnn");
@@ -157,6 +163,8 @@
   const cmpLiveBody = document.querySelector("#cmp-live-table tbody");
   const cmpBenchBody = document.querySelector("#cmp-bench-table tbody");
   const cmpRealBody = document.querySelector("#cmp-real-table tbody");
+  const cmpStressWrap = document.getElementById("cmp-stress-wrap");
+  const cmpStressBody = document.querySelector("#cmp-stress-table tbody");
   const cmpBenchDevice = document.getElementById("cmp-bench-device");
   const cmpBenchScope = document.getElementById("cmp-bench-scope");
 
@@ -362,11 +370,13 @@
       btnLoad,
       btnRadec,
       btnUpload,
+      btnCmpZhao,
       btnCmpMount,
       btnCmpTetra3,
       btnCmpGlare,
       btnCmpSeed42,
-      btnCmpCurrent
+      btnCmpCurrent,
+      btnCmpUpload
     ].forEach((b) => {
       if (!b) return;
       b.disabled = on;
@@ -826,7 +836,7 @@
         drawCompareOverlay();
       });
       if (!lastComparePayload && !compareLoading) {
-        runCompareScenario("mount");
+        runCompareScenario("zhao");
       }
     }
   }
@@ -859,10 +869,13 @@
   });
 
   function setCentroidBackend(mode) {
+    const autoEl = document.getElementById("centroid-auto");
     const classical = document.getElementById("centroid-classical");
     const tetra3 = document.getElementById("centroid-tetra3");
     const cnn = document.getElementById("centroid-cnn");
-    if (mode === "cnn") {
+    if (mode === "auto") {
+      if (autoEl) autoEl.checked = true;
+    } else if (mode === "cnn") {
       if (cnn) cnn.checked = true;
     } else if (mode === "tetra3") {
       if (tetra3) tetra3.checked = true;
@@ -1489,10 +1502,15 @@
 
     // Concise, natural human Vietnamese inline status
     const reqCent = String(payload.centroid_backend || "classical");
-    const fellBack = Boolean(payload.centroid_fallback) || (reqCent !== "classical" && usedCent === "classical");
+    const fellBack = Boolean(payload.centroid_fallback) || (reqCent === "cnn" && usedCent === "classical");
     let centBit = "";
-    if (reqCent !== "classical") {
-      centBit = fellBack ? " · Chuyển tự động về CoG" : " · Tách tâm MobileUNet";
+    if (payload.auto_router_used) {
+      const selName = payload.auto_router_selected === "cnn" ? "CNN-Hybrid (tự động nâng cấp)" : "CoG tốc độ cao";
+      centBit = ` · Tự động chọn: ${selName}`;
+    } else if (reqCent === "tetra3") {
+      centBit = " · Ngưỡng kiểu tetra3";
+    } else if (reqCent !== "classical") {
+      centBit = fellBack ? " · Chuyển tự động về CoG" : " · Tách tâm CNN-Hybrid";
     }
 
     if (statusEl) {
@@ -2438,7 +2456,16 @@
   }
 
   function runCompareScenario(kind) {
-    if (kind === "mount") {
+    if (kind === "zhao") {
+      runCompare(
+        {
+          image: "real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy",
+          catalog: "bsc5",
+          solver: "svd"
+        },
+        "Đang đối chiếu CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN-Hybrid trên ảnh đêm thực Zhao MT9V022 (8-bit)..."
+      );
+    } else if (kind === "mount") {
       runCompare(
         {
           image: "uploads/mount_st_helens_1.png",
@@ -2480,11 +2507,72 @@
     }
   }
 
+  if (btnCmpZhao) btnCmpZhao.addEventListener("click", () => runCompareScenario("zhao"));
   if (btnCmpMount) btnCmpMount.addEventListener("click", () => runCompareScenario("mount"));
   if (btnCmpTetra3) btnCmpTetra3.addEventListener("click", () => runCompareScenario("tetra3"));
   if (btnCmpGlare) btnCmpGlare.addEventListener("click", () => runCompareScenario("glare"));
   if (btnCmpSeed42) btnCmpSeed42.addEventListener("click", () => runCompareScenario("seed42"));
   if (btnCmpCurrent) btnCmpCurrent.addEventListener("click", () => runCompareScenario("current"));
+
+  if (btnCmpUpload) {
+    btnCmpUpload.addEventListener("click", async () => {
+      if (!cmpUploadFile || !cmpUploadFile.files || !cmpUploadFile.files[0]) {
+        if (cmpVerdictBanner) {
+          cmpVerdictBanner.className = "cmp-verdict-banner";
+          cmpVerdictBanner.innerHTML = "<strong>Chưa chọn ảnh:</strong> Hãy chọn một tệp ảnh bầu trời sao (TIFF/PNG/JPG/NPY) ở thanh tải lên trước khi bấm so sánh.";
+        }
+        return;
+      }
+      const fd = new FormData();
+      fd.append("image", cmpUploadFile.files[0]);
+      if (cmpUploadFocal && cmpUploadFocal.value) fd.append("focal_mm", cmpUploadFocal.value);
+      if (cmpUploadPixel && cmpUploadPixel.value) fd.append("pixel_um", cmpUploadPixel.value);
+      compareLoading = true;
+      const msg = `Đang tải lên "${cmpUploadFile.files[0].name}" và đối chiếu đồng thời CoG, Ngưỡng kiểu tetra3 và CNN-Hybrid...`;
+      setBusy(true, msg);
+      if (cmpVerdictBanner) {
+        cmpVerdictBanner.className = "cmp-verdict-banner";
+        cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${msg}`;
+      }
+      try {
+        const data = await fetchJson("/api/compare-upload", { method: "POST", body: fd }, 180000);
+        renderComparePayload(data);
+        if (statusEl) {
+          statusEl.className = "status-banner ok";
+          statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên ảnh tải lên (${cmpUploadFile.files[0].name}).`;
+        }
+      } catch (err) {
+        if (cmpVerdictBanner) {
+          cmpVerdictBanner.className = "cmp-verdict-banner";
+          cmpVerdictBanner.innerHTML = `<strong>Lỗi tải ảnh so sánh:</strong> ${err.message || err}`;
+        }
+      } finally {
+        compareLoading = false;
+        setBusy(false);
+      }
+    });
+  }
+
+  if (btnCmpExportJson) {
+    btnCmpExportJson.addEventListener("click", () => {
+      const exportObj = lastComparePayload || lastSensorPayload;
+      if (!exportObj) {
+        if (cmpVerdictBanner) {
+          cmpVerdictBanner.innerHTML = "Chưa có dữ liệu kết quả để xuất JSON. Hãy chạy một kịch bản trước.";
+        }
+        return;
+      }
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = lastComparePayload ? "startracker_compare_audit.json" : "startracker_run_audit.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  }
 
   async function loadBenchmarkSummary() {
     if (benchmarkLoaded) return;
@@ -2501,15 +2589,17 @@
       }
       if (cmpBenchScope) {
         cmpBenchScope.textContent =
-          "Số liệu đo tự động từ benchmark_3way_comparison.json trên PC/laptop (chưa kiểm định phần cứng bay vệ tinh), đối chiếu đầy đủ cả CNN gốc trước nâng cấp (Ablation).";
+          "Số liệu đo tự động từ benchmark_3way_comparison.json trên PC/laptop (chưa kiểm định phần cứng bay vệ tinh), đối chiếu cả CNN gốc trước nâng cấp (Ablation) và chế độ Tự động (Auto CoG→CNN).";
       }
 
-      const beOrder = ["classical", "tetra3", "cnn_raw", "cnn"];
+      const rawSummary = data.sim_hd1024?.summary || {};
+      const beOrder = ["classical", "tetra3", "cnn_raw", "cnn", "auto"].filter((b) => rawSummary[b]);
       const beNames = {
         classical: "CoG (Nhóm)",
         tetra3: "Ngưỡng kiểu tetra3",
         cnn_raw: "CNN gốc (Trước)",
-        cnn: "CNN-Hybrid (Sau nâng cấp)"
+        cnn: "CNN-Hybrid (Sau nâng cấp)",
+        auto: "Auto (CoG → CNN-Hybrid)"
       };
       const suites = [
         { title: "500 ảnh sạch (hd1024)", obj: data.sim_hd1024?.summary },
@@ -2525,7 +2615,7 @@
           beOrder.forEach((be, idx) => {
             const s = su.obj[be];
             if (!s) return;
-            const rowCls = be === "cnn" ? "cmp-row-hybrid" : "";
+            const rowCls = be === "cnn" ? "cmp-row-hybrid" : be === "auto" ? "cmp-row-auto" : "";
             const dth = s.attitude_error_arcsec?.median;
             const precM = s.centroid_precision_micro;
             const recM = s.centroid_recall_micro;
@@ -2536,7 +2626,7 @@
             htmlRows.push(
               `<tr class="${rowCls}">` +
                 (idx === 0 ? `<td rowspan="${beOrder.length}"><strong>${su.title}</strong></td>` : "") +
-                `<td>${be === "cnn" ? `<strong>${beNames[be]}</strong>` : beNames[be]}</td>` +
+                `<td>${be === "cnn" || be === "auto" ? `<strong>${beNames[be]}</strong>` : beNames[be]}</td>` +
                 `<td>${solvedTxt}</td>` +
                 `<td class="${(s.n_false_lock || 0) === 0 ? "cmp-cell-best" : "cmp-cell-lost"}">${s.n_false_lock ?? 0}</td>` +
                 `<td>${fmtArc(dth)}</td>` +
@@ -2588,6 +2678,40 @@
           );
         }
         cmpRealBody.innerHTML = rRows.join("");
+      }
+
+      if (cmpStressWrap && cmpStressBody && data.stress_curves) {
+        const sc = data.stress_curves;
+        const scBes = ["classical", "tetra3", "cnn", "auto"];
+        const axesSpec = [
+          { title: "Vận tốc quay ω (°/s)", list: sc.omega_sweep || [], unit: "°/s" },
+          { title: "Sao giả / Tia vũ trụ", list: sc.false_stars_sweep || [], unit: " sao giả" },
+          { title: "Lóa mặt trời (peak DN)", list: sc.glare_sweep || [], unit: " DN" }
+        ];
+        const sRows = [];
+        axesSpec.forEach((ax) => {
+          ax.list.forEach((pt, idx) => {
+            const cells = scBes
+              .map((be) => {
+                const r = (pt.results || {})[be];
+                if (!r) return "<td>—</td>";
+                const pct = Number(r.solve_rate_pct || 0);
+                const err = r.median_err_arcsec != null ? ` (${Number(r.median_err_arcsec).toFixed(1)}″)` : "";
+                const cls = pct >= 90 ? "cmp-cell-best" : pct === 0 ? "cmp-cell-lost" : "cmp-cell-warn";
+                return `<td class="${cls}">${pct.toFixed(0)}%${err}</td>`;
+              })
+              .join("");
+            sRows.push(
+              `<tr>` +
+                (idx === 0 ? `<td rowspan="${ax.list.length}"><strong>${ax.title}</strong></td>` : "") +
+                `<td>${pt.x}${ax.unit}</td>${cells}</tr>`
+            );
+          });
+        });
+        if (sRows.length) {
+          cmpStressBody.innerHTML = sRows.join("");
+          cmpStressWrap.hidden = false;
+        }
       }
     } catch (_) {
       // Ignore silent preload failures

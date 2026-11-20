@@ -4,7 +4,7 @@ from math import isfinite
 import os
 from pathlib import Path
 import sys
-from threading import Lock, Timer
+from threading import Event, Lock, Thread, Timer
 from webbrowser import open as open_browser
 from flask import Flask, Response, jsonify, render_template, request, send_from_directory
 import matplotlib
@@ -23,8 +23,14 @@ ENGINE = DemoEngine(BASE)
 LOCK = Lock()
 _SKY_CATALOG_CACHE = {}
 _SKY_CACHE_LOCK = Lock()
-_VALID_BACKENDS = ('classical', 'tetra3', 'tetra3_threshold', 'cnn', 'cnn_hybrid', 'cnn_raw', 'cnn_zhao2024', 'zhao', 'mobileunet')
-_UPLOAD_EXTS = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.webp')
+_PLOT_STATE_LOCK = Lock()
+_PLOT_RENDER_LOCK = Lock()
+_PLOT_READY = Event()
+_PLOT_READY.set()
+_PLOT_GEN = 0
+_STATIC_PLOT_NAMES = ('demo_input.png', 'demo_output.png', 'demo_result.png')
+_VALID_BACKENDS = ('auto', 'adaptive', 'hybrid_auto', 'classical', 'tetra3', 'tetra3_threshold', 'cnn', 'cnn_hybrid', 'cnn_raw', 'cnn_zhao2024', 'zhao', 'mobileunet')
+_UPLOAD_EXTS = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.webp', '.npy')
 _FAVICON_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
     '<rect width="32" height="32" rx="7" fill="#05070B"/>'
@@ -77,13 +83,40 @@ def _body_radec(body: object) -> object:
     fmt_tag: object = str(body.get('radec_fmt') or 'auto')
     return (parse_ra_deg(ra_in, fmt=fmt_tag), parse_dec_deg(dec_in, fmt=fmt_tag))
 
+def _kickoff_static_plots(render_cb: object) -> None:
+    global _PLOT_GEN
+    if render_cb is None:
+        return
+    with _PLOT_STATE_LOCK:
+        _PLOT_GEN += 1
+        my_gen = _PLOT_GEN
+        _PLOT_READY.clear()
+
+    def _worker() -> None:
+        try:
+            with _PLOT_RENDER_LOCK:
+                with _PLOT_STATE_LOCK:
+                    if my_gen != _PLOT_GEN:
+                        return
+                render_cb()
+        except Exception:
+            pass
+        finally:
+            with _PLOT_STATE_LOCK:
+                if my_gen == _PLOT_GEN:
+                    _PLOT_READY.set()
+
+    Thread(target=_worker, name='star-tracker-plots', daemon=True).start()
+
 def _run_locked(req: object) -> object:
     if not LOCK.acquire(timeout=0.15):
         raise EngineBusy('Hệ thống đang xử lý khung ảnh trước đó. Vui lòng đợi giây lát rồi thử lại.')
+    req.async_plots = True
     try:
         outcome: object = ENGINE.run(req)
     finally:
         LOCK.release()
+    _kickoff_static_plots(getattr(outcome, 'render_static_plots', None))
     res_dict: object = dict(outcome.payload)
     res_dict.update(
         image_url='/output/demo_result.png',
@@ -238,10 +271,65 @@ def api_compare() -> object:
     except Exception as err:
         return (jsonify(dict(error=str(err))), 400)
 
+@app.post('/api/compare-upload')
+def api_compare_upload() -> object:
+    uploaded: object = request.files.get('image')
+    if uploaded is None or not uploaded.filename:
+        return (jsonify(dict(error='Chưa chọn file ảnh để so sánh')), 400)
+    from werkzeug.utils import secure_filename
+    safe_name: object = secure_filename(uploaded.filename)
+    if Path(safe_name).suffix.lower() not in _UPLOAD_EXTS:
+        return (jsonify(dict(error='Nhận TIFF, PNG, JPEG, WebP hoặc NPY.')), 400)
+    up_dir: object = BASE.joinpath('data', 'uploads')
+    up_dir.mkdir(parents=True, exist_ok=True)
+    saved_img: object = up_dir / safe_name
+    uploaded.save(saved_img)
+    saved_sidecar: object = None
+    sc_upload: object = request.files.get('sidecar')
+    if sc_upload is not None and sc_upload.filename:
+        sc_safe: object = secure_filename(sc_upload.filename)
+        if Path(sc_safe).suffix.lower() != '.json':
+            return (jsonify(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).')), 400)
+        saved_sidecar = up_dir / sc_safe
+        sc_upload.save(saved_sidecar)
+    form_get: object = request.form.get
+    try:
+        req: object = RunRequest(
+            mode=str(form_get('mode') or 'fast'),
+            seed=int(float(form_get('seed') or 42)),
+            catalog=str(form_get('catalog') or 'bsc5'),
+            omega=float(form_get('omega') or 0.06),
+            omega_axis=str(form_get('omega_axis') or 'y'),
+            exposure=float(form_get('exposure') or 0.15),
+            glare=str(form_get('glare') or 'none'),
+            sky_clutter=str(form_get('sky_clutter') or 'none'),
+            false_stars=int(float(form_get('false_stars') or 0)),
+            solver=str(form_get('solver') or 'svd'),
+            image=saved_img,
+            sidecar=saved_sidecar,
+            out_dir=BASE.joinpath('data', 'outputs'),
+            lookup=True,
+            save_png=False,
+            **_optics_from(form_get),
+        )
+        if not LOCK.acquire(timeout=0.15):
+            raise EngineBusy('Hệ thống đang xử lý khung ảnh trước đó. Vui lòng đợi giây lát rồi thử lại.')
+        try:
+            comp_payload = ENGINE.compare(req, backends=('classical', 'tetra3', 'cnn'))
+        finally:
+            LOCK.release()
+        comp_payload['source'] = 'upload'
+        return jsonify(comp_payload)
+    except EngineBusy as busy_err:
+        return (jsonify(dict(error=str(busy_err), busy=True)), 409)
+    except Exception as err:
+        return (jsonify(dict(error=str(err))), 400)
+
 @app.get('/api/benchmark-summary')
 def api_benchmark_summary() -> object:
     bench_p: Path = BASE.joinpath('data', 'outputs', 'benchmark_3way_comparison.json')
     rej_p: Path = BASE.joinpath('data', 'outputs', 'benchmark_rejection_stress.json')
+    stress_p: Path = BASE.joinpath('data', 'outputs', 'benchmark_stress_curves.json')
     out: dict = dict(available=False, evaluation_scope='PC/laptop software benchmark (not flight-qualified spacecraft hardware)')
     if bench_p.is_file():
         try:
@@ -256,6 +344,11 @@ def api_benchmark_summary() -> object:
         try:
             rej_data = json_loads(rej_p.read_text(encoding='utf-8'))
             out['rejection_stress'] = rej_data.get('summary') or rej_data
+        except Exception:
+            pass
+    if stress_p.is_file():
+        try:
+            out['stress_curves'] = json_loads(stress_p.read_text(encoding='utf-8'))
         except Exception:
             pass
     return jsonify(out)
@@ -295,12 +388,30 @@ def api_run_upload() -> object:
 
 @app.get('/output/<path:name>')
 def output_file(name: object) -> object:
+    if str(name) in _STATIC_PLOT_NAMES:
+        _PLOT_READY.wait(timeout=15.0)
     out_root: object = BASE.joinpath('data', 'outputs').resolve()
     target: object = out_root.joinpath(name).resolve()
     target.relative_to(out_root)
     if not target.is_file():
         return (jsonify(dict(error='missing output')), 404)
     return send_from_directory(out_root, name)
+
+def _preload_warmup() -> None:
+    """Warm up BSC5 catalog, K-vector table, and MobileUNet weights asynchronously on server start."""
+    try:
+        ENGINE.stack('bsc5', 6.0, 30.5)
+        from src.centroid_cnn import CNNCentroidDetector, weights_available
+        if weights_available():
+            import numpy as _np
+            det = CNNCentroidDetector(ENGINE.cam_full.downscaled(4))
+            det.detect(_np.zeros((128, 128), dtype=_np.uint16))
+            ENGINE._cnn_cache = det
+    except Exception:
+        pass
+
+if os.environ.get('STAR_TRACKER_PRELOAD', '').strip().lower() in ('1', 'true', 'yes'):
+    Thread(target=_preload_warmup, name='star-tracker-preload', daemon=True).start()
 
 def main() -> object:
     raw_port: object = os.environ.get('STAR_TRACKER_PORT', '').strip()

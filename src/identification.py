@@ -1,5 +1,6 @@
 """Lost-in-space star identification via Mortari's Pyramid algorithm and wide-field pair voting."""
-from numpy import arange, arccos, argmin, argsort, asarray, broadcast_to, clip, concatenate, cross, dot, einsum, empty, eye, fill_diagonal, float64, full, hypot, inf, int32, isfinite, lexsort, maximum, mean, minimum, pi, radians, sign, sin, where, zeros
+from time import perf_counter
+from numpy import arange, arccos, argmin, argsort, asarray, broadcast_to, clip, concatenate, cos, cross, dot, einsum, empty, eye, fill_diagonal, float32, float64, full, hypot, inf, int32, isfinite, lexsort, maximum, mean, minimum, pi, radians, sign, sin, where, zeros
 from numpy.linalg import det, norm, svd
 
 class IdResult:
@@ -22,6 +23,35 @@ def _attitudes_from_pair(b1: object, b2: object, r1: object, r2: object) -> obje
     fix: object = broadcast_to(eye(3, dtype=float64), u_m.shape).copy()
     fix[:, 2, 2] = d_sgn
     return u_m @ fix @ vt_m
+
+def _fast_screen_attitudes(attitudes: object, catalog_vectors: object, obs_sub: object, camera: object, inlier_px: float, tight_px: float, top_k: int=48) -> object:
+    """Fast BLAS SGEMM angular pre-filter reducing thousands of pair attitudes to top-K before exact pixel scoring."""
+    num_att: int = int(len(attitudes))
+    if num_att <= top_k:
+        return arange(num_att, dtype=int32)
+    ifov = float(camera.ifov_rad)
+    # Slightly generous angular cone (~1.25x) guarantees zero false misses vs exact pixel reprojection
+    cos_loose = float(cos(min(pi * 0.5, float(inlier_px) * ifov * 1.25)))
+    cos_tight = float(cos(min(pi * 0.5, float(tight_px) * ifov * 1.25)))
+    cat_t = asarray(catalog_vectors, dtype=float32).T
+    obs_f = asarray(obs_sub, dtype=float32)
+    k_obs = int(len(obs_f))
+    loose_s = zeros(num_att, dtype=int32)
+    tight_s = zeros(num_att, dtype=int32)
+    mean_c = zeros(num_att, dtype=float32)
+    chunk_sz = 256
+    for s_idx in range(0, num_att, chunk_sz):
+        chunk = asarray(attitudes[s_idx:s_idx + chunk_sz], dtype=float32)
+        m_c = int(len(chunk))
+        # Rotate K observed rays into ICRS via A^T: (m_c, K, 3)
+        obs_icrs = einsum('mji,kj->mki', chunk, obs_f).reshape(m_c * k_obs, 3)
+        best_cos = (obs_icrs @ cat_t).max(axis=1).reshape(m_c, k_obs)
+        e_idx = s_idx + m_c
+        loose_s[s_idx:e_idx] = (best_cos >= cos_loose).sum(axis=1)
+        tight_s[s_idx:e_idx] = (best_cos >= cos_tight).sum(axis=1)
+        mean_c[s_idx:e_idx] = best_cos.mean(axis=1)
+    order = lexsort((-mean_c, -loose_s, -tight_s))
+    return order[:top_k].astype(int32)
 
 def _inlier_stats(attitudes: object, catalog_vectors: object, observed_uv: object, camera: object, inlier_px: object, tight_px: object) -> object:
     """Score batch of candidate attitudes by loose/tight pixel reprojection inliers."""
@@ -88,10 +118,11 @@ def _iter_triangle_indices(n_s: object) -> object:
 class StarIdentifier:
     """Mortari Pyramid star-pattern identifier with wide-FOV pair-voting fallback."""
 
-    def __init__(self, catalog: object, kvector: object, tol_rad: object, n_false_sky: object=300, p_max: object=0.0001, max_stars: object=12, cutoff: object=2000, tol_frac: object=0.0) -> object:
+    def __init__(self, catalog: object, kvector: object, tol_rad: object, n_false_sky: object=300, p_max: object=0.0001, max_stars: object=12, cutoff: object=2000, tol_frac: object=0.0, time_budget_s: float | None=1.2) -> object:
         nf: object = max(int(n_false_sky), 1)
         t_rad: object = float(tol_rad)
         self.catalog, self.kvector, self.tol_rad, self.tol_frac, self.n_false_sky, self.p_max, self.max_stars, self.cutoff, self._econst = (catalog, kvector, t_rad, float(tol_frac), int(n_false_sky), float(p_max), int(max_stars), int(cutoff), nf ** 4 * t_rad ** 5 / (2.0 * float(pi) ** 2))
+        self.time_budget_s = None if time_budget_s is None else float(time_budget_s)
 
     def _tol(self, theta: object) -> object:
         return self.tol_rad + self.tol_frac * abs(float(theta))
@@ -116,10 +147,13 @@ class StarIdentifier:
         tested: object = 0
         adj_cache: dict = {}
         tri_cache: dict = {}
+        deadline: float | None = (perf_counter() + self.time_budget_s) if (self.time_budget_s is not None and self.time_budget_s > 0.0) else None
         for i, j, k, r in _iter_pyramid_indices(n_sub):
             tested += 1
             if tested > self.cutoff:
                 return _empty_id_result(0)
+            if deadline is not None and (tested & 7) == 0 and perf_counter() > deadline:
+                return _empty_id_result(tested)
             pyr_hit: object = self._try_pyramid(b_sub, ang_mat, i, j, k, r, adj_cache=adj_cache, tri_cache=tri_cache)
             if pyr_hit is not None:
                 ci, cj, ck, cr, ef = pyr_hit
@@ -128,6 +162,8 @@ class StarIdentifier:
             tested += 1
             if tested > self.cutoff:
                 return _empty_id_result(0)
+            if deadline is not None and (tested & 7) == 0 and perf_counter() > deadline:
+                return _empty_id_result(tested)
             tri_hit: object = self._try_triangle(b_sub, ang_mat, i, j, k, adj_cache=adj_cache, tri_cache=tri_cache)
             if tri_hit is not None:
                 ci, cj, ck, ef = tri_hit
@@ -259,8 +295,10 @@ class StarIdentifier:
         cat_b: object = concatenate((p_right, p_left))
         cat_vecs: object = self.catalog.vectors
         rot_bank: object = _attitudes_from_pair(obs_sub[row_i], obs_sub[col_j], cat_vecs[cat_a], cat_vecs[cat_b])
+        top_idx: object = _fast_screen_attitudes(rot_bank, cat_vecs, obs_sub, camera, float(inlier_px), float(min(3.0, inlier_px)), top_k=48)
+        rot_top: object = rot_bank[top_idx]
         obs_uv: object = camera.project(obs_sub)[0]
-        loose_c, tight_c, avg_d = _inlier_stats(rot_bank, cat_vecs, obs_uv, camera, inlier_px, min(3.0, inlier_px))
+        loose_c, tight_c, avg_d = _inlier_stats(rot_top, cat_vecs, obs_uv, camera, inlier_px, min(3.0, inlier_px))
         order_idx: object = lexsort((avg_d, -loose_c, -tight_c))
         win_idx: object = int(order_idx[0])
         run_idx: object = int(order_idx[1]) if len(order_idx) > 1 else win_idx
@@ -268,7 +306,7 @@ class StarIdentifier:
             return _empty_id_result(0)
         if int(tight_c[win_idx]) == int(tight_c[run_idx]) and int(loose_c[win_idx]) == int(loose_c[run_idx]):
             return _empty_id_result(0)
-        cam_all: object = einsum('ij,kj->ik', cat_vecs, rot_bank[win_idx])
+        cam_all: object = einsum('ij,kj->ik', cat_vecs, rot_top[win_idx])
         cx_v, cy_v, cz_v = cam_all.T
         front_mask: object = cz_v > 0.0
         inv_cz: object = 1.0 / maximum(cz_v, 1e-12)

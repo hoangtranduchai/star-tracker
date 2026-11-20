@@ -79,8 +79,14 @@ class StarTrackerPipeline:
         self.camera, self.catalog, self.kvector, self.cfg = (camera, catalog, kvector, conf)
         self.masker = GlareMasker(bright_frac=conf.mask_bright_frac, min_area_px=conf.mask_min_area_px, min_span_px=conf.mask_min_span_px, dilate_px=conf.mask_dilate_px, bg_excess_k=conf.mask_bg_excess_k, full_scale=conf.mask_full_scale)
         base_det: object = CentroidDetector(camera, k_sigma=conf.k_sigma, bg_block=conf.bg_block, min_area=conf.min_area, max_area=conf.max_area, max_area_sat=conf.max_area_sat, max_axis_ratio=conf.max_axis_ratio, saturation_dn=conf.saturation_dn, binary_open=conf.binary_open, cog_pad=conf.cog_pad)
+        self._base_det = base_det
+        self._auto_cnn_detector = None
+        self._is_auto_mode = False
         backend_tag: object = str(conf.centroid_backend or 'classical').lower().strip()
-        if backend_tag in ('cnn', 'cnn_hybrid', 'cnn_zhao2024', 'zhao', 'mobileunet'):
+        if backend_tag in ('auto', 'adaptive', 'hybrid_auto'):
+            self.centroid_detector = base_det
+            self._is_auto_mode = True
+        elif backend_tag in ('cnn', 'cnn_hybrid', 'cnn_zhao2024', 'zhao', 'mobileunet'):
             from .centroid_cnn import CNNCentroidDetector
             self.centroid_detector = CNNCentroidDetector(camera, classical=base_det, refine_subpixel=True)
         elif backend_tag in ('cnn_raw', 'cnn_trilateration'):
@@ -158,22 +164,73 @@ class StarTrackerPipeline:
         rms_limit: float = max(floor_arc, 0.8 * float(mean(gate_arc)))
         return (True, None, None, obs_sel, cat_sel, quat, dcm, res_arc, cov_mat, n_rejected_outliers, rms_r, max_r, rms_limit)
 
+    def _ensure_auto_cnn(self) -> object:
+        if self._auto_cnn_detector is None:
+            from .centroid_cnn import CNNCentroidDetector
+            self._auto_cnn_detector = CNNCentroidDetector(self.camera, classical=self._base_det, refine_subpixel=True)
+        return self._auto_cnn_detector
+
     def process_frame(self, image: object) -> object:
+        if not self._is_auto_mode:
+            return self._process_with_detector(image, self.centroid_detector, str(self.cfg.centroid_backend or 'classical'))
+        # Adaptive Auto-Router: fast CoG first (~85 ms); escalate to CNN-Hybrid on LOST or heavy clutter
+        res_cog = self._process_with_detector(image, self._base_det, 'classical')
+        n_det_cog = int(len(res_cog.centroids.uv)) if (res_cog.centroids is not None and res_cog.centroids.uv is not None) else 0
+        if res_cog.success and n_det_cog <= 300:
+            if isinstance(res_cog.quality, dict):
+                res_cog.quality.update(
+                    centroid_backend='auto',
+                    auto_router_used=True,
+                    auto_router_selected='classical',
+                    auto_router_reason='CoG khóa thành công tốc độ cao',
+                )
+            return res_cog
+        cnn_det = self._ensure_auto_cnn()
+        res_cnn = self._process_with_detector(image, cnn_det, 'cnn', precomputed_mask=res_cog.glare_mask, mask_ms=0.0)
+        cog_ms = float((res_cog.timing_ms or {}).get('total_pipeline_ms', 0.0))
+        if isinstance(res_cnn.timing_ms, dict):
+            res_cnn.timing_ms['auto_cog_attempt_ms'] = cog_ms
+            res_cnn.timing_ms['total_pipeline_ms'] = float(res_cnn.timing_ms.get('total_pipeline_ms', 0.0)) + cog_ms
+        trigger_tag = res_cog.reject_code if not res_cog.success else f'CLUTTER_{n_det_cog}'
+        if res_cnn.success or not res_cog.success:
+            if isinstance(res_cnn.quality, dict):
+                res_cnn.quality.update(
+                    centroid_backend='auto',
+                    auto_router_used=True,
+                    auto_router_selected='cnn',
+                    auto_router_reason=f'CoG trả {res_cog.status} [{trigger_tag}] → tự động chuyển sang CNN-Hybrid',
+                    auto_cog_status=res_cog.status,
+                    auto_cog_reject_code=res_cog.reject_code,
+                )
+            return res_cnn
+        if isinstance(res_cog.quality, dict):
+            res_cog.quality.update(
+                centroid_backend='auto',
+                auto_router_used=True,
+                auto_router_selected='classical',
+                auto_router_reason=f'CoG giải được ({n_det_cog} tâm); giữ kết quả CoG sau đối chiếu CNN-Hybrid',
+            )
+        return res_cog
+
+    def _process_with_detector(self, image: object, detector: object, cfg_be: str, *, precomputed_mask: object=None, mask_ms: float | None=None) -> object:
         t_log: object = {}
-        ts: object = perf_counter()
-        g_mask: object = self.masker.make_mask(image)
-        t_log['mask_ms'] = (perf_counter() - ts) * 1000.0
+        if precomputed_mask is None:
+            ts: object = perf_counter()
+            g_mask: object = self.masker.make_mask(image)
+            t_log['mask_ms'] = (perf_counter() - ts) * 1000.0
+        else:
+            g_mask = precomputed_mask
+            t_log['mask_ms'] = 0.0 if mask_ms is None else float(mask_ms)
         ts = perf_counter()
-        cents: object = self.centroid_detector.detect(image, mask=g_mask)
+        cents: object = detector.detect(image, mask=g_mask)
         t_log['centroiding_ms'] = (perf_counter() - ts) * 1000.0
         req_stars: int = max(int(self.cfg.min_stars), 3)
         n_det: int = int(len(cents.vectors))
-        cfg_be: str = str(self.cfg.centroid_backend or 'classical')
 
         def abort(reject_code: str, reason: str, *, n_initial_matched: int=0, n_rejected_outliers: int=0, n_valid_pairs: int=0, rms_res: object=None, max_res: object=None, fov_expected: int=0) -> TrackerResult:
             t_log['total_pipeline_ms'] = sum((val for key, val in t_log.items() if key != 'total_pipeline_ms'))
             stats = _build_match_stats(status='LOST', reject_code=reject_code, n_detected=n_det, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=n_valid_pairs, min_pairs_required=req_stars, rms_residual_arcsec=rms_res, max_residual_arcsec=max_res, fov_expected_stars=fov_expected)
-            q_diag = dict(stats, n_matched=0, centroid_backend=cfg_be, centroid_detector=getattr(self.centroid_detector, 'last_backend', cfg_be), centroid_fallback=bool(getattr(self.centroid_detector, 'last_fallback', False)), low_recall=True, many_false=False)
+            q_diag = dict(stats, n_matched=0, centroid_backend=cfg_be, centroid_detector=getattr(detector, 'last_backend', cfg_be), centroid_fallback=bool(getattr(detector, 'last_fallback', False)), low_recall=True, many_false=False)
             return TrackerResult(success=False, q=None, a=None, centroids=cents, ident=None, residuals_arcsec=None, cov_rad2=None, timing_ms=t_log, quality=q_diag, error=f'LOST [{reject_code}]: {reason}', glare_mask=g_mask, status='LOST', reject_code=reject_code, match_stats=stats)
 
         if n_det < 3:
@@ -226,7 +283,7 @@ class StarTrackerPipeline:
             return abort('LOW_FOV_CONSISTENCY', f'Attitude matched only {num_final} of {num_fov} catalog stars in that field', n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, rms_res=rms_res, max_res=max_res, fov_expected=num_fov)
         final_id: object = IdResult(obs_sel, cat_sel, True, id_res.n_pyramids_tested, id_res.expected_false)
         match_stats: dict = _build_match_stats(status='SOLVED', reject_code=None, n_detected=n_det, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=num_final, min_pairs_required=req_stars, rms_residual_arcsec=rms_res, max_residual_arcsec=max_res, fov_expected_stars=num_fov)
-        q_metrics: object = self._quality(cents, final_id, dcm)
+        q_metrics: object = self._quality(cents, final_id, dcm, detector=detector, cfg_be=cfg_be)
         q_metrics.update(match_stats)
         return TrackerResult(success=True, q=quat, a=dcm, centroids=cents, ident=final_id, residuals_arcsec=res_arc, cov_rad2=cov_mat, timing_ms=t_log, quality=q_metrics, error=None, glare_mask=g_mask, status='SOLVED', reject_code=None, match_stats=match_stats)
 
@@ -269,11 +326,12 @@ class StarTrackerPipeline:
             return (obs_idx, cat_idx)
         return (concatenate((obs_idx, asarray(more_o, dtype=int32))), concatenate((cat_idx, asarray(more_c, dtype=int32))))
 
-    def _quality(self, cents: object, ident: object, a: object) -> object:
+    def _quality(self, cents: object, ident: object, a: object, detector: object=None, cfg_be: str | None=None) -> object:
         n_det: object = int(len(cents.uv))
         n_id: object = int(len(ident.obs_idx))
-        cfg_be: object = str(self.cfg.centroid_backend or 'classical')
-        q_info: object = dict(n_detected=n_det, n_matched=n_id, centroid_backend=cfg_be, centroid_detector=getattr(self.centroid_detector, 'last_backend', cfg_be), centroid_fallback=bool(getattr(self.centroid_detector, 'last_fallback', False)), low_recall=False, many_false=False)
+        det_ref = self.centroid_detector if detector is None else detector
+        be_str: object = str(cfg_be if cfg_be is not None else (self.cfg.centroid_backend or 'classical'))
+        q_info: object = dict(n_detected=n_det, n_matched=n_id, centroid_backend=be_str, centroid_detector=getattr(det_ref, 'last_backend', be_str), centroid_fallback=bool(getattr(det_ref, 'last_fallback', False)), low_recall=False, many_false=False)
         if a is None:
             return q_info
         proj_uv, in_fov = self.camera.project(einsum('ij,kj->ik', self.catalog.vectors, a))

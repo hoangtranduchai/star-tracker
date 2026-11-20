@@ -96,6 +96,17 @@ Số đo chỉ lấy từ `data/outputs/log_reconciliation_audit.json` và các 
 
 **Trả lời:** Cùng seed → cùng khung mô phỏng / ground truth (`seed42_cog_vs_cnn.json`), dễ tái lập và đối chiếu trực tiếp giữa hai nhánh CoG (`0,446″`) và CNN (`1,648″`).
 
+### 21. CNN có vượt được thuật toán chọn ngưỡng truyền thống kiểu ESA `tetra3` không?
+
+**Trả lời:** Với bản nâng cấp **`CNN-Hybrid`** (MobileUNet lọc ngữ nghĩa + trừ nền `31×31` + cổng SNR vòng khuyên rỗng + lọc điểm nóng đơn pixel `pk_net/flux > 0,75` + tinh chỉnh tọa độ dưới mức pixel Windowed CoG), câu trả lời định lượng trên `566 khung × 5 phương pháp` (`benchmark_3way_comparison.json`) và `600 ca stress` (`benchmark_stress_curves.json`, **0% Khóa sai**) là **CÓ ở độ chính xác nền phức tạp/lóa/tiền cảnh và ảnh trời thật**:
+- Giảm **-99,8% FP** so với `CNN gốc` (`1.118 → 2 FP` trên 500 khung sạch, `157 → 0 FP` trên 40 khung lóa) và giảm sai số Δθ **4×** (`7,99″ → 2,02″`).
+- Vượt trực diện `tetra3` trên 500 khung sạch (`2,02″` vs `2,34″`), vượt gần **2×** độ chính xác & `+18,6%` Recall trên 40 khung lóa (`2,73″ / 69,9%` vs `5,06″ / 51,3%`), giữ **100%** khi tiêm `30` sao giả (trong khi `CoG` và `tetra3` giảm còn `70%`), và giải đúng cả 2 ảnh thực địa mà `tetra3` trả `LOST` là `Zhao MT9V022` (`48,26″`) và `Mount St. Helens` (`71,13″`).
+- Đánh đổi trung thực: `CNN-Hybrid` chậm hơn ~1,8× trên nền sạch (`152 ms` vs `82–84 ms`) và suy giảm ở vận tốc quay góc cực cao `ω ≥ 1,5 °/s` (`40%–20%`) vì MobileUNet học trên PSF tròn. Chính vì vậy, kiến trúc mặc định **`Tự động (Auto: CoG → CNN-Hybrid)`** chạy `CoG` trước rồi chỉ nâng cấp `CNN-Hybrid` khi `CoG` trả `LOST` — đạt đồng thời `1,91″ / 85,8 ms` trên trời sạch, `100%` tới `ω = 1,5 °/s`, `100%` ở `30` sao giả, và giải trọn **4/4 ảnh trời thật hiệu chuẩn**.
+
+### 22. Tại sao tốc độ tăng 5×–11× mà không phải giảm độ phân giải ảnh?
+
+**Trả lời:** Giảm độ phân giải (downsample) sẽ phá hỏng độ chính xác cận pixel của tâm sao (`σ_centroid`) và mất sao mờ. Thay vào đó, nhóm xử lý đúng nút thắt cổ chai bằng thuật toán: (1) bộ tiền lọc góc 2 tầng dùng nhân ma trận BLAS `float32 SGEMM` trong `StarIdentifier.identify_wide` (`Mount St. Helens tetra3`: `11,3 s → 1,43 s`; `Zhao CoG`: `2,7 s → 0,25 s`), (2) vector hóa NumPy vòng lặp tinh chỉnh `trilateration_centroids`, (3) vẽ biểu đồ Matplotlib tĩnh trên luồng nền bất đồng bộ để Web UI phản hồi ngay với ảnh sạch không viền, và (4) tải sẵn trọng số CNN khi khởi động server (`STAR_TRACKER_PRELOAD=1`).
+
 ---
 
 ## Không được nói

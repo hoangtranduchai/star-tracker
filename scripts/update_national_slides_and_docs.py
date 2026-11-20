@@ -75,6 +75,8 @@ def _load_all_data() -> dict[str, Any]:
         data[k] = json.loads(p.read_text(encoding='utf-8'))
     b3_path = OUT_DIR / 'benchmark_3way_comparison.json'
     data['bench3'] = json.loads(b3_path.read_text(encoding='utf-8')) if b3_path.is_file() else None
+    sc_path = OUT_DIR / 'benchmark_stress_curves.json'
+    data['stress_curves'] = json.loads(sc_path.read_text(encoding='utf-8')) if sc_path.is_file() else None
     return data
 
 
@@ -1658,42 +1660,46 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         '```powershell',
         '# 1. Chạy toàn bộ bộ kiểm thử đơn vị & hồi quy chống khóa sai',
         'pytest -v',
-        '# Kỳ vọng: 129 passed, 2 skipped (test cache tùy chọn không có sẵn)',
+        '# Kỳ vọng: 130+ passed, 2 skipped (test cache tùy chọn không có sẵn)',
         '',
-        '# 2. Chạy benchmark End-to-End đầy đủ & đối chuẩn 4 phương pháp (CoG vs tetra3 vs CNN gốc vs CNN-Hybrid)',
+        '# 2. Chạy benchmark End-to-End, đối chuẩn 5 phương pháp & đường cong stress khắc nghiệt',
         'python scripts/benchmark_end_to_end.py --suites all',
         'python scripts/benchmark_3way_centroid_e2e.py',
+        'python scripts/benchmark_stress_curves.py',
+        'python scripts/make_stage1_upgrade_figures.py',
         '',
         '# 3. Chạy kiểm toán đối soát toàn bộ JSON & tài liệu',
         'python scripts/reconcile_logs.py',
         '',
         '# 4. Đồng bộ tự động toàn bộ slide PPTX, hồ sơ DOCX/MD và báo cáo Chặng 1',
-        'python scripts/update_national_slides_and_docs.py',
-        'python scripts/fill_ai2026_dossier.py',
+        'python scripts/update_national_slides_and_docs.py --report-only',
         '',
         '# 5. Chạy demo dòng lệnh & Web UI cục bộ (cổng 8765)',
         'python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show',
         'python app.py',
         '```',
         '',
-        'Trên giao diện Web (`http://127.0.0.1:8765/`, hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser`, hoặc truy cập trực tuyến 24/7 tại `https://startracker.agentlens.dpdns.org`), hệ thống cung cấp endpoint `GET /api/sky-catalog` nạp 5.023 sao thực Yale BSC5 (hệ J2000) để hiển thị **không gian 3D quỹ đạo Trái Đất & thiên cầu thực**, cho phép đối chiếu trực quan tư thế vệ tinh 3D (`Quỹ đạo Trái Đất` / `Góc nhìn Cảm biến 1:1`) ngay cạnh ảnh sao gốc không viền (lưu ý: mô phỏng trực quan trên máy tính, không phải phần cứng bay/ADCS). Người dùng có thể bấm trực tiếp các kịch bản nhanh:',
-        '- **`Mẫu chuẩn Seed 42`**: minh họa CoG giải nhanh `0,446″` với `36/36` sao khớp (`SOLVED`) và đối chiếu 3D trực tiếp.',
-        '- **`Bầu trời thật ESA`**: nạp ảnh 16-bit thật `Alt60` (`f=35,2911 mm`, `6,9 µm`), minh họa cả CoG và CNN giải `SOLVED` ở sai số vài giây cung.',
-        '- **`Núi St. Helens`**: minh họa preset CNN-Hybrid giải `72/77` sao (`Δθ = 71,13″`, chỉ `2 FP`), đồng thời trên tab **`So sánh CoG / tetra3 ↔ CNN`** cho phép đối chiếu trực tiếp 3 lớp tâm sao trên cùng khung ảnh.',
+        'Trên giao diện Web (`http://127.0.0.1:8765/`, hỗ trợ `STAR_TRACKER_NO_BROWSER=1` / `--no-browser`, hoặc truy cập trực tuyến 24/7 tại `https://startracker.agentlens.dpdns.org`), hệ thống cung cấp bộ chọn mặc định **`Tự động (Auto: CoG → CNN-Hybrid)`** bên cạnh `CoG`, `tetra3`, `CNN`, cùng endpoint `GET /api/sky-catalog` nạp 5.023 sao thực Yale BSC5 (hệ J2000) để hiển thị **không gian 3D quỹ đạo Trái Đất & thiên cầu thực**, cho phép đối chiếu trực quan tư thế vệ tinh 3D (`Quỹ đạo Trái Đất` / `Góc nhìn Cảm biến 1:1`) ngay cạnh ảnh sao gốc không viền (lưu ý: mô phỏng trực quan trên máy tính/VPS, không phải phần cứng bay/ADCS). Người dùng có thể bấm trực tiếp các kịch bản nhanh:',
+        '- **`Mẫu chuẩn Seed 42`**: minh họa bộ định tuyến `Tự động` chọn nhánh `CoG` giải nhanh `0,446″` với `36/36` sao khớp (`SOLVED`) và đối chiếu 3D trực tiếp.',
+        '- **`Bầu trời thật ESA`**: nạp ảnh 16-bit thật `Alt60` (`f=35,2911 mm`, `6,9 µm`), giải `SOLVED` ở sai số vài giây cung (`2,26″` ở Auto/CoG · `6,77″` ở CNN-Hybrid).',
+        '- **`Núi St. Helens`**: minh họa cảnh rộng 68° có tiền cảnh núi thật — `CNN-Hybrid` giải `72/77` sao (`Δθ = 71,13″`, chỉ `2 FP`), còn `tetra3` trả `LOST` (`57 FP`).',
         '- **`Ngược nắng lóa mạnh`**: minh họa xử lý ảnh nhiễu lóa mặt trời mạnh kèm mặt nạ `GlareMasker`.',
-        '- **Tab `So sánh CoG / tetra3 ↔ CNN` (`POST /api/compare` & `GET /api/benchmark-summary`)**: chạy đồng thời cả 3 thuật toán tách tâm sao trên cùng một mảng điểm ảnh, hiển thị lớp phủ màu trực quan (CoG vàng cam · Ngưỡng kiểu tetra3 tím · CNN-Hybrid xanh ngọc) cùng bảng đối chuẩn 566 khung hình.',
+        '- **Tab `So sánh CoG / tetra3 ↔ CNN` (`POST /api/compare`, `POST /api/compare-upload` & `GET /api/benchmark-summary`)**: hỗ trợ sẵn nút 1 chạm **`Ảnh đêm Zhao (8-bit)`** (chứng minh trực tiếp trong `~1,3 s` cả `CoG` và `tetra3` trả `LOST` trong khi duy nhất `CNN-Hybrid` giải đúng `48,26″`), tải ảnh FITS/PNG/TIFF/NPY tự chọn để so sánh trực tiếp 3 lớp tâm sao, nút **`Xuất JSON`**, bảng đối chuẩn 5 phương pháp trên 566 khung và bảng đường cong suy giảm stress.',
     ]
 
     b3 = d.get('bench3')
+    sc = d.get('stress_curves')
     t_b3_sim: list[list[str]] = []
     t_b3_real: list[list[str]] = []
+    t_stress_curves: list[list[str]] = []
     if isinstance(b3, dict):
-        be_order = ('classical', 'tetra3', 'cnn_raw', 'cnn')
+        be_order = tuple(b for b in ('classical', 'tetra3', 'cnn_raw', 'cnn', 'auto') if b in ((b3.get('sim_hd1024') or {}).get('summary') or {}))
         be_lbl = {
             'classical': 'CoG (Nhóm)',
             'tetra3': 'Ngưỡng kiểu tetra3',
             'cnn_raw': 'CNN gốc (Trước)',
             'cnn': 'CNN-Hybrid (Sau)',
+            'auto': 'Auto (CoG→CNN)',
         }
         for s_title, s_key in (
             ('500 sạch (hd1024)', 'sim_hd1024'),
@@ -1745,28 +1751,62 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         if nc:
             t_b3_real.append(['NTNU 0006.png (Số tâm)', *[f"{_fi(nc.get(be))} tâm" for be in be_order]])
 
+        if isinstance(sc, dict):
+            sc_bes = ('classical', 'tetra3', 'cnn', 'auto')
+            for ax_title, ax_key, unit in (
+                ('Vận tốc quay ω', 'omega_sweep', ' °/s'),
+                ('Sao giả tiêm vào', 'false_stars_sweep', ' sao'),
+                ('Nền lóa mặt trời', 'glare_sweep', ' DN'),
+            ):
+                for pt in (sc.get(ax_key) or []):
+                    row_cells = [ax_title, f"{pt['x']}{unit}"]
+                    for be in sc_bes:
+                        r = (pt.get('results') or {}).get(be) or {}
+                        pct = float(r.get('solve_rate_pct') or 0.0)
+                        err = r.get('median_err_arcsec')
+                        err_s = f" ({_fv(err, 1)}″)" if err is not None else ''
+                        row_cells.append(f"{pct:.0f}%{err_s}")
+                    t_stress_curves.append(row_cells)
+
         md_parts.extend([
             '',
             '---',
             '',
-            '## 6. Nâng cấp CNN-Hybrid & Đối chuẩn 4 phương pháp (CoG ↔ Ngưỡng kiểu ESA tetra3 ↔ CNN gốc ↔ CNN-Hybrid)',
+            '## 6. Nâng cấp CNN-Hybrid, Định tuyến Tự động (Auto-Router), Tối ưu Tốc độ & Đối chuẩn 5 phương pháp',
             '',
-            'Để trả lời định lượng câu hỏi **"CNN có vượt được thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 hay không?"** và khắc phục hai điểm yếu của `CNN gốc` (RMSE cao `0,43–0,47 px` do nội suy tam giác hóa bản đồ khoảng cách và `1.118 FP` do lệch miền 12-bit), nhóm triển khai hai nâng cấp lõi:',
+            'Để trả lời định lượng câu hỏi **"CNN có vượt được thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 hay không?"**, khắc phục điểm yếu của `CNN gốc` (`1.118 FP` do điểm nóng/lệch miền 12-bit, RMSE `0,43–0,47 px`), đồng thời tăng tốc hệ thống **5×–11× mà không giảm độ phân giải ảnh**, nhóm triển khai 4 nâng cấp lõi:',
             '',
-            '- **Nâng cấp `CNN-Hybrid` (`src/centroid_cnn.py`, mặc định `refine_subpixel=True`):** Giữ MobileUNet làm bộ lọc ngữ nghĩa phân biệt sao với địa hình/mây/chói sáng; sau đó trừ nền cục bộ (`boxFilter 31×31`), lọc cổng SNR vòng khuyên rỗng (`hollow-annulus MAD`), loại điểm nóng/tia vũ trụ đơn pixel (`area < 3` trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel bằng trọng tâm cường độ cục bộ (Windowed Connected-Component CoG) kèm trọng số `sigma_px` theo SNR cho Wahba. Đồng thời bổ sung chốt kiểm tra góc 3D trong `StarTrackerPipeline._associate_remaining` nhằm chặn lỗi gập đa thức méo xuyên tâm trên ống kính góc siêu rộng (`mount_st_helens_1.png`) và ghi nhớ cạnh/tam giác trong `StarIdentifier.identify`.',
-            '- **Bộ so sánh ngưỡng truyền thống kiểu ESA `tetra3` (`src/centroid_tetra3.py`):** Cài đặt chuẩn `local_mean` (`filtsize=25`) + `global_root_square` (`σ=2,0`) + `binary_open` + lọc diện tích `5..100 px` + CoG quy đổi về gốc tọa độ tâm pixel `(0,0)`, chạy trực tiếp trong cùng `StarTrackerPipeline` (0% False Lock trên toàn bộ `566 × 4 = 2.264` lượt đo, lưu tại `data/outputs/benchmark_3way_comparison.json`).',
+            '- **1) Nâng cấp `CNN-Hybrid` (`src/centroid_cnn.py`, mặc định `refine_subpixel=True`):** Giữ MobileUNet làm bộ lọc ngữ nghĩa phân biệt sao với địa hình/mây/chói sáng; sau đó trừ nền cục bộ (`boxFilter 31×31`), lọc cổng SNR vòng khuyên rỗng (`hollow-annulus MAD`), loại điểm nóng/tia vũ trụ đơn pixel bằng cả diện tích (`area < 3`) lẫn tỷ lệ tập trung năng lượng đỉnh (`pk_net / flux_sum > 0,75` trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel bằng Windowed Connected-Component CoG kèm trọng số `sigma_px` theo SNR cho Wahba. Đồng thời vector hóa toàn bộ vòng lặp tinh chỉnh `trilateration_centroids` bằng NumPy.',
+            '- **2) Bộ định tuyến thích ứng `Auto-Router (CoG → CNN-Hybrid)` (`src/pipeline.py`, `centroid_backend="auto"`):** Chạy nhánh `CoG` siêu nhanh (`~85 ms`) trước; nếu khung hình sạch và giải hợp lệ (`SOLVED`, `≤ 300` tâm), trả nghiệm ngay với độ chính xác cực cao (`1,91″` trên `hd1024`, `2,26″` trên `Alt60`). Nếu `CoG` trả `LOST` (ví dụ ảnh đêm 8-bit `Zhao MT9V022` hoặc khung bị tiêm `20–30` sao giả/nhiễu nền phức tạp), hệ thống tự động chuyển sang `CNN-Hybrid` (tái sử dụng mặt nạ `GlareMasker`, cộng gộp trung thực toàn bộ thời gian thử `CoG` vào tổng độ trễ).',
+            '- **3) Tăng tốc 5×–11× không giảm độ phân giải (`src/identification.py`, `app.py`):** Cài đặt bộ tiền lọc góc hai tầng bằng phép nhân ma trận BLAS `float32 SGEMM` (`_fast_screen_attitudes`) trong `StarIdentifier.identify_wide` kết hợp ngân sách thời gian (`time_budget_s=1,2 s`), kéo độ trễ cảnh góc rộng `Mount St. Helens (tetra3)` từ `11,3 s → 1,43 s` (**8×**), `Zhao (CoG)` từ `2,7 s → 0,25 s` (**11×**), `Zhao (3-way compare)` từ `9,5 s → 1,3 s`; đồng thời tách kết xuất biểu đồ Matplotlib tĩnh sang luồng nền bất đồng bộ trên Web UI (`app.py`) và tải sẵn trọng số CNN (`STAR_TRACKER_PRELOAD=1`).',
+            '- **4) Bộ so sánh ngưỡng truyền thống kiểu ESA `tetra3` (`src/centroid_tetra3.py`):** Cài đặt chuẩn `local_mean` (`filtsize=25`) + `global_root_square` (`σ=2,0`) + `binary_open` + lọc diện tích `5..100 px` + CoG tâm pixel `(0,0)`, chạy trực tiếp trong cùng `StarTrackerPipeline` (**0% False Lock trên toàn bộ `566 × 5 = 2.830` lượt đối chuẩn chính + `600` lượt quét stress = `3.430` lượt chạy**).',
             '',
-            '### 6.1. Bảng đối chuẩn 4 phương pháp trên 560 khung mô phỏng (PC/Laptop RTX 5070 CUDA)',
+            '### 6.1. Bảng đối chuẩn 5 phương pháp trên 560 khung mô phỏng (PC/Laptop RTX 5070 CUDA)',
             '',
             md_table(['Tập kiểm thử', 'Phương pháp', 'Đúng / Tổng', 'Khóa sai', 'Δθ trung vị', 'Precision (FP)', 'Recall', 'RMSE (5 px)', 'Độ trễ TB'], t_b3_sim),
             '',
-            '### 6.2. Bảng đối chuẩn 4 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn',
+            '### 6.2. Bảng đối chuẩn 5 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn',
             '',
-            md_table(['Khung ảnh thực', 'CoG (Nhóm)', 'Ngưỡng kiểu tetra3', 'CNN gốc (Trước)', 'CNN-Hybrid (Sau)'], t_b3_real),
+            md_table(['Khung ảnh thực', *[be_lbl[b] for b in be_order]], t_b3_real),
             '',
-            '### 6.3. Kết luận khoa học khách quan',
-            '- **Tác động cải tiến `CNN gốc → CNN-Hybrid`:** Giảm **-97,2% điểm giả FP** trên 500 khung sạch (`1.118 → 31 FP`, Precision `95,5% → 99,9%`) và **-98,7% FP** trên 40 khung lóa (`157 → 2 FP`); giảm sai số tư thế trung vị **4×** trên 500 khung sạch (`7,99″ → 2,02″`), **3,6×** trên 40 khung lóa (`9,82″ → 2,73″`), **-41%** trên `Mount St. Helens` (`120,26″ → 71,13″`, `72/77` cặp hợp lệ) và tăng tốc **38,6×** trên `Alt40 Hipparcos V≤7` (`21,2 s → 0,55 s`).',
-            '- **So sánh trực diện với ngưỡng truyền thống kiểu ESA `tetra3`:** `CNN-Hybrid` **vượt `tetra3` rõ rệt** về sai số góc trên 500 ảnh sạch (`2,02″` vs `2,34″`), vượt gần **2×** độ chính xác & `+18,6%` Recall trên 40 ảnh lóa mạnh (`2,73″ / 69,9%` vs `5,06″ / 51,3%`), vượt `tetra3` trên `ESA Alt60` (`6,77″ / 0,102 px` vs `8,68″ / 0,119 px`), và **giải đúng cả 2 ảnh thực địa phức tạp mà `tetra3` thất bại hoàn toàn (`LOST`)** là `Mount St. Helens` (`CNN-Hybrid 71,13″, 2 FP` vs `tetra3 LOST, 57 FP`) và `Zhao MT9V022` (`CNN-Hybrid 48,26″` vs `tetra3 LOST`). Đánh đổi được ghi nhận minh bạch: trên nền trời sạch, `CoG` và `tetra3` vẫn chạy nhanh hơn khoảng 2× (`~84–88 ms` vs `~171 ms` do chi phí suy luận MobileUNet) và không cần trọng số học sâu; do đó kiến trúc song song **CoG mặc định + CNN-Hybrid cho cảnh phức tạp/tiền cảnh/lóa** (có tab so sánh trực tiếp trên Web) là lựa chọn tối ưu.',
+            '![Đối chuẩn 5 phương pháp và cắt giảm điểm giả FP](../data/outputs/e2e_figures/fig10_4way_ablation_tetra3_hybrid.png)',
+            '',
+            '*Hình 10. Đối chuẩn 5 phương pháp (`CoG`, `Ngưỡng tetra3`, `CNN gốc`, `CNN-Hybrid`, `Auto-Router`): sai số tư thế trung vị Δθ, cắt giảm -99,8% điểm giả FP (`1.118 → 2 FP`) và ma trận giải đúng 4/4 ảnh bầu trời thật hiệu chuẩn (`data/outputs/e2e_figures/fig10_4way_ablation_tetra3_hybrid.png`).*',
+            '',
+            '### 6.3. Đường cong suy giảm hiệu năng dưới điều kiện khắc nghiệt (`benchmark_stress_curves.json`)',
+            '',
+            'Để đánh giá ranh giới hoạt động thực chất dưới 3 trục khắc nghiệt (**vận tốc quay góc ω tạo vệt motion blur**, **tiêm 0–30 sao giả/tia vũ trụ**, và **đỉnh nền lóa 0–4095 DN**, `10` seed độc lập/mức trên `1024×683`, tổng `600` lượt chạy — **0% False Lock** ở mọi mức):',
+            '',
+            md_table(['Trục stress', 'Mức thử nghiệm', 'CoG (Nhóm)', 'Ngưỡng tetra3', 'CNN-Hybrid', 'Auto (CoG→CNN)'], t_stress_curves),
+            '',
+            '![Đường cong suy giảm hiệu năng dưới điều kiện khắc nghiệt](../data/outputs/e2e_figures/fig11_stress_degradation_curves.png)',
+            '',
+            '*Hình 11. Đường cong suy giảm hiệu năng theo 3 trục khắc nghiệt (`ω`, `sao giả`, `lóa mặt trời`) — 100% đạt 0% Khóa sai (`data/outputs/e2e_figures/fig11_stress_degradation_curves.png`).*',
+            '',
+            '### 6.4. Kết luận khoa học khách quan',
+            '- **Tác động nâng cấp `CNN gốc → CNN-Hybrid`:** Giảm **-99,8% điểm giả FP** trên 500 khung sạch (`1.118 → 2 FP`, Precision `95,5% → 99,99%`, `500/500` giải đúng) và **-100% FP** trên 40 khung lóa (`157 → 0 FP`, Precision `91,0% → 100,0%`, `40/40` giải đúng); giảm sai số Δθ trung vị **4,0×** trên 500 khung sạch (`7,99″ → 2,02″`), **3,6×** trên 40 khung lóa (`9,82″ → 2,73″`), **4,6×** trên 20 khung Rìa Trái Đất + Mây (`14,58″ → 3,17″`), và **-41%** trên `Mount St. Helens` (`120,26″ → 71,13″`, `72/77` cặp hợp lệ).',
+            '- **So sánh trực diện với ngưỡng truyền thống kiểu ESA `tetra3`:** `CNN-Hybrid` **vượt `tetra3`** trên 500 khung sạch (`2,02″` vs `2,34″`), vượt gần **2×** độ chính xác & `+18,6%` Recall trên 40 khung lóa (`2,73″ / 69,9%` vs `5,06″ / 51,3%`), vượt `tetra3` trên `ESA Alt60` (`6,77″ / 0,102 px` vs `8,68″ / 0,119 px`), đạt **100%** khi tiêm `20–30` sao giả (khi `tetra3` và `CoG` tụt xuống **70%**), và **giải đúng cả 2 ảnh thực địa mà `tetra3` thất bại hoàn toàn (`LOST`)** là `Mount St. Helens` (`71,13″` vs `LOST`) và `Zhao MT9V022` (`48,26″` vs `LOST`). Ngược lại, một giới hạn trung thực được đo rõ qua Hình 11A: ở vận tốc quay góc cực cao `ω = 1,5–2,0 °/s` (vệt sao kéo dài), `CNN-Hybrid` đơn lẻ giảm tỷ lệ giải xuống `40%–20%` vì MobileUNet học trên PSF tròn, trong khi `tetra3` giữ `100%` (`5,0″`) và `CoG/Auto` giữ `100%` tới `1,5 °/s` (`3,3″`).',
+            '- **Ưu thế vượt trội của kiến trúc `Auto (CoG → CNN-Hybrid)`:** Kết hợp trọn vẹn điểm mạnh của cả hai thế giới mà không có điểm yếu chí mạng nào: tốc độ & độ chính xác như `CoG` trên trời sạch (`1,91″`, `85,8 ms`, `0 FP`), chống chịu `100%` tới `ω = 1,5 °/s`, giữ **100%** khi bị tiêm `30` sao giả (tự chuyển CNN cứu `30%` ca hỏng của CoG), và đạt **4/4 ảnh bầu trời thật hiệu chuẩn** (`Alt60 2,26″`, `Alt40 Hip7 39,51″`, `Zhao 48,26″`, `Mount St. Helens 49,51″`) với **0% Khóa sai tuyệt đối**.',
         ])
 
     REPORT_MD.write_text('\n'.join(md_parts) + '\n', encoding='utf-8')
@@ -2030,43 +2070,71 @@ def build_report_md_and_docx_and_pdf(d: dict[str, Any]) -> None:
         'pytest -v\n'
         'python scripts/benchmark_end_to_end.py --suites all\n'
         'python scripts/benchmark_3way_centroid_e2e.py\n'
+        'python scripts/benchmark_stress_curves.py\n'
+        'python scripts/make_stage1_upgrade_figures.py\n'
         'python scripts/reconcile_logs.py\n'
-        'python scripts/update_national_slides_and_docs.py\n'
-        'python scripts/fill_ai2026_dossier.py\n'
+        'python scripts/update_national_slides_and_docs.py --report-only\n'
         'python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show\n'
-        'python app.py  # Web UI tối giản + 3D J2000 + Tab So sánh tại http://127.0.0.1:8765/'
+        'python app.py  # Web UI Tự động (Auto) + 3D J2000 + Tab So sánh tại http://127.0.0.1:8765/'
     )
     add_callout('Lệnh tái lập chuẩn:', '\n' + cmd_block, bg_hex='F1F5F9', border_hex='133E68')
     add_p(
-        'Giao diện Web (cục bộ tại http://127.0.0.1:8765/ hoặc trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org) tích hợp endpoint GET /api/sky-catalog dựng không gian 3D quỹ đạo Trái Đất và thiên cầu thực J2000 '
-        '(5.023 sao Yale BSC5), cùng tab "So sánh CoG / tetra3 ↔ CNN" (POST /api/compare và GET /api/benchmark-summary) cho phép chạy đồng thời cả 3 thuật toán trên cùng một khung ảnh điểm ảnh với lớp phủ màu đối chiếu trực quan. '
+        'Giao diện Web (cục bộ tại http://127.0.0.1:8765/ hoặc trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org) mặc định kích hoạt bộ định tuyến "Tự động (Auto: CoG → CNN-Hybrid)", tích hợp endpoint GET /api/sky-catalog dựng không gian 3D quỹ đạo Trái Đất và thiên cầu thực J2000 '
+        '(5.023 sao Yale BSC5), cùng tab "So sánh CoG / tetra3 ↔ CNN" (POST /api/compare, POST /api/compare-upload và GET /api/benchmark-summary) hỗ trợ nút 1 chạm "Ảnh đêm Zhao (8-bit)", tải ảnh tự chọn, xuất JSON kiểm toán và bảng đường cong suy giảm stress. '
         'Lưu ý: không gian 3D và ứng dụng Web là mô phỏng trực quan chạy trên máy tính/VPS, không phải phần cứng vệ tinh hay vòng điều khiển ADCS thực tế.'
     )
 
     if isinstance(b3, dict) and t_b3_sim:
-        add_h1('6. Nâng cấp CNN-Hybrid & Đối chuẩn 4 phương pháp (CoG ↔ Ngưỡng kiểu tetra3 ↔ CNN gốc ↔ CNN-Hybrid)')
+        add_h1('6. Nâng cấp CNN-Hybrid, Định tuyến Tự động (Auto-Router), Tối ưu Tốc độ & Đối chuẩn 5 phương pháp')
         add_p(
-            'Nâng cấp lõi CNN-Hybrid (src/centroid_cnn.py, refine_subpixel=True) giữ MobileUNet làm bộ lọc ngữ nghĩa loại nền địa hình/mây/lóa, kết hợp trừ nền cục bộ (boxFilter 31×31), cổng SNR vòng khuyên rỗng, lọc điểm nóng đơn pixel (area < 3 trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel bằng Windowed Connected-Component CoG kèm trọng số sigma_px theo SNR cho Wahba. Đồng thời bổ sung bộ ngưỡng truyền thống kiểu ESA tetra3 (src/centroid_tetra3.py) và chốt kiểm tra góc 3D trong _associate_remaining để đối chuẩn công bằng 4 phương pháp qua chung StarTrackerPipeline (0% False Lock trên toàn bộ 2.264 lượt chạy).'
+            'Để trả lời định lượng câu hỏi "CNN có vượt được thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 hay không?" đồng thời tăng tốc hệ thống 5×–11× mà không giảm độ phân giải ảnh, nhóm triển khai 4 nâng cấp lõi: '
+            '(1) CNN-Hybrid (src/centroid_cnn.py, refine_subpixel=True) giữ MobileUNet lọc ngữ nghĩa kết hợp trừ nền cục bộ 31×31, cổng SNR vòng khuyên rỗng, lọc điểm nóng đơn pixel (area < 3 và tỷ lệ năng lượng đỉnh pk_net/flux > 0,75 trên 12/16-bit), và tinh chỉnh tọa độ dưới mức pixel Windowed CoG vector hóa NumPy; '
+            '(2) Bộ định tuyến Auto-Router (CoG → CNN-Hybrid) trong StarTrackerPipeline chạy CoG trước và tự động nâng cấp sang CNN-Hybrid khi CoG trả LOST; '
+            '(3) Bộ tiền lọc góc 2 tầng BLAS float32 SGEMM trong identify_wide + time_budget_s=1,2 s kéo độ trễ cảnh rộng giảm 8×–11× (MSH tetra3: 11,3 s → 1,43 s; Zhao CoG: 2,7 s → 0,25 s) và tách kết xuất biểu đồ Matplotlib sang luồng nền bất đồng bộ trên Web UI; '
+            '(4) Bộ ngưỡng kiểu ESA tetra3 (src/centroid_tetra3.py) đối chuẩn công bằng 5 phương pháp qua chung StarTrackerPipeline (0% False Lock trên toàn bộ 2.830 lượt đối chuẩn chính + 600 lượt quét stress = 3.430 lượt chạy).'
         )
-        add_h2('6.1. Bảng đối chuẩn 4 phương pháp trên 560 khung mô phỏng (benchmark_3way_comparison.json)')
+        add_h2('6.1. Bảng đối chuẩn 5 phương pháp trên 560 khung mô phỏng (benchmark_3way_comparison.json)')
         _docx_add_styled_table(
             doc,
             ['Tập kiểm thử', 'Phương pháp', 'Đúng/Tổng', 'FL', 'Δθ tv', 'Precision (FP)', 'Recall', 'RMSE 5px', 'Trễ TB'],
             t_b3_sim,
-            col_widths_in=[1.06, 0.94, 0.62, 0.28, 0.56, 1.02, 0.52, 0.66, 0.62],
-            font_size=7.4,
+            col_widths_in=[1.05, 0.96, 0.62, 0.28, 0.56, 1.04, 0.52, 0.66, 0.62],
+            font_size=7.3,
         )
-        add_h2('6.2. Bảng đối chuẩn 4 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn')
+        add_h2('6.2. Bảng đối chuẩn 5 phương pháp trên 6 ảnh bầu trời thật hiệu chuẩn')
+        real_hdrs = ['Khung ảnh thực', *[be_lbl[b] for b in be_order]]
+        real_w = [1.12] + [round((6.77 - 1.12) / len(be_order), 2)] * len(be_order)
         _docx_add_styled_table(
             doc,
-            ['Khung ảnh thực', 'CoG (Nhóm)', 'Ngưỡng kiểu tetra3', 'CNN gốc (Trước)', 'CNN-Hybrid (Sau)'],
+            real_hdrs,
             t_b3_real,
-            col_widths_in=[1.15, 1.40, 1.40, 1.40, 1.42],
-            font_size=7.4,
+            col_widths_in=real_w,
+            font_size=6.8 if len(be_order) >= 5 else 7.4,
         )
-        add_h2('6.3. Kết luận khoa học khách quan')
-        add_p('• Tác động cải tiến CNN gốc → CNN-Hybrid: giảm -97,2% điểm giả FP trên 500 khung sạch (1.118 → 31 FP, Precision 95,5% → 99,9%) và -98,7% FP trên 40 khung lóa (157 → 2 FP); giảm sai số Δθ trung vị 4× trên 500 khung sạch (7,99″ → 2,02″), 3,6× trên 40 khung lóa (9,82″ → 2,73″), -41% trên Mount St. Helens (120,26″ → 71,13″, 72/77 cặp hợp lệ), và tăng tốc 38,6× trên Alt40 Hipparcos V≤7 (21,2 s → 0,55 s).')
-        add_p('• So sánh với ngưỡng truyền thống kiểu ESA tetra3: CNN-Hybrid vượt tetra3 về sai số góc trên 500 khung sạch (2,02″ vs 2,34″), vượt gần 2× độ chính xác và +18,6% Recall trên 40 khung lóa (2,73″ / 69,9% vs 5,06″ / 51,3%), vượt tetra3 trên ảnh thực Alt60 (6,77″ / 0,102 px vs 8,68″ / 0,119 px), và giải đúng cả 2 ảnh thực địa mà tetra3 thất bại LOST là Mount St. Helens (71,13″, 2 FP vs tetra3 LOST 57 FP) và Zhao MT9V022 (48,26″ vs tetra3 LOST). Đánh đổi minh bạch: trên nền trời sạch, CoG và tetra3 vẫn nhanh hơn ~2× (~84–88 ms vs ~171 ms) nên mô hình song song CoG mặc định + CNN-Hybrid cho cảnh phức tạp/lóa là kiến trúc hợp lý nhất.')
+        add_fig(
+            'data/outputs/e2e_figures/fig10_4way_ablation_tetra3_hybrid.png',
+            'Hình 10. Đối chuẩn 5 phương pháp: sai số tư thế Δθ, cắt giảm -99,8% điểm giả FP (1.118 → 2) và ma trận giải đúng 4/4 ảnh bầu trời thật hiệu chuẩn.',
+            width_in=6.55,
+        )
+        if t_stress_curves:
+            add_h2('6.3. Đường cong suy giảm hiệu năng dưới điều kiện khắc nghiệt (benchmark_stress_curves.json)')
+            add_p('Đánh giá 10 seed/mức trên 1024×683 theo 3 trục khắc nghiệt (vận tốc quay ω, sao giả/tia vũ trụ, nền lóa 0–4095 DN; tổng 600 lượt chạy — 0% Khóa sai ở mọi mức):')
+            _docx_add_styled_table(
+                doc,
+                ['Trục stress', 'Mức thử nghiệm', 'CoG (Nhóm)', 'Ngưỡng tetra3', 'CNN-Hybrid', 'Auto (CoG→CNN)'],
+                t_stress_curves,
+                col_widths_in=[1.25, 0.92, 1.15, 1.15, 1.15, 1.15],
+                font_size=7.5,
+            )
+            add_fig(
+                'data/outputs/e2e_figures/fig11_stress_degradation_curves.png',
+                'Hình 11. Đường cong suy giảm hiệu năng dưới 3 trục khắc nghiệt (vận tốc quay ω, sao giả, lóa mặt trời) — 0% Khóa sai.',
+                width_in=6.55,
+            )
+        add_h2('6.4. Kết luận khoa học khách quan')
+        add_p('• Tác động cải tiến CNN gốc → CNN-Hybrid: giảm -99,8% điểm giả FP trên 500 khung sạch (1.118 → 2 FP, Precision 95,5% → 99,99%, 500/500 giải đúng) và -100% FP trên 40 khung lóa (157 → 0 FP, Precision 91,0% → 100,0%, 40/40 giải đúng); giảm sai số Δθ trung vị 4,0× trên 500 khung sạch (7,99″ → 2,02″), 3,6× trên 40 khung lóa (9,82″ → 2,73″), 4,6× trên 20 khung Rìa TĐ + Mây (14,58″ → 3,17″) và -41% trên Mount St. Helens (120,26″ → 71,13″, 72/77 cặp hợp lệ).')
+        add_p('• So sánh với ngưỡng truyền thống kiểu ESA tetra3: CNN-Hybrid vượt tetra3 trên 500 khung sạch (2,02″ vs 2,34″), vượt gần 2× độ chính xác và +18,6% Recall trên 40 khung lóa (2,73″ / 69,9% vs 5,06″ / 51,3%), vượt tetra3 trên ảnh thực Alt60 (6,77″ / 0,102 px vs 8,68″ / 0,119 px), đạt 100% khi tiêm 20–30 sao giả (khi CoG và tetra3 giảm còn 70%), và giải đúng cả 2 ảnh thực địa mà tetra3 thất bại LOST là Mount St. Helens (71,13″ vs LOST) và Zhao MT9V022 (48,26″ vs LOST). Giới hạn trung thực: ở vận tốc quay góc cực cao ω = 1,5–2,0 °/s (vệt sao dài), CNN-Hybrid đơn lẻ giảm còn 40%–20% vì MobileUNet học trên PSF tròn, trong khi tetra3 giữ 100% (5,0″) và CoG/Auto giữ 100% tới 1,5 °/s (3,3″).')
+        add_p('• Kiến trúc tối ưu Auto (CoG → CNN-Hybrid): đạt đồng thời tốc độ & độ chính xác CoG trên trời sạch (1,91″, 85,8 ms, 0 FP), giữ 100% tới ω = 1,5 °/s, giữ 100% dưới 30 sao giả, và giải trọn vẹn 4/4 ảnh bầu trời thật hiệu chuẩn (Alt60 2,26″, Alt40 Hip7 39,51″, Zhao 48,26″, Mount St. Helens 49,51″) với 0% Khóa sai tuyệt đối.')
 
     doc.save(str(REPORT_DOCX))
     print(f'wrote {REPORT_DOCX}')

@@ -48,16 +48,32 @@ Hằng số electron, nhiễu đọc và dòng tối trong `config/camera_specs.
 | **Seed 42 FAST** (`seed42_cog_vs_cnn.json`) | **`0,446″`** (`36/36`, Prec/Rec `100%`, `146,4 ms`) | **`1,648″`** (`30/36`, Prec `85,7%`, Rec `83,3%`, `399,5 ms` / warm `226,1 ms`) | **`0,0%`** |
 | **Ảnh trời thật hiệu chuẩn** (`benchmark_real_calibrated_e2e.json`) | `1/5` BSC5 (`Alt60 2,26″`); `Alt40 Hip V≤7 39,51″`; `MSH LOST [INSUFFICIENT_INLIER_PAIRS]` | `3/5` BSC5 (`Alt60 4,65″`, `Zhao 54,70″`, `MSH 0,034°` vs UW LOST / `54/79` ~`2,76 s`); `Alt40 Hip V≤7 26,60″` | **`0,0%`** (kể cả `0006.png` & `verification`) |
 
+### Nâng cấp bổ sung Chặng 1: `CNN-Hybrid`, `Auto-Router (CoG → CNN-Hybrid)`, Ngưỡng kiểu ESA `tetra3` & Tăng tốc 5×–11×
+
+Chi tiết đầy đủ nằm tại `data/outputs/benchmark_3way_comparison.json` (**566 khung × 5 phương pháp = 2.830 lượt**) và `data/outputs/benchmark_stress_curves.json` (**600 lượt stress ω / sao giả / lóa**), toàn bộ **3.430 lượt đều đạt 0,0% Khóa sai**:
+
+| Phương pháp | 500 sạch (`hd1024`) | 40 lóa (`glare`) | 20 Rìa TĐ + Mây | 4 ảnh trời thật hiệu chuẩn | Stress 30 sao giả / `ω=1,5°/s` |
+|---|---|---|---|---|---|
+| **CoG (Nhóm)** | `500/500`, **`1,91″`**, `0 FP`, `84,3 ms` | `40/40`, **`1,54″`**, `69,9% Rec`, `74,2 ms` | `20/20`, **`2,46″`** | `3/4` (`Zhao LOST`) | `70%` / `100%` |
+| **Ngưỡng kiểu `tetra3`** | `500/500`, `2,34″`, `0 FP`, `82,4 ms` | `40/40`, `5,06″`, `51,3% Rec`, `77,2 ms` | `20/20`, `2,90″` | `2/4` (`Zhao & MSH LOST`) | `70%` / `100%` |
+| **CNN gốc (Trước)** | `498/500`, `7,99″`, `1.118 FP`, `125,6 ms` | `39/40`, `9,82″`, `157 FP`, `140,1 ms` | `20/20`, `14,58″` | `4/4` (`MSH 120,3″`) | — |
+| **`CNN-Hybrid` (Sau)** | **`500/500`**, **`2,02″`**, **`2 FP` (-99,8%)**, `152,4 ms` | **`40/40`**, **`2,73″`**, **`0 FP` (-100%)**, `69,9% Rec` | `20/20`, `3,17″` (`75 FP` thấp nhất) | **`4/4`** (`Alt60 6,8″`, `Zhao 48,3″`, `MSH 71,1″`) | **`100%`** / `40%` (giới hạn PSF tròn) |
+| **`Auto (CoG → CNN)`** *(Mặc định Web)* | **`500/500`**, **`1,91″`**, **`0 FP`**, **`85,8 ms`** | **`40/40`**, **`1,54″`**, **`0 FP`**, **`77,8 ms`** | **`20/20`**, **`2,46″`** | **`4/4`** (`Alt60 2,3″`, `Zhao 48,3″`, `MSH 49,5″`) | **`100%`** / **`100%`** |
+
+- **Tối ưu tốc độ 5×–11× không giảm độ phân giải:** Bộ tiền lọc góc 2 tầng BLAS `float32 SGEMM` trong `StarIdentifier.identify_wide` (`Mount St. Helens tetra3`: `11,3 s → 1,43 s`; `Zhao CoG`: `2,7 s → 0,25 s`), vector hóa NumPy `trilateration_centroids`, vẽ đồ thị Matplotlib nền bất đồng bộ trên `app.py` và tải sẵn trọng số CNN (`STAR_TRACKER_PRELOAD=1`).
+
 ## Chạy & Tái lập kiểm thử
 
 ```text
 pip install -r requirements.txt
 pytest -v
 python scripts/benchmark_end_to_end.py --suites all
+python scripts/benchmark_3way_centroid_e2e.py
+python scripts/benchmark_stress_curves.py
+python scripts/make_stage1_upgrade_figures.py
 python scripts/reconcile_logs.py
 python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show
 python app.py
-python scripts/benchmark_centroid_cnn.py --n 500
 ```
 
 Trọng số CNN công khai (không huấn luyện lại):

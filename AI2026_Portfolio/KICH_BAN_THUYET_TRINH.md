@@ -125,7 +125,8 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 4. Chốt chặn False Lock Chặng 1? → Sửa lỗi `break` + lọc lặp trước/sau `_associate_remaining` + SVD `s_min >= 1e-6` → `0/100 (0,0%)` vs `41/100 (41,0%)` ở mã cũ.
 5. Ảnh thật hiệu chuẩn & phạm vi PC? → CoG `Alt60` `2,26″`, CNN `Alt60` `4,65″` / `Zhao` `54,70″` / `MSH` `0,034°`; `Alt40 Hip V≤7` đạt `39,51″` / `26,60″`. Chưa kiểm chứng phần cứng vệ tinh bay / ADCS.
 6. Seed 42 FAST? → `seed42_cog_vs_cnn.json`: CoG `0,446″` (`36/36`) vs CNN `1,648″` (`30/36`).
-7. Đối soát Log–Slide? → Sửa Slide 7, 8, 10, 16; xóa số mồ côi cũ không có log đối chiếu; đồng bộ MD/DOCX/PDF.
+7. Đối soát Log–Slide? → Sửa Slide 7, 8, 10, 17; xóa số mồ côi cũ không có log đối chiếu; đồng bộ MD/DOCX/PDF.
+8. CNN-Hybrid vs `tetra3` & Auto-Router? → `CNN-Hybrid` cắt `-99,8% FP` (`1.118 → 2 FP`), vượt `tetra3` trên 500 sạch (`2,02″` vs `2,34″`), 40 lóa (`2,73″/69,9%` vs `5,06″/51,3%`), 30 sao giả (`100%` vs `70%`) và giải cả 2 ảnh thật mà `tetra3` `LOST` (`Zhao 48,3″` & `MSH 71,1″`). Chế độ mặc định **`Tự động (Auto: CoG → CNN)`** kết hợp tốc độ `CoG` (`85,8 ms`, `100%` tới `ω=1,5°/s`) với độ bền `CNN-Hybrid` → giải **4/4 ảnh trời thật**, **0% False Lock trên 3.430 lượt kiểm thử**.
 
 ---
 
@@ -133,19 +134,20 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 
 1. Chỉ trình bày đúng cấu hình camera demo trên PC (APS-C 50 mm) và dữ liệu thật công khai (`ESA tetra3`, `Zhao MT9V022`, `UW LOST MSH`, `NTNU 0006.png`).
 2. Không gán GSD mét mặt đất cho star tracker; **không** claim sẵn sàng vệ tinh bay, bức xạ hay giao tiếp ADCS.
-3. Không nói «CNN luôn tốt hơn» — trên 500 khung sạch và 40 lóa, CoG thắng cả RMSE lẫn E2E.
+3. Không nói «CNN luôn tốt hơn» — trên 500 khung sạch và 40 lóa, CoG vẫn nhanh & chính xác hơn một chút, và ở `ω ≥ 1,5 °/s` CNN giảm tỷ lệ giải do PSF tròn; đó là lý do chọn kiến trúc lai `Auto (CoG → CNN-Hybrid)`.
 4. Không gọi ảnh núi là «ảnh nhóm chụp» — là mẫu công bố kèm LOST.
-5. Không đọc lại số cũ chưa đối soát hay số ngoài JSON; chỉ đọc số trên màn hình hoặc trong `log_reconciliation_audit.json`.
+5. Không đọc lại số cũ chưa đối soát hay số ngoài JSON; chỉ đọc số trên màn hình hoặc trong `log_reconciliation_audit.json`, `benchmark_3way_comparison.json`, `benchmark_stress_curves.json`.
 
 ---
 
 ## 5. Checklist sân khấu
 
 ```text
-□ python app.py → http://127.0.0.1:8765/
-□ FAST + Seed 42 + CoG → chạy thử → đọc KPI (đối chiếu 0,446″ trong JSON)
-□ 🏔 Ảnh núi thật → CNN SOLVED (54/79, 0,034°) rồi CoG LOST [INSUFFICIENT_INLIER_PAIRS] + 16B 0x00
-□ 🌌 Ảnh trời thật (ESA tetra3 Alt60) → giải ảnh 16-bit thực tế
-□ Tab quaternion 16 byte + nêu rõ phạm vi Demo PC (chưa kiểm chứng bay)
-□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (17 slide đã đối soát)
+□ python app.py → http://127.0.0.1:8765/ (hoặc https://startracker.agentlens.dpdns.org)
+□ Chế độ mặc định: Tự động (Auto: CoG → CNN-Hybrid) + Mẫu chuẩn Seed 42 → đọc KPI (0,446″)
+□ Tab So sánh CoG / tetra3 ↔ CNN → bấm 1 chạm "Ảnh đêm Zhao (8-bit)" (~1,3s): CoG LOST · tetra3 LOST · CNN-Hybrid SOLVED 48,26″
+□ 🏔 Ảnh núi thật Mount St. Helens → CNN-Hybrid SOLVED (72/77, 71,13″, 2 FP) vs tetra3 LOST (57 FP)
+□ 🌌 Ảnh trời thật (ESA tetra3 Alt60) → giải ảnh 16-bit thực tế (2,26″)
+□ Tab Đối chiếu tư thế & Downlink 16 byte + nêu rõ phạm vi Demo PC/VPS (chưa kiểm chứng bay)
+□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (18 slide đã đối soát, có Hình 10 & Hình 11)
 ```

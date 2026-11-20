@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=33" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=33" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=34" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=34" />
 </head>
 <body>
   <!-- ROW 1: Minimalist Top Command Header (~52px) -->
@@ -72,9 +72,13 @@
         </label>
       </div>
 
-      <div class="inline-seg" id="centroid-mode-toggle" role="radiogroup" aria-label="Thuật toán tách tâm sao" title="Phương pháp trích xuất tâm sao">
-        <label class="inline-seg-opt">
-          <input type="radio" name="centroid_backend" value="classical" checked id="centroid-classical" form="run-form" />
+      <div class="inline-seg" id="centroid-mode-toggle" role="radiogroup" aria-label="Thuật toán tách tâm sao" title="Phương pháp trích xuất tâm sao (Tự động: CoG tốc độ cao, tự chuyển CNN-Hybrid khi nền phức tạp)">
+        <label class="inline-seg-opt" title="Tự động: chạy CoG trước (~85 ms), tự chuyển sang CNN-Hybrid nếu ảnh khó hoặc nhiều tạp nền">
+          <input type="radio" name="centroid_backend" value="auto" checked id="centroid-auto" form="run-form" />
+          <span>Tự động</span>
+        </label>
+        <label class="inline-seg-opt" title="Trọng tâm cường độ cổ điển CoG (Nhóm)">
+          <input type="radio" name="centroid_backend" value="classical" id="centroid-classical" form="run-form" />
           <span>CoG</span>
         </label>
         <label class="inline-seg-opt" title="Thuật toán chọn ngưỡng truyền thống kiểu ESA tetra3 (local_mean + global RMS)">
@@ -349,7 +353,8 @@
               <p class="card-desc">Chạy cả 3 thuật toán tách tâm sao trên <strong>cùng một khung ảnh điểm ảnh</strong> qua chung bộ nhận diện Pyramid K-vector và bộ giải Wahba SVD (kèm kiểm định lọc ngoại lai).</p>
             </div>
             <div class="cmp-scenario-pills" role="group" aria-label="Chọn kịch bản so sánh nhanh">
-              <button type="button" id="btn-cmp-mount" class="exp-pill is-featured" title="So sánh trên ảnh thực có tiền cảnh núi St. Helens (8-bit)">Núi St. Helens</button>
+              <button type="button" id="btn-cmp-zhao" class="exp-pill is-featured" title="Ảnh thực đêm MT9V022 (8-bit): CoG & tetra3 đều LOST, duy nhất CNN-Hybrid khóa đúng 48,26″">Ảnh đêm Zhao (8-bit)</button>
+              <button type="button" id="btn-cmp-mount" class="exp-pill" title="So sánh trên ảnh thực có tiền cảnh núi St. Helens (8-bit)">Núi St. Helens</button>
               <button type="button" id="btn-cmp-tetra3" class="exp-pill" title="So sánh trên ảnh chụp bầu trời thực ESA tetra3 (16-bit Alt60)">Trời thực ESA</button>
               <button type="button" id="btn-cmp-glare" class="exp-pill" title="So sánh khi có ánh nắng chói lóa mạnh">Ngược nắng</button>
               <button type="button" id="btn-cmp-seed42" class="exp-pill" title="So sánh trên bầu trời mô phỏng sạch 12-bit (Seed 42)">Bầu trời chuẩn</button>
@@ -357,12 +362,20 @@
                 <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />
                 </svg>
-                <span>Chạy theo cấu hình hiện tại</span>
+                <span>Chạy cấu hình hiện tại</span>
               </button>
             </div>
           </div>
+          <div class="cmp-upload-strip">
+            <span class="cmp-upload-label">Hoặc tải ảnh bầu trời riêng để so sánh trực tiếp:</span>
+            <input type="file" id="cmp-upload-file" class="cmp-upload-input" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,.npy" />
+            <input type="number" id="cmp-upload-focal" class="cmp-num-input" step="any" min="0.1" placeholder="Tiêu cự mm (tùy chọn)" />
+            <input type="number" id="cmp-upload-pixel" class="cmp-num-input" step="any" min="0.1" placeholder="Pixel µm (tùy chọn)" />
+            <button type="button" id="btn-cmp-upload" class="exp-pill" title="Tải tệp ảnh lên và chạy đồng thời CoG, tetra3, CNN-Hybrid">Tải ảnh &amp; So sánh 3pp</button>
+            <button type="button" id="btn-cmp-export-json" class="exp-pill" title="Tải xuống tệp JSON kết quả đối chiếu hiện tại để kiểm chứng">Xuất JSON</button>
+          </div>
           <div id="cmp-verdict-banner" class="cmp-verdict-banner">
-            Chọn một kịch bản phía trên (gợi ý <strong>Núi St. Helens</strong> hoặc <strong>Trời thực ESA</strong>) để quan sát trực tiếp sự khác biệt giữa chọn ngưỡng truyền thống và mạng CNN-Hybrid.
+            Chọn một kịch bản phía trên (gợi ý <strong>Ảnh đêm Zhao (8-bit)</strong> hoặc <strong>Núi St. Helens</strong>) để quan sát trực tiếp sự khác biệt giữa chọn ngưỡng truyền thống và mạng CNN-Hybrid.
           </div>
         </div>
 
@@ -502,12 +515,31 @@
                     <th>CoG (Nhóm)</th>
                     <th>Ngưỡng kiểu tetra3</th>
                     <th>CNN gốc (Trước)</th>
-                    <th>CNN-Hybrid (Sau nâng cấp)</th>
+                    <th>CNN-Hybrid (Sau)</th>
+                    <th>Auto (CoG→CNN)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td colspan="5" class="empty">Đang nạp kết quả ảnh trời thực...</td></tr>
+                  <tr><td colspan="6" class="empty">Đang nạp kết quả ảnh trời thực...</td></tr>
                 </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="cmp-real-wrap" id="cmp-stress-wrap" hidden>
+            <h4 class="cmp-subhead">Khảo sát suy giảm hiệu năng theo tải khắc nghiệt (ω vệt quay · Sao giả · Lóa mặt trời — 0% Khóa sai)</h4>
+            <div class="table-responsive">
+              <table id="cmp-stress-table" class="data-table cmp-table">
+                <thead>
+                  <tr>
+                    <th>Trục chịu tải</th>
+                    <th>Mức thử nghiệm</th>
+                    <th>CoG (Nhóm)</th>
+                    <th>Ngưỡng kiểu tetra3</th>
+                    <th>CNN-Hybrid</th>
+                    <th>Auto (CoG→CNN)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
@@ -1148,7 +1180,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=33"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=33"></script>
+  <script src="{{ url_for('static', filename='orbit3d.js') }}?v=34"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=34"></script>
 </body>
 </html>

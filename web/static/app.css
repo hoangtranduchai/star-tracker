@@ -2563,6 +2563,40 @@ input[type="range"] {
   font-size: 0.8rem;
 }
 
+.cmp-upload-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.48rem;
+  padding: 0.52rem 0.72rem;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+.cmp-upload-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.cmp-upload-input {
+  width: auto;
+  max-width: 240px;
+  font-size: 0.76rem;
+  padding: 0.28rem 0.46rem;
+}
+
+.cmp-num-input {
+  width: 142px;
+  font-size: 0.76rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.cmp-row-auto td {
+  background: var(--accent-soft);
+}
+
 .cmp-verdict-banner {
   padding: 0.62rem 0.9rem;
   border-radius: var(--radius-sm);

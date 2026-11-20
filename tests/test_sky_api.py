@@ -359,5 +359,62 @@ def test_api_compare_and_benchmark_summary(tmp_path: Path, monkeypatch: pytest.M
     bench_json = bench_res.get_json()
     assert 'available' in bench_json and 'evaluation_scope' in bench_json
 
+    auto_res = client.post('/api/run', json={'seed': 42, 'mode': 'fast', 'centroid_backend': 'auto'})
+    assert auto_res.status_code == 200
+    auto_json = auto_res.get_json()
+    assert auto_json['status'] == 'SOLVED'
+    assert auto_json['auto_router_used'] is True
+    assert auto_json['auto_router_selected'] == 'classical'
+
+
+def test_api_compare_upload_and_zhao_auto_router(
+    star_tracker_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client = web_app.app.test_client()
+
+    # 1. Verify /api/compare-upload accepts a PNG upload and returns multi-backend metrics
+    rng = np.random.default_rng(123)
+    img = np.clip(10 + rng.normal(0, 2, size=(480, 640)), 0, 255).astype(np.uint8)
+    ok, buf = cv2.imencode('.png', img)
+    assert ok
+    up_res = client.post(
+        '/api/compare-upload',
+        data={
+            'image': (io.BytesIO(buf.tobytes()), 'blank_test.png'),
+            'focal_mm': '8.0',
+            'pixel_um': '6.0',
+        },
+        content_type='multipart/form-data',
+    )
+    assert up_res.status_code == 200
+    up_json = up_res.get_json()
+    assert up_json['clean_url'] == '/output/demo_compare_clean.png'
+    assert set(up_json['methods'].keys()) >= {'classical', 'tetra3'}
+    # Blank sky MUST safely reject with LOST (0% False Lock)
+    for m in up_json['methods'].values():
+        assert m['status'] == 'LOST'
+
+    # 2. Verify Auto-Router escalates CoG -> CNN-Hybrid on real 8-bit Zhao nightsky frame
+    zhao_p = star_tracker_root / 'data' / 'real_calibrated' / 'zhao_mt9v022' / 'nightsky_june16_2021.npy'
+    if zhao_p.is_file():
+        z_res = client.post(
+            '/api/run',
+            json={
+                'image': 'real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy',
+                'centroid_backend': 'auto',
+            },
+        )
+        assert z_res.status_code == 200
+        z_json = z_res.get_json()
+        assert z_json['status'] == 'SOLVED'
+        assert z_json['auto_router_used'] is True
+        assert z_json['auto_router_selected'] == 'cnn'
+        assert z_json['metrics']['n_matched'] >= 6
+
+
+
 
 

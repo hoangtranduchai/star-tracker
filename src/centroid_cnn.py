@@ -4,6 +4,7 @@ Uses the authors' public MobileUNet checkpoint. Classical CoG remains the defaul
 fallback when weights are missing or inference fails.
 """
 from __future__ import annotations
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -151,33 +152,27 @@ def trilateration_centroids(dist_map: np.ndarray, seg_map: np.ndarray, radius: i
     h, w = dist.shape
     cap: object = int(max_stars) if int(max_stars) > 0 else None
     for cy, cx in zip(rows, cols):
-        if work_seg[cy, cx] <= 0:
+        cy_i, cx_i = (int(cy), int(cx))
+        if work_seg[cy_i, cx_i] <= 0:
             continue
-        xs: list[float] = []
-        ys: list[float] = []
-        rs: list[float] = []
-        for dy in range(-radius, radius + 1):
-            for dx in range(-radius, radius + 1):
-                y: object = int(cy + dy)
-                x: object = int(cx + dx)
-                if y < 0 or x < 0 or y >= h or (x >= w):
-                    continue
-                if work_seg[y, x] <= 0:
-                    continue
-                xs.append(x + 0.5)
-                ys.append(y + 0.5)
-                rs.append(float(dist[y, x]))
-                work_seg[y, x] = 0.0
-        n: object = len(xs)
+        y0, y1 = (max(0, cy_i - radius), min(h, cy_i + radius + 1))
+        x0, x1 = (max(0, cx_i - radius), min(w, cx_i + radius + 1))
+        sub_seg = work_seg[y0:y1, x0:x1]
+        ly, lx = np.nonzero(sub_seg > 0)
+        n = int(len(ly))
         if n < 3:
+            sub_seg[ly, lx] = 0.0
             continue
-        xn, yn, rn = (xs[-1], ys[-1], rs[-1])
-        a: object = np.zeros((n - 1, 2), dtype=np.float64)
-        b: object = np.zeros(n - 1, dtype=np.float64)
-        for i in range(n - 1):
-            a[i, 0] = 2.0 * (xn - xs[i])
-            a[i, 1] = 2.0 * (yn - ys[i])
-            b[i] = rs[i] ** 2 - rn ** 2 - xs[i] ** 2 - ys[i] ** 2 + xn ** 2 + yn ** 2
+        ys = (ly + y0).astype(np.float64) + 0.5
+        xs = (lx + x0).astype(np.float64) + 0.5
+        rs = dist[ly + y0, lx + x0]
+        sub_seg[ly, lx] = 0.0
+        xn, yn, rn = (float(xs[-1]), float(ys[-1]), float(rs[-1]))
+        xi, yi, ri = (xs[:-1], ys[:-1], rs[:-1])
+        a = np.empty((n - 1, 2), dtype=np.float64)
+        a[:, 0] = 2.0 * (xn - xi)
+        a[:, 1] = 2.0 * (yn - yi)
+        b = ri * ri - rn * rn - xi * xi - yi * yi + (xn * xn + yn * yn)
         try:
             sol, *_ = lstsq(a, b, lapack_driver='gelsy')
         except Exception:
@@ -280,6 +275,11 @@ class CNNCentroidDetector:
         else:
             device: object = 'cpu'
         self._device = device
+        if device == 'cpu':
+            try:
+                torch.set_num_threads(min(4, max(1, os.cpu_count() or 2)))
+            except Exception:
+                pass
         model: object = torch.load(self.weights_path, map_location=device, weights_only=False)
         model: object = model.to(device)
         model.eval()
@@ -495,6 +495,9 @@ class CNNCentroidDetector:
 
             wt = np.where(in_star, np.maximum(ap_net, 0.0), 0.0)
             f_sum = float(wt.sum())
+            # Reject single-pixel hot pixels & cosmic rays (>75% of aperture energy in 1 pixel)
+            if not is_8bit and f_sum > 0.0 and (pk_net / f_sum) > 0.75:
+                continue
             if f_sum > 0.0:
                 u_ref = float((wt * gx).sum() / f_sum)
                 v_ref = float((wt * gy).sum() / f_sum)

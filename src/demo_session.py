@@ -1,9 +1,10 @@
 """Shared execution session for CLI and Web UI: synthetic sky generation and lost-in-space solving."""
 from json import dumps as json_dumps, loads as json_loads
 from math import ceil as math_ceil, isfinite as math_isfinite
+from os import replace as os_replace
 from pathlib import Path
-from cv2 import COLOR_BGR2GRAY, IMREAD_UNCHANGED, cvtColor, imread, imwrite
-from numpy import asarray, clip, column_stack, degrees, float32, float64, floating, full, integer, mean, ndarray, sqrt, where, zeros, zeros_like
+from cv2 import BORDER_CONSTANT, COLOR_BGR2GRAY, IMREAD_UNCHANGED, INTER_LINEAR, cvtColor, imread, imwrite, remap
+from numpy import asarray, clip, column_stack, degrees, float32, float64, floating, full, integer, load as np_load, mean, median as np_median, mgrid, ndarray, sqrt, where, zeros, zeros_like
 from numpy.linalg import norm
 from numpy.random import default_rng
 from .camera import CameraModel, demo_camera
@@ -22,7 +23,7 @@ THETA_MIN_DEG = 0.02
 THETA_MAX_LOCKED_DEG = 30.5
 MAX_SIM_PIXELS = 20000000
 _RAD_DEFAULTS = dict(e_per_s_v0=3300000.0, qe=1.0, read_noise_e=5.0, dark_e_per_s=10.0, gain_dn_per_e=1.0, full_well_e=12000.0, bit_depth=12, bias_dn=64.0, hot_pixel_frac=1e-05, cosmic_rate_per_frame=2.0)
-_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None, k1=None, k2=None)
+_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None, k1=None, k2=None, async_plots=False)
 
 def load_specs(root: object=None) -> object:
     cfg_file: object = Path(root or ROOT).joinpath('config', 'camera_specs.json')
@@ -123,10 +124,43 @@ def omega_vector(axis: object, mag: object, rng: object) -> object:
     return asarray(basis[axis], dtype=float64)
 
 def load_frame(path: object) -> object:
+    p = Path(path)
+    if p.suffix.lower() == '.npy':
+        if not p.is_file():
+            raise FileNotFoundError(f'Cannot read image: {path}')
+        raw = np_load(str(p))
+        return raw[:, :, 0] if raw.ndim == 3 else raw
     raw: object = imread(str(path), IMREAD_UNCHANGED)
     if raw is None:
         raise FileNotFoundError(f'Cannot read image: {path}')
     return cvtColor(raw, COLOR_BGR2GRAY) if raw.ndim == 3 else raw
+
+def _heikkila_undistort_uv(uv: object, p: object, u0: float, v0: float) -> object:
+    pts = asarray(uv, dtype=float64)
+    if pts.size == 0:
+        return pts.reshape(0, 2)
+    a1, a2, a3, a4, a5, a6, a7, a8 = (float(x) for x in p)
+    ud = pts[:, 0] - float(u0)
+    vd = pts[:, 1] - float(v0)
+    r2 = ud * ud + vd * vd
+    r4 = r2 * r2
+    inv_g = 1.0 / ((a5 * r2 + a6 * ud + a7 * vd + a8) * r2 + 1.0)
+    rad = a1 * r2 + a2 * r4
+    uu = inv_g * (ud + ud * rad + 2.0 * a3 * ud * vd + a4 * (r2 + 2.0 * ud * ud)) + float(u0)
+    vv = inv_g * (vd + vd * rad + a3 * (r2 + 2.0 * vd * vd) + 2.0 * a4 * ud * vd) + float(v0)
+    return column_stack((uu, vv))
+
+def _heikkila_undistort_image(img: object, p: object, u0: float, v0: float) -> object:
+    arr = asarray(img, dtype=float32)
+    h, w = arr.shape[:2]
+    ys, xs = mgrid[0:h, 0:w].astype(float64)
+    uv_u = column_stack((xs.ravel(), ys.ravel()))
+    uv_d = uv_u.copy()
+    for _ in range(6):
+        uv_d += uv_u - _heikkila_undistort_uv(uv_d, p, u0, v0)
+    map_x = uv_d[:, 0].reshape(h, w).astype(float32)
+    map_y = uv_d[:, 1].reshape(h, w).astype(float32)
+    return remap(arr, map_x, map_y, interpolation=INTER_LINEAR, borderMode=BORDER_CONSTANT, borderValue=float(np_median(arr)))
 
 def camera_for_image(img: object, cam_full: object) -> object:
     h_px, w_px = img.shape[:2]
@@ -144,6 +178,9 @@ def camera_for_image(img: object, cam_full: object) -> object:
     if (w_px, h_px) == (1024, 768):
         tetra_cam: object = CameraModel(width=1024, height=768, pixel_um=6.9, focal_mm=35.291113627236776, k1=0.10021753616812087)
         return (tetra_cam, 1, 'custom')
+    if (w_px, h_px) == (640, 480):
+        zhao_cam: object = CameraModel(width=640, height=480, pixel_um=6.0, focal_mm=16.08029475, cx=352.84399, cy=199.46077)
+        return (zhao_cam, 1, 'custom')
     raise ValueError(f'Ảnh {w_px}×{h_px} không khớp kích thước mẫu {cam_full.width}×{cam_full.height} (FULL) hay {fast_cam.width}×{fast_cam.height} (FAST). Vui lòng nhập tiêu cự (mm) và kích thước pixel (µm) của máy ảnh.')
 
 def uses_custom_optics(req: object) -> object:
@@ -292,8 +329,9 @@ class RunRequest:
 class RunOutcome:
     """Complete result bundle returned by `DemoEngine.run`."""
 
-    def __init__(self, success: object, payload: object, image: object, result: object, truth: object, metrics: object, catalog: object, camera: object, png_path: object, have_gt: object, error: object=None) -> object:
+    def __init__(self, success: object, payload: object, image: object, result: object, truth: object, metrics: object, catalog: object, camera: object, png_path: object, have_gt: object, error: object=None, render_static_plots: object=None) -> object:
         self.success, self.payload, self.image, self.result, self.truth, self.metrics, self.catalog, self.camera, self.png_path, self.have_gt, self.error = (bool(success), payload, image, result, truth, metrics, catalog, camera, png_path, bool(have_gt), error)
+        self.render_static_plots = render_static_plots
 
 def _compare_rows(q_gt: object, q_est: object, metrics: object, have_gt: object, cfg: object, match_stats: object=None) -> object:
     mstats: object = match_stats if isinstance(match_stats, dict) else {}
@@ -376,6 +414,8 @@ class DemoEngine:
 
     def _normalize_backend(self, raw_be: object) -> str:
         be_key: str = str(raw_be or 'classical').lower().strip()
+        if be_key in ('auto', 'adaptive', 'hybrid_auto'):
+            return 'auto'
         if be_key in ('cnn', 'cnn_hybrid', 'cnn_zhao2024', 'zhao', 'mobileunet'):
             return 'cnn'
         if be_key in ('cnn_raw', 'cnn_trilateration'):
@@ -384,48 +424,72 @@ class DemoEngine:
             return 'tetra3'
         return 'classical'
 
+    def _inject_cnn_cache(self, det: object) -> None:
+        if self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
+            det._model = self._cnn_cache._model
+            det._torch = self._cnn_cache._torch
+            det._normalize = self._cnn_cache._normalize
+            det._device = self._cnn_cache._device
+            det.device_name = self._cnn_cache.device_name
+        else:
+            self._cnn_cache = det
+
     def _build_pipeline(self, camera: object, catalog: object, kvector: object, cfg: object) -> object:
         pipe: object = StarTrackerPipeline(camera, catalog, kvector, cfg)
         if cfg.centroid_backend in ('cnn', 'cnn_raw'):
-            det = pipe.centroid_detector
-            if self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
-                det._model = self._cnn_cache._model
-                det._torch = self._cnn_cache._torch
-                det._normalize = self._cnn_cache._normalize
-                det._device = self._cnn_cache._device
-                det.device_name = self._cnn_cache.device_name
-            else:
-                self._cnn_cache = det
+            self._inject_cnn_cache(pipe.centroid_detector)
+        elif cfg.centroid_backend == 'auto' and self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
+            from .centroid_cnn import CNNCentroidDetector
+            auto_det = CNNCentroidDetector(camera, classical=pipe._base_det, refine_subpixel=True)
+            self._inject_cnn_cache(auto_det)
+            pipe._auto_cnn_detector = auto_det
         return pipe
 
-    def _manifest_truth_for(self, image_path: object) -> tuple:
-        """Look up calibrated ground-truth metadata for known real-sky demo frames."""
+    def _manifest_entry_for(self, image_path: object) -> dict | None:
         if image_path is None:
-            return (None, None)
+            return None
         manifest_p: object = self.root.joinpath('data', 'real_calibrated', 'manifest_real_calibrated.json')
         if not manifest_p.is_file():
-            return (None, None)
+            return None
         try:
             m_data: object = json_loads(manifest_p.read_text(encoding='utf-8'))
             fname: str = Path(image_path).name.lower()
             for entry in (m_data.get('frames') or []):
-                if Path(str(entry.get('path', ''))).name.lower() == fname and entry.get('q_gt') is not None:
-                    q_gt = asarray(entry['q_gt'], dtype=float64)
-                    stars = entry.get('stars_in_fov') or []
-                    uv_pts = asarray([[s['u_px'], s['v_px']] for s in stars], dtype=float64) if stars else zeros((0, 2), dtype=float64)
-                    mags = asarray([float(s.get('mag', 0.0)) for s in stars], dtype=float64) if stars else zeros(0, dtype=float64)
-                    truth = RenderTruth(
-                        q_gt=q_gt,
-                        uv_mid=uv_pts,
-                        cat_idx=zeros(len(stars), dtype=int),
-                        streak_px=zeros(len(stars), dtype=float64),
-                        omega_deg_s=zeros(3, dtype=float64),
-                        vis_mags=mags,
-                    )
-                    return (truth, str(entry.get('gt_source') or 'manifest_real_calibrated'))
+                if Path(str(entry.get('path', ''))).name.lower() == fname:
+                    return entry
+        except Exception:
+            return None
+        return None
+
+    def _maybe_undistort_frame(self, image: object, image_path: object) -> object:
+        entry = self._manifest_entry_for(image_path)
+        if entry is not None and 'heikkila_p' in entry and entry.get('calibrated_cx') is not None:
+            return _heikkila_undistort_image(image, entry['heikkila_p'], float(entry['calibrated_cx']), float(entry['calibrated_cy']))
+        return image
+
+    def _manifest_truth_for(self, image_path: object) -> tuple:
+        """Look up calibrated ground-truth metadata for known real-sky demo frames."""
+        entry = self._manifest_entry_for(image_path)
+        if entry is None or entry.get('q_gt') is None:
+            return (None, None)
+        try:
+            q_gt = asarray(entry['q_gt'], dtype=float64)
+            stars = entry.get('stars_in_fov') or []
+            uv_pts = asarray([[s['u_px'], s['v_px']] for s in stars], dtype=float64) if stars else zeros((0, 2), dtype=float64)
+            if 'heikkila_p' in entry and len(uv_pts):
+                uv_pts = _heikkila_undistort_uv(uv_pts, entry['heikkila_p'], float(entry['calibrated_cx']), float(entry['calibrated_cy']))
+            mags = asarray([float(s.get('mag', 0.0)) for s in stars], dtype=float64) if stars else zeros(0, dtype=float64)
+            truth = RenderTruth(
+                q_gt=q_gt,
+                uv_mid=uv_pts,
+                cat_idx=zeros(len(stars), dtype=int),
+                streak_px=zeros(len(stars), dtype=float64),
+                omega_deg_s=zeros(3, dtype=float64),
+                vis_mags=mags,
+            )
+            return (truth, str(entry.get('gt_source') or 'manifest_real_calibrated'))
         except Exception:
             return (None, None)
-        return (None, None)
 
     def stack(self, kind: object, max_mag: object, theta_max_deg: object=THETA_MAX_LOCKED_DEG) -> object:
         cache_key: object = (kind, float(max_mag), float(theta_max_deg))
@@ -477,11 +541,14 @@ class DemoEngine:
         elif clean_rel.startswith('tetra3/'):
             base_dir: object = self.root.joinpath('data', 'tetra3').resolve()
             resolved: object = base_dir.joinpath(clean_rel[len('tetra3/'):]).resolve()
+        elif clean_rel.startswith('real_calibrated/'):
+            base_dir: object = self.root.joinpath('data', 'real_calibrated').resolve()
+            resolved: object = base_dir.joinpath(clean_rel[len('real_calibrated/'):]).resolve()
         else:
             base_dir: object = self.root.joinpath('data', 'sim_dataset').resolve()
             resolved: object = base_dir.joinpath(clean_rel).resolve()
         resolved.relative_to(base_dir)
-        valid_exts: object = ('.tif', '.tiff', '.png', '.jpg', '.jpeg')
+        valid_exts: object = ('.tif', '.tiff', '.png', '.jpg', '.jpeg', '.npy')
         if resolved.suffix.lower() not in valid_exts or not resolved.is_file():
             raise ValueError(f'Not a dataset frame: {rel}')
         return resolved
@@ -518,6 +585,8 @@ class DemoEngine:
 
     def run(self, req: object) -> object:
         loaded_img: object = load_frame(Path(req.image)) if req.image is not None else None
+        if loaded_img is not None:
+            loaded_img = self._maybe_undistort_frame(loaded_img, req.image)
         camera, scale, mode, locked = resolve_run_camera(req, loaded_img, self.cam_full)
         t_max: object = theta_max_deg_for_fov(float(camera.fov_deg[2]))
         catalog, synthetic, kvector = self.stack(req.catalog, req.max_mag, t_max)
@@ -537,6 +606,8 @@ class DemoEngine:
         result: object = pipe.process_frame(image)
         if cfg.centroid_backend in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
             self._cnn_cache = pipe.centroid_detector
+        elif cfg.centroid_backend == 'auto' and getattr(pipe, '_auto_cnn_detector', None) is not None and getattr(pipe._auto_cnn_detector, '_model', None) is not None:
+            self._cnn_cache = pipe._auto_cnn_detector
         metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
         status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
         fov_rows: object = star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
@@ -556,32 +627,47 @@ class DemoEngine:
         output_png: object = out_dir / 'demo_output.png'
         clean_png: object = out_dir / 'demo_clean.png'
         stats: object = image_stats(image)
+        render_static_cb = None
         if req.save_png:
-            if not req.show:
-                import matplotlib
-                matplotlib.use('Agg')
             save_clean_png(image, clean_png)
-            save_input_png(image, input_png, stats=stats)
-            save_output_png(image, result, output_png, catalog=catalog, lookup=req.lookup, stats=stats)
             cam_lbl: object = f'Optics     : f {camera.focal_mm:.4g} mm   pixel {camera.pixel_um:.4g} um\nFrame      : {camera.width} x {camera.height}   fx {camera.fx:.1f} px\nFOV        : {fov[0]:.2f} x {fov[1]:.2f} deg   diag {fov[2]:.2f} deg'
-            plot_frame(image, result, truth, metrics, cam_lbl, png_path, show=req.show, catalog=catalog, lookup=req.lookup)
+            def _do_static_plots() -> None:
+                if not req.show:
+                    import matplotlib
+                    matplotlib.use('Agg')
+                in_tmp = out_dir / '.demo_input.tmp.png'
+                out_tmp = out_dir / '.demo_output.tmp.png'
+                res_tmp = out_dir / '.demo_result.tmp.png'
+                save_input_png(image, in_tmp, stats=stats)
+                os_replace(str(in_tmp), str(input_png))
+                save_output_png(image, result, out_tmp, catalog=catalog, lookup=req.lookup, stats=stats)
+                os_replace(str(out_tmp), str(output_png))
+                plot_frame(image, result, truth, metrics, cam_lbl, res_tmp, show=req.show, catalog=catalog, lookup=req.lookup)
+                os_replace(str(res_tmp), str(png_path))
+            if bool(getattr(req, 'async_plots', False)) and not req.show:
+                render_static_cb = _do_static_plots
+            else:
+                _do_static_plots()
         q_est: object = None if result.q is None else asarray(result.q, dtype=float64)
-        det_obj: object = pipe.centroid_detector
+        qual_d: dict = result.quality if isinstance(result.quality, dict) else {}
+        det_obj: object = pipe._auto_cnn_detector if (cfg.centroid_backend == 'auto' and qual_d.get('auto_router_selected') == 'cnn' and pipe._auto_cnn_detector is not None) else pipe.centroid_detector
         dl_bytes: object = result.to_downlink_bytes()
         theta_max_actual: object = float(degrees(kvector.theta_max))
         bore_est_dict: object = None if metrics.get('boresight_est_ra_deg') is None else dict(ra_deg=metrics['boresight_est_ra_deg'], dec_deg=metrics['boresight_est_dec_deg'], ra_hms=metrics['boresight_est_ra_hms'], dec_dms=metrics['boresight_est_dec_dms'], frame='Trục quang học +Z trong hệ quy chiếu J2000')
         bore_gt_dict: object = None if not have_gt else dict(ra_deg=metrics['boresight_gt_ra_deg'], dec_deg=metrics['boresight_gt_dec_deg'], ra_hms=metrics['boresight_gt_ra_hms'], dec_dms=metrics['boresight_gt_dec_dms'])
-        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, centroid_detector=getattr(det_obj, 'last_backend', cfg.centroid_backend), centroid_fallback=bool(getattr(det_obj, 'last_fallback', False)), centroid_error=getattr(det_obj, 'last_error', None), centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), sky_clutter=req.sky_clutter, have_gt=have_gt, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
+        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', cfg.centroid_backend)), centroid_fallback=bool(qual_d.get('centroid_fallback', getattr(det_obj, 'last_fallback', False))), centroid_error=getattr(det_obj, 'last_error', None), centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), auto_router_used=bool(qual_d.get('auto_router_used', False)), auto_router_selected=qual_d.get('auto_router_selected'), auto_router_reason=qual_d.get('auto_router_reason'), sky_clutter=req.sky_clutter, have_gt=have_gt, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
         out_dir.joinpath('demo_result.json').write_text(json_dumps(payload, indent=2), encoding='utf-8')
         if req.save_raw and req.image is None:
             imwrite(str(out_dir / 'demo_raw.tif'), image)
             raw_meta: object = dict(q_gt=q_gt.tolist(), omega_deg_s=asarray(omega).tolist(), t_exp_s=req.exposure, stars_in_fov=fov_rows)
             out_dir.joinpath('demo_raw.json').write_text(json_dumps(raw_meta, indent=2), encoding='utf-8')
-        return RunOutcome(success=bool(result.success), payload=payload, image=image, result=result, truth=truth, metrics=metrics, catalog=catalog, camera=camera, png_path=png_path if req.save_png else None, have_gt=have_gt, error=result.error)
+        return RunOutcome(success=bool(result.success), payload=payload, image=image, result=result, truth=truth, metrics=metrics, catalog=catalog, camera=camera, png_path=png_path if req.save_png else None, have_gt=have_gt, error=result.error, render_static_plots=render_static_cb)
 
     def compare(self, req: object, backends: tuple[str, ...]=('classical', 'tetra3', 'cnn')) -> dict:
         """Run multiple centroid backends on the exact same pixel frame for live head-to-head comparison."""
         loaded_img: object = load_frame(Path(req.image)) if req.image is not None else None
+        if loaded_img is not None:
+            loaded_img = self._maybe_undistort_frame(loaded_img, req.image)
         camera, scale, mode, locked = resolve_run_camera(req, loaded_img, self.cam_full)
         t_max: object = theta_max_deg_for_fov(float(camera.fov_deg[2]))
         catalog, synthetic, kvector = self.stack(req.catalog, req.max_mag, t_max)
