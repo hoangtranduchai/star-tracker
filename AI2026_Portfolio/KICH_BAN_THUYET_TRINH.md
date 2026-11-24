@@ -10,7 +10,7 @@
 
 | Hạng mục | Gợi ý |
 |---|---|
-| Thời lượng nói | **8–9 phút** (không tính hỏi đáp · 17 slide mở rộng Vòng Chung kết · Chặng 1) |
+| Thời lượng nói | **8–9 phút** (không tính hỏi đáp · 19 slide mở rộng Vòng Chung kết · Chặng 1) |
 | Công cụ | Laptop + trình duyệt `http://127.0.0.1:8765/` (chạy `python app.py` trước) |
 | Demo sạch (Seed) | **⚡ FAST MODE**, Yale BSC5 (V ≤ 6), Wahba **SVD**, kính demo 50 mm · 3,72 µm, Seed **42** — preset tự gắn **CoG** |
 | Demo sáng tạo & Ảnh thật | Nút **🏔 Ảnh núi thật** (tự gắn **CNN** + 4,2 mm · 4,1 µm) & **🌌 Ảnh trời thật (ESA tetra3)** (16-bit Alt60, 35,291 mm · 6,9 µm) → đọc số trên màn |

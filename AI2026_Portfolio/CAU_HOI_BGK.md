@@ -55,7 +55,7 @@ Số đo chỉ lấy từ `data/outputs/log_reconciliation_audit.json` và các 
 
 ### 11. Vì sao chốt chặn từ chối khớp sai là cải tiến cốt lõi ở Vòng Chung kết · Chặng 1?
 
-**Trả lời:** Trong mã gốc `HEAD:src/pipeline.py` (dòng 98–100), khi `count_nonzero(inliers) < 3`, vòng lặp thoát `break` mà **không xóa cặp ngoại lai** khỏi `obs_sel, cat_sel`; cộng thêm thiếu lọc sau `_associate_remaining` và thiếu kiểm SVD thẳng hàng ở `src/attitude.py`. Điều này khiến 100 ca stress đối kháng ở mã cũ bị **`41/100 (41,0%) False Lock`** (tạo góc giả lên tới `647.283″` ở nhóm khớp nhiễu và `928,8″` ở 3 sao thẳng hàng). Sau khi bổ sung chuỗi chốt chặn (`_dedup_pairs`, `_refine_inliers` trước & sau gán bổ sung, kiểm SVD `s_min >= 1e-6`, `min_stars >= 4`, RMS hậu kiểm, `LOW_FOV_CONSISTENCY`), tỷ lệ False Lock giảm từ **`41,0%` xuống `0,0% (0/100)`**, kèm `127 passed, 2 skipped` trong `pytest`.
+**Trả lời:** Trong mã gốc `HEAD:src/pipeline.py` (dòng 98–100), khi `count_nonzero(inliers) < 3`, vòng lặp thoát `break` mà **không xóa cặp ngoại lai** khỏi `obs_sel, cat_sel`; cộng thêm thiếu lọc sau `_associate_remaining` và thiếu kiểm SVD thẳng hàng ở `src/attitude.py`. Điều này khiến 100 ca stress đối kháng ở mã cũ bị **`41/100 (41,0%) False Lock`** (tạo góc giả lên tới `647.283″` ở nhóm khớp nhiễu và `928,8″` ở 3 sao thẳng hàng). Sau khi bổ sung chuỗi chốt chặn (`_dedup_pairs`, `_refine_inliers` trước & sau gán bổ sung, kiểm SVD `s_min >= 1e-6`, `min_stars >= 4`, RMS hậu kiểm, `LOW_FOV_CONSISTENCY`), tỷ lệ False Lock giảm từ **`41,0%` xuống `0,0% (0/100)`**, kèm `133 passed, 2 skipped` trong `pytest`.
 
 ### 12. Giới hạn & các ca lỗi trên ảnh thật hiệu chuẩn?
 

@@ -10,7 +10,7 @@
 
 | Hạng mục | Gợi ý |
 |---|---|
-| Thời lượng nói | **8–9 phút** (không tính hỏi đáp · 17 slide Vòng Chung kết · Chặng 1) |
+| Thời lượng nói | **8–9 phút** (không tính hỏi đáp · 19 slide Vòng Chung kết · Chặng 1) |
 | Công cụ | Laptop + trình duyệt `http://127.0.0.1:8765/` (chạy `python app.py` trước) |
 | Demo sạch (Seed) | **⚡ FAST MODE**, Yale BSC5 (V ≤ 6), Wahba **SVD**, kính demo 50 mm · 3,72 µm, Seed **42** — preset tự gắn **CoG** |
 | Demo sáng tạo & Ảnh thật | Nút **🏔 Ảnh núi thật** (tự gắn **CNN** + 4,2 mm · 4,1 µm) & **🌌 Ảnh trời thật (ESA tetra3)** → đọc số trên màn |
@@ -128,7 +128,7 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 5. Ảnh núi có phải nhóm chụp? → Không. Ảnh công bố kèm LOST (ĐH Washington).
 6. Có AI không? → Mạng chỉ ở bước tìm tâm (hỗ trợ 8/12/16-bit). Nhận dạng và tư thế là Pyramid và Wahba.
 7. Có dùng mét trên mặt đất hay kiểm chứng bay chưa? → Không dùng GSD mét; đây là phần mềm demo PC Laptop, chưa kiểm chứng trên phần cứng vệ tinh hay bus ADCS bay.
-8. Đối soát Log–Slide? → Đã xóa toàn bộ số cũ chưa đối soát, sửa Slide 7/8/10/16, bổ sung 4 slide cải tiến (tổng 17 slide).
+8. Đối soát Log–Slide? → Đã xóa toàn bộ số cũ chưa đối soát, sửa Slide 7/8/10/18, bổ sung 6 slide cải tiến, CNN-Hybrid/Auto-Router & kiểm toán nhúng CubeSat (tổng 19 slide).
 
 ---
 
@@ -140,5 +140,5 @@ Em xin cảm ơn quý thầy cô. Em sẵn sàng trả lời câu hỏi. »
 □ 🏔 Ảnh núi thật → CNN SOLVED (54/79) rồi CoG LOST [INSUFFICIENT_INLIER_PAIRS]
 □ 🌌 Ảnh trời thật (ESA tetra3 Alt60) → giải ảnh 16-bit thực tế
 □ Tab quaternion 16 byte + nhấn mạnh phạm vi PC Demo (chưa kiểm chứng bay)
-□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (17 slide đã đối soát)
+□ Slide: AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx (19 slide đã đối soát)
 ```
