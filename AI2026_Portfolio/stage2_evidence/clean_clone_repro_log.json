@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-28T00:59:07Z",
-  "elapsed_s": 6.67,
+  "generated_at_utc": "2026-11-28T01:28:42Z",
+  "elapsed_s": 7.05,
   "repro_bundle": {
     "ok": true,
     "n_verified": 13,
@@ -21,7 +21,8 @@
       "reject_code": null,
       "n_valid_pairs": 36,
       "attitude_error_arcsec": 0.4463370537767079,
-      "total_ms": 97.56930000003194
+      "gt_source": "simulator_ground_truth",
+      "total_ms": 92.78910000057294
     },
     {
       "case": "esa_alt60_auto",
@@ -33,8 +34,9 @@
       "status": "SOLVED",
       "reject_code": null,
       "n_valid_pairs": 9,
-      "attitude_error_arcsec": null,
-      "total_ms": 65.54270000015094
+      "attitude_error_arcsec": 2.2632107772614365,
+      "gt_source": "esa_tetra3_hipparcos_plus_scipy_f_k1",
+      "total_ms": 65.48019999991084
     },
     {
       "case": "zhao_nightsky_auto",
@@ -46,8 +48,9 @@
       "status": "SOLVED",
       "reject_code": null,
       "n_valid_pairs": 8,
-      "attitude_error_arcsec": null,
-      "total_ms": 3138.432499999908
+      "attitude_error_arcsec": 48.25534172069045,
+      "gt_source": "zhao_heikkila_undistort_plus_hipparcos_3dof",
+      "total_ms": 3105.508400000417
     },
     {
       "case": "mount_st_helens_cnn",
@@ -59,48 +62,60 @@
       "status": "SOLVED",
       "reject_code": null,
       "n_valid_pairs": 72,
-      "attitude_error_arcsec": null,
-      "total_ms": 329.8821000003045
+      "attitude_error_arcsec": 71.13119703047542,
+      "gt_source": "startracker_hipparcos_sky_only_scipy_f_k1_k2",
+      "total_ms": 321.7177999995329
     }
   ],
   "fallback_proof": {
     "requested_backend": "cnn",
     "executed_backend": "classical",
+    "execution_mode_summary": "cnn -> classical [FALLBACK_TO_COG]",
     "fallback_triggered": true,
-    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_v2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
     "status": "SOLVED",
     "n_valid_pairs": 36,
     "attitude_error_arcsec": 0.4463370537767079
   },
+  "auto_fallback_proof": {
+    "case": "zhao_nightsky_auto_missing_ckpt",
+    "requested_backend": "auto",
+    "executed_backend": "classical",
+    "execution_mode_summary": "auto -> classical [FALLBACK_TO_COG]",
+    "fallback_triggered": true,
+    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_v2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "status": "LOST",
+    "reject_code": "INSUFFICIENT_INLIER_PAIRS"
+  },
   "data_control_proof": {
     "same_filename_tested": "mount_st_helens_1.png",
-    "upload_id_1": "a9633fcb3edf4b0a",
-    "upload_id_2": "3a7e343c72af433d",
+    "upload_id_1": "5b21b99e2643458a",
+    "upload_id_2": "171bd8025382499b",
     "distinct_isolated_dirs": true,
     "bundled_sample_untouched": true,
     "delete_1": {
       "deleted": true,
-      "upload_id": "a9633fcb3edf4b0a",
-      "storage_rel_dir": "data/user_uploads/a9633fcb3edf4b0a/",
+      "upload_id": "5b21b99e2643458a",
+      "storage_rel_dir": "data/user_uploads/5b21b99e2643458a/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T00:59:07Z"
+      "deleted_at_utc": "2026-11-28T01:28:42Z"
     },
     "delete_2": {
       "deleted": true,
-      "upload_id": "3a7e343c72af433d",
-      "storage_rel_dir": "data/user_uploads/3a7e343c72af433d/",
+      "upload_id": "171bd8025382499b",
+      "storage_rel_dir": "data/user_uploads/171bd8025382499b/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T00:59:07Z"
+      "deleted_at_utc": "2026-11-28T01:28:42Z"
     },
     "remaining_user_uploads": 0
   }

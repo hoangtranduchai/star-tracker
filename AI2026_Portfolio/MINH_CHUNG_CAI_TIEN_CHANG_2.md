@@ -1,7 +1,7 @@
 # MINH CHỨNG CẢI TIẾN VÒNG CHUNG KẾT · CHẶNG 2 (HACKATHON)
 
 > **Đội thi:** `DUT.StarTracker` (`AI26C0083`) · Bảng C · Trường Đại học Bách khoa, Đại học Đà Nẵng — Khoa Công nghệ thông tin  
-> **Ngày kiểm chứng:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `e38c899`)  
+> **Ngày kiểm chứng:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `04549fc`)  
 > **Đề cải tiến Chặng 2 (Phiên bản 1):** *1. Tái lập pipeline và kiểm soát dữ liệu ảnh*  
 > **Sản phẩm trực tuyến 24/7:** https://startracker.agentlens.dpdns.org  
 > **Hướng dẫn tái lập từ bản clone sạch:** [`REPRODUCIBILITY.md`](../REPRODUCIBILITY.md) · **Bảng Checksum:** [`CHECKSUMS.sha256`](../CHECKSUMS.sha256)
@@ -52,13 +52,13 @@ python scripts/run_clean_repro.py
 ### Kết quả stdout nguyên văn từ bản clone sạch:
 
 ```text
-=== Clean Git Clone Verification ===
-$ git clone . C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2
-Cloning into 'C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2'...
+=== Clean Git Clone Verification (Stage 2 Hardened) ===
+$ git clone . C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2
+Cloning into 'C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2'...
 done.
 
 $ python scripts/verify_repro_bundle.py
-  [PASS] checkpoint      third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt ( 18137.5 KB) sha256=e02d7723b832d12c...
+[PASS] checkpoint      third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt ( 18137.5 KB) sha256=e02d7723b832d12c...
   [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f5d6c27ac7e8e211...
   [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f288f6e1fb3a1299...
   [PASS] sample_real_sky data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy     (  2400.1 KB) sha256=57ec7838e430900b...
@@ -81,51 +81,140 @@ $ python scripts/run_clean_repro.py
 
 === [2/4] Clean-Clone Pipeline Runs (Seed 42 + Calibrated Real-Sky) ===
 Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
-  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.4463370537767079 | t=97.56930000003194ms
-  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=None | t=65.54270000015094ms
-  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=None | t=3138.432499999908ms
+  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.45" | gt=simulator_ground_truth | t=92.8ms
+  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=2.26" | gt=esa_tetra3_hipparcos_plus_scipy_f_k1 | t=65.5ms
+  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=48.26" | gt=zhao_heikkila_undistort_plus_hipparcos_3dof | t=3105.5ms
 Building angle table 0.02-71.5 deg for BSC5+filt (first time, then cached).
-  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=None | t=329.8821000003045ms
+  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=71.13" | gt=startracker_hipparcos_sky_only_scipy_f_k1_k2 | t=321.7ms
 
-=== [3/4] Explicit CNN -> CoG Fallback Proof (Simulated Missing Checkpoint) ===
-  [FALLBACK PROOF] req=cnn -> exe=classical | fallback=True | reason=FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt | status=SOLVED
+=== [3/4] Explicit CNN -> CoG Fallback Proof (Direct CNN & Auto-Router) ===
+  [FALLBACK DIRECT] req=cnn  -> exe=classical | fallback=True | summary=cnn -> classical [FALLBACK_TO_COG] | status=SOLVED
+  [FALLBACK AUTO  ] req=auto -> exe=classical | fallback=True | summary=auto -> classical [FALLBACK_TO_COG] | status=LOST (INSUFFICIENT_INLIER_PAIRS)
 
 === [4/4] Upload Isolation (Zero-Overwrite) & Verified Deletion Proof ===
-  [DATA CONTROL] Same filename -> isolated UUIDs (a9633fcb3edf4b0a, 3a7e343c72af433d); deleted & verified_gone=True; remaining=0
+  [DATA CONTROL] Same filename -> isolated UUIDs (5b21b99e2643458a, 171bd8025382499b); deleted & verified_gone=True; remaining=0
 
-[PASS] Clean-clone reproducibility & data-control audit completed in 6.67s -> C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2\data\outputs\clean_repro_log.json
+[PASS] Clean-clone reproducibility & data-control audit completed in 7.05s -> C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\clean_repro_log.json
+
+$ python scripts/benchmark_3way_centroid_e2e.py --real-only --clutter-frames 5
+[*] CNN warmed: torch=2.11.0+cu128 cuda=True device=NVIDIA GeForce RTX 5070 Laptop GPU
+
+=== Suite: real_calibrated (6 frames x 4 backends) ===
+  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not bundled on clean clone — running full primary BSC5 V<=6.0 suite and skipping supplementary Alt40 Hipparcos V<=7.0.
+Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff classical: LOST   dTh=n/a      valid=1/8 RMSE5=0.164px t=136.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff tetra3   : SOLVED dTh=27.08"   valid=4/23 RMSE5=0.142px t=161.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn_raw  : LOST   dTh=n/a      valid=4/38 RMSE5=0.167px t=295.2ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn      : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=217.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff auto     : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=333.4ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff classical: SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=63.9ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff tetra3   : SOLVED dTh=8.68"    valid=9/29 RMSE5=0.119px t=86.8ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn_raw  : SOLVED dTh=4.65"    valid=9/45 RMSE5=0.114px t=95.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn      : SOLVED dTh=6.77"    valid=9/45 RMSE5=0.102px t=110.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff auto     : SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=60.7ms
+  [Cal/BSC5] nightsky_june16_2021.npy             classical: LOST   dTh=n/a      valid=3/4 RMSE5=0.627px t=153.9ms
+  [Cal/BSC5] nightsky_june16_2021.npy             tetra3   : LOST   dTh=n/a      valid=5/5 RMSE5=0.486px t=158.6ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn_raw  : SOLVED dTh=54.70"   valid=8/8 RMSE5=0.380px t=67.3ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn      : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=59.9ms
+  [Cal/BSC5] nightsky_june16_2021.npy             auto     : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=234.0ms
+  [Cal/BSC5] verification_img.npy                 classical: LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=266.9ms
+  [Cal/BSC5] verification_img.npy                 tetra3   : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=279.2ms
+  [Cal/BSC5] verification_img.npy                 cnn_raw  : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=294.8ms
+  [Cal/BSC5] verification_img.npy                 cnn      : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=285.6ms
+  [Cal/BSC5] verification_img.npy                 auto     : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=562.8ms
+  [Cal/BSC5] mount_st_helens_1.png                classical: SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=147.6ms
+  [Cal/BSC5] mount_st_helens_1.png                tetra3   : LOST   dTh=n/a      valid=4/80 RMSE5=0.535px t=778.9ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn_raw  : SOLVED dTh=120.26"  valid=66/79 RMSE5=1.306px t=222.3ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn      : SOLVED dTh=71.13"   valid=72/77 RMSE5=0.976px t=318.0ms
+  [Cal/BSC5] mount_st_helens_1.png                auto     : SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=141.2ms
+Building angle table 0.02-78.5 deg for BSC5+filt (first time, then cached).
+  [Uncal Stress] 0006.png: detected counts = {'classical': 2729, 'tetra3': 80, 'cnn_raw': 80, 'cnn': 80, 'auto': 2729}
+
+=== Suite: sim_earth_clutter (5 frames x 4 backends) ===
+  classical : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
+  tetra3    : solved= 5/ 5 correct= 5 FL=0 med_dTh=3.14" Prec= 91.5% Rec= 73.2% FP= 17 RMSE5=0.0845px
+  cnn_raw   : solved= 5/ 5 correct= 5 FL=0 med_dTh=15.74" Prec= 88.8% Rec= 70.0% FP= 22 RMSE5=0.3009px
+  cnn       : solved= 5/ 5 correct= 5 FL=0 med_dTh=1.18" Prec= 91.7% Rec= 70.4% FP= 16 RMSE5=0.0536px
+  auto      : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
+
+[DONE] Saved 4-way audited benchmark to C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\benchmark_3way_clean_clone.json in 41.91s
+
+$ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 --no-show
+======================================================================
+   STAR TRACKER - STAR TRACKER DEMO (LAPTOP RUNTIME)
+======================================================================
+[*] Hardware: APS-C (Tùy chỉnh) + 50mm f/1.8 (Tùy chỉnh)
+[*] Pixel pitch: 3.72 um
+[*] Radiometry parameters are simulation assumptions, not a camera datasheet.
+[1/5] Loading catalog + K-vector...
+[2/5] Rendering or loading frame...
+[1/5] Catalog BSC5+filt: 5023 stars  V<=6.0
+[*] Mode=fast  1500x1000  FOV=25.16x16.93 deg  IFOV=61.38 arcsec/px
+      q_GT = [0.18817, -0.64223, 0.46343, 0.58083]
+      GT boresight RA=162.1367 deg (10h 48m 32.81s)  Dec=-14.7409 deg (-14d 44m 27.2s)
+      stars in FOV=36
+      image 1500x1000  source=simulator
+[3/5] Running deterministic pipeline...
+[4/5] Results
+-------------------------------------------------------
+  Centroiding : 34.23 ms
+  Star ID     : 12.53 ms
+  Wahba       : 1.22 ms
+  Total       : 90.72 ms
+-------------------------------------------------------
+  Exec mode   : cnn -> classical [FALLBACK_TO_COG] (checkpoint=simulated_missing)
+  [WARNING] FALLBACK TO CoG TRIGGERED! Reason: FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt
+  Status      : SOLVED
+  Valid pairs : 36 (initial=12, min_req=4)
+  Rejected outliers          : 0
+  Post-fit residual RMS/Max (arcsec): 3.286 / 7.037
+  Centroid precision/recall  : 100.0% / 100.0%
+  q_est       : [0.18817, -0.64223, 0.46343, 0.58083]
+  boresight   : RA 162.1367 deg (10h 48m 32.82s)   Dec -14.7408 deg (-14d 44m 26.8s)
+               (optical axis +Z in ICRS/J2000 celestial coordinates)
+  att err     : 0.446 arcsec
+  downlink    : a4b0403e036924bfb046ed3e7eb1143f  (16 bytes)
+  verdict     : PASS
+  matched HR  : 4232, 4382, 3994, 4094, 4405, 4287, 4343, 3970, 4163, 4402, 4171, 4314, 3977, 3989, 3991, 3996, 4042, 4055, 4082, 4092, 4116, 4123, 4158, 4214, 4233, 4237, 4251, 4255, 4284, 4289, 4305, 4317, 4334, 4395, 4416, 4488
+[5/5] Wrote C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\demo_result.png and C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\demo_result.json
+======================================================================
 ```
 
 ### Tóm tắt kết quả định lượng từ bản clone sạch (`clean_repro_log.json`):
 
 | Ca kiểm chứng tái lập | Chế độ yêu cầu → Thực thi | Trạng thái | Cặp sao hợp lệ | Sai số / Thời gian |
 |---|---|---|---|---|
-| `seed42_auto` | `auto -> classical` | **SOLVED** | `36 sao` | Δθ 0.45″ · `97.6 ms` |
-| `esa_alt60_auto` | `auto -> classical` | **SOLVED** | `9 sao` | Không có GT góc · `65.5 ms` |
-| `zhao_nightsky_auto` | `auto -> cnn_hybrid` | **SOLVED** | `8 sao` | Không có GT góc · `3138.4 ms` |
-| `mount_st_helens_cnn` | `cnn -> cnn_hybrid` | **SOLVED** | `72 sao` | Không có GT góc · `329.9 ms` |
-| `fallback_missing_checkpoint` | `cnn -> classical [FALLBACK_TO_COG]` | **SOLVED** (`fallback=True`) | `36 sao` | Lý do: `FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt` |
-| `upload_isolation_and_delete` | `same filename (mount_st_helens_1.png)` | **VERIFIED** (`remaining=0`) | 2 UUID: `a9633fcb3edf4b0a`, `3a7e343c72af433d` | Chống ghi đè & xóa sạch đĩa (`bundled_untouched=True`) |
+| `seed42_auto` | `auto -> classical` | **SOLVED** | `36 sao` | Δθ 0.45″ · `92.8 ms` |
+| `esa_alt60_auto` | `auto -> classical` | **SOLVED** | `9 sao` | Δθ 2.26″ · `65.5 ms` |
+| `zhao_nightsky_auto` | `auto -> cnn_hybrid` | **SOLVED** | `8 sao` | Δθ 48.26″ · `3105.5 ms` |
+| `mount_st_helens_cnn` | `cnn -> cnn_hybrid` | **SOLVED** | `72 sao` | Δθ 71.13″ · `321.7 ms` |
+| `fallback_missing_checkpoint` | `cnn -> classical [FALLBACK_TO_COG]` | **SOLVED** (`fallback=True`) | `36 sao` | Lý do: `FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt` |
+| `auto_router_fallback_zhao` | `auto -> classical [FALLBACK_TO_COG]` | **LOST** (`INSUFFICIENT_INLIER_PAIRS`) | `fallback=True` | Tự báo lỗi checkpoint trong Auto-Router & từ chối an toàn |
+| `upload_isolation_and_delete` | `same filename (mount_st_helens_1.png)` | **VERIFIED** (`remaining=0`) | 2 UUID: `5b21b99e2643458a`, `171bd8025382499b` | Chống ghi đè & xóa sạch đĩa (`bundled_untouched=True`) |
 
 ---
 
 ## 4. Minh chứng trực tiếp trên hệ thống trực tuyến 24/7 (`https://startracker.agentlens.dpdns.org`)
 
-### Hình 1. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.
+### Hình 1. Sơ đồ kiến trúc tổng thể Pipeline định hướng sao J2000 & Tầng kiểm soát dữ liệu ảnh Chặng 2 (Gói tái lập SHA-256, Auto-Router + Fallback CoG tường minh, Cô lập UUID4 / Ephemeral 0s / TTL 15 phút & Quyền xóa).
 
-![Hình 1. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.](stage2_evidence/ev1_repro_checksums_and_audit_log.png)
+![Hình 1. Sơ đồ kiến trúc tổng thể Pipeline định hướng sao J2000 & Tầng kiểm soát dữ liệu ảnh Chặng 2 (Gói tái lập SHA-256, Auto-Router + Fallback CoG tường minh, Cô lập UUID4 / Ephemeral 0s / TTL 15 phút & Quyền xóa).](stage2_evidence/stage2_pipeline_architecture.png)
 
-### Hình 2. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.
+### Hình 2. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.
 
-![Hình 2. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.](stage2_evidence/ev2_fallback_cog_banner.png)
+![Hình 2. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.](stage2_evidence/ev1_repro_checksums_and_audit_log.png)
 
-### Hình 3. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.
+### Hình 3. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.
 
-![Hình 3. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.](stage2_evidence/ev3_upload_ttl_and_zero_overwrite.png)
+![Hình 3. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.](stage2_evidence/ev2_fallback_cog_banner.png)
 
-### Hình 4. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa) và ghi dấu DATA_DELETION vào nhật ký.
+### Hình 4. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.
 
-![Hình 4. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa) và ghi dấu DATA_DELETION vào nhật ký.](stage2_evidence/ev4_delete_verified_empty.png)
+![Hình 4. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.](stage2_evidence/ev3_upload_ttl_and_zero_overwrite.png)
+
+### Hình 5. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa, URL preview trả 404) và ghi dấu DATA_DELETION vào nhật ký.
+
+![Hình 5. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa, URL preview trả 404) và ghi dấu DATA_DELETION vào nhật ký.](stage2_evidence/ev4_delete_verified_empty.png)
 
 ---
 
@@ -443,83 +532,46 @@ Các bản ghi JSONL thực tế trích xuất trực tiếp từ `https://start
 
 ## 6. Kết quả Bộ kiểm thử tự động (`pytest`) & Smoke Test trực tuyến trên VPS
 
-- **Bộ kiểm thử tự động (`pytest -q`):** `137 passed, 2 skipped in 66.68s` (bao gồm 4 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py)).
+- **Bộ kiểm thử tự động (`pytest -q`):** `139 passed, 2 skipped in 43.12s` (bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, Fallback CNN→CoG trực tiếp, Fallback Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, và kiểm tra 0 NUL byte UTF-8).
 - **Kết quả triển khai & smoke test 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):**
 
 ```text
-��[ 1 / 4 ]   P a c k e d   a p p l i c a t i o n   s o u r c e   b u n d l e   ( 5 0 4 . 0   K B   c o m p r e s s e d ) . 
- 
- [ 2 / 4 ]   S y n c e d   c o d e   t o   / o p t / s t a r - t r a c k e r / a p p   i n   9 . 6 8 s . 
- 
- [ 3 / 4 ]   B u i l t   s t a r - t r a c k e r : l a t e s t   &   s t a r t e d   c o n t a i n e r   s t a r - t r a c k e r   i n   2 . 6 0 s   ( s h a 2 5 6 : 5 4 c c 4 ) . 
- 
- [ 4 / 4 ]   R u n n i n g   r e m o t e   H T T P   &   D o c k e r - n e t w o r k   s m o k e   t e s t s . . . 
- 
- [ P A S S ]   G E T   / a p i / h e a l t h   - >   2 0 0   i n   0 . 2 0 s :   { ' o k ' :   T r u e ,   ' s e r v i c e ' :   ' s t a r - t r a c k e r ' } 
- 
- [ P A S S ]   G E T   /   - >   2 0 0   ( 7 5 , 2 0 6   b y t e s ) 
- 
- [ P A S S ]   G E T   / a p i / f r a m e s   - >   2 0 0   ( 1 7   s t a g e d   f r a m e s ) 
- 
- [ P A S S ]   G E T   / a p i / s k y - c a t a l o g   - >   2 0 0   ( s o u r c e = B S C 5 + f i l t ,   s y n t h e t i c = F a l s e ,   n = 5 0 2 3 ,   n a m e d = 4 6 2 ) 
- 
- [ P A S S ]   P O S T   / a p i / r u n   ( s e e d = 4 2   c l a s s i c a l )   - >   S O L V E D   i n   0 . 8 1 s   ( n _ m a t c h e d = 3 6 ,   a t t _ e r r = 0 . 4 5 " ) 
- 
-               G E T   / o u t p u t / d e m o _ r e s u l t . p n g   - >   2 0 0   ( 3 4 3 , 4 0 4   b y t e s ) 
- 
-               G E T   / o u t p u t / d e m o _ i n p u t . p n g   - >   2 0 0   ( 9 7 , 8 8 0   b y t e s ) 
- 
-               G E T   / o u t p u t / d e m o _ o u t p u t . p n g   - >   2 0 0   ( 1 7 0 , 3 0 0   b y t e s ) 
- 
-               G E T   / o u t p u t / d e m o _ c l e a n . p n g   - >   2 0 0   ( 2 1 , 7 1 1   b y t e s ) 
- 
- [ P A S S ]   P O S T   / a p i / r u n   ( m o u n t _ s t _ h e l e n s _ 1 . p n g   C N N )   - >   S O L V E D   i n   5 . 2 1 s   ( d e t e c t o r = c n n _ z h a o 2 0 2 4 ,   f a l l b a c k = F a l s e ,   n _ m a t c h e d = 7 2 ,   R A = 2 0 h   4 1 m   5 8 . 2 0 s ,   D e c = + 3 5 d   5 9 m   2 7 . 9 s ) 
- 
- [ P A S S ]   P O S T   / a p i / r u n   ( t e t r a 3   A l t 6 0   r e a l   f r a m e )   - >   S O L V E D   i n   0 . 3 6 s   ( n _ m a t c h e d = 9 ) 
- 
- [ P A S S ]   P O S T   / a p i / r u n   ( Z h a o   n i g h t s k y   A u t o - R o u t e r )   - >   S O L V E D   i n   2 . 1 3 s   ( s e l e c t e d = c n n ) 
- 
- [ P A S S ]   P O S T   / a p i / c o m p a r e   ( Z h a o   n i g h t s k y )   i n   3 . 0 2 s   - >   C o G = L O S T ,   t e t r a 3 = L O S T ,   C N N - H y b r i d = S O L V E D 
- 
- [ P A S S ]   P O S T   / a p i / c o m p a r e   ( M o u n t   S t .   H e l e n s )   i n   7 . 5 9 s   - >   C o G = S O L V E D ,   t e t r a 3 = L O S T ,   C N N - H y b r i d = S O L V E D   ( 7 2 / 7 7 ) 
- 
- [ P A S S ]   G E T   / a p i / b e n c h m a r k - s u m m a r y   - >   a v a i l a b l e = T r u e   s t r e s s = T r u e   d e v i c e = N V I D I A   G e F o r c e   R T X   5 0 7 0   L a p t o p   G P U 
- 
- [ P A S S ]   G E T   / a p i / r e p r o - s t a t u s   - >   o k = T r u e   ( 1 3 / 1 3   v e r i f i e d ,   3 6 . 0 3   M B ) 
- 
- [ P A S S ]   P O S T   / a p i / r u n   ( s i m u l a t e _ m i s s i n g _ w e i g h t s = T r u e )   - >   c n n   - >   c l a s s i c a l   [ F A L L B A C K _ T O _ C O G ]   r e a s o n = F i l e N o t F o u n d E r r o r :   m i s s i n g   p u b l i c   w e i g h t s :   / a p p / t h i r d _ p a r t y / c n n _ s t a r _ c e n t r o i d / s a v e d _ m o d e l s / _ _ s i m u l a t e d _ m i s s i n g _ c h e c k p o i n t _ _ . p t 
- 
- [ P A S S ]   G E T   / a p i / e x e c u t i o n - l o g   - >   1 0   e n t r i e s   ( f a l l b a c k   l o g g e d ) 
- 
- [ P A S S ]   G E T   / a p i / u p l o a d s   - >   d e f a u l t = e p h e m e r a l ,   a c t i v e = 0 
- 
- [ P A S S ]   D o c k e r   D N S   o n   a g e n t l e n s _ a g e n t l e n s   ( h t t p : / / s t a r - t r a c k e r : 8 7 6 5 / a p i / h e a l t h )   - >   { " o k " : t r u e , " s e r v i c e " : " s t a r - t r a c k e r " } 
- 
- = = =   R u n n i n g   C o n t a i n e r s   o n   V P S   = = = 
- 
- N A M E S                                           S T A T U S                                     I M A G E                                                                       N E T W O R K S                             P O R T S 
- 
- s t a r - t r a c k e r                             U p   2 7   s e c o n d s                       s t a r - t r a c k e r : l a t e s t                                           a g e n t l e n s _ a g e n t l e n s       1 2 7 . 0 . 0 . 1 : 8 7 6 5 - > 8 7 6 5 / t c p 
- 
- l u n a r - n a v i g a t o r                       U p   1 3   d a y s                             n g i n x : a l p i n e                                                         a g e n t l e n s _ a g e n t l e n s       1 2 7 . 0 . 0 . 1 : 8 0 8 8 - > 8 0 / t c p 
- 
- m u l t i - a g e n t - b l o g                     U p   3   m o n t h s   ( h e a l t h y )       m u l t i - a g e n t - b l o g : l a t e s t                                   b l o g - w r i t e r _ d e f a u l t       0 . 0 . 0 . 0 : 8 0 0 0 - > 8 0 0 0 / t c p ,   [ : : ] : 8 0 0 0 - > 8 0 0 0 / t c p 
- 
- a g e n t l e n s - c l o u d f l a r e d - 1       U p   3   m o n t h s                           c l o u d f l a r e / c l o u d f l a r e d : l a t e s t                                                                   
- 
- a g e n t l e n s - g a t e w a y - 1               U p   3   m o n t h s                           c a d d y : 2 . 1 0 - a l p i n e                                               a g e n t l e n s _ a g e n t l e n s       8 0 / t c p ,   4 4 3 / t c p ,   2 0 1 9 / t c p ,   4 4 3 / u d p 
- 
- a g e n t l e n s - b a c k e n d - 1               U p   3   m o n t h s   ( h e a l t h y )       a g e n t l e n s / b a c k e n d : d e v                                       a g e n t l e n s _ a g e n t l e n s       8 0 0 0 / t c p 
- 
- a g e n t l e n s - f r o n t e n d - 1             U p   3   m o n t h s   ( h e a l t h y )       a g e n t l e n s / f r o n t e n d : p r o d - 2 0 2 6 0 8 2 5 - 1 0 4 6       a g e n t l e n s _ a g e n t l e n s       3 0 0 0 / t c p 
- 
- a g e n t l e n s - w o r k e r - 1                 U p   3   m o n t h s   ( h e a l t h y )       a g e n t l e n s / b a c k e n d : d e v                                       a g e n t l e n s _ a g e n t l e n s       8 0 0 0 / t c p 
- 
- a g e n t l e n s - p o s t g r e s - 1             U p   3   m o n t h s   ( h e a l t h y )       p g v e c t o r / p g v e c t o r : p g 1 6                                     a g e n t l e n s _ a g e n t l e n s       5 4 3 2 / t c p 
- 
- = = =   D E P L O Y   C O M P L E T E   i n   4 2 . 0 3 s   t o t a l   = = = 
- 
- 
+[1/4] Packed application source bundle (504.0 KB compressed).
+[2/4] Synced code to /opt/star-tracker/app in 9.68s.
+[3/4] Built star-tracker:latest & started container star-tracker in 2.60s (sha256:54cc4).
+[4/4] Running remote HTTP & Docker-network smoke tests...
+[PASS] GET /api/health -> 200 in 0.20s: {'ok': True, 'service': 'star-tracker'}
+[PASS] GET / -> 200 (75,206 bytes)
+[PASS] GET /api/frames -> 200 (17 staged frames)
+[PASS] GET /api/sky-catalog -> 200 (source=BSC5+filt, synthetic=False, n=5023, named=462)
+[PASS] POST /api/run (seed=42 classical) -> SOLVED in 0.81s (n_matched=36, att_err=0.45")
+       GET /output/demo_result.png -> 200 (343,404 bytes)
+       GET /output/demo_input.png -> 200 (97,880 bytes)
+       GET /output/demo_output.png -> 200 (170,300 bytes)
+       GET /output/demo_clean.png -> 200 (21,711 bytes)
+[PASS] POST /api/run (mount_st_helens_1.png CNN) -> SOLVED in 5.21s (detector=cnn_zhao2024, fallback=False, n_matched=72, RA=20h 41m 58.20s, Dec=+35d 59m 27.9s)
+[PASS] POST /api/run (tetra3 Alt60 real frame) -> SOLVED in 0.36s (n_matched=9)
+[PASS] POST /api/run (Zhao nightsky Auto-Router) -> SOLVED in 2.13s (selected=cnn)
+[PASS] POST /api/compare (Zhao nightsky) in 3.02s -> CoG=LOST, tetra3=LOST, CNN-Hybrid=SOLVED
+[PASS] POST /api/compare (Mount St. Helens) in 7.59s -> CoG=SOLVED, tetra3=LOST, CNN-Hybrid=SOLVED (72/77)
+[PASS] GET /api/benchmark-summary -> available=True stress=True device=NVIDIA GeForce RTX 5070 Laptop GPU
+[PASS] GET /api/repro-status -> ok=True (13/13 verified, 36.03 MB)
+[PASS] POST /api/run (simulate_missing_weights=True) -> cnn -> classical [FALLBACK_TO_COG] reason=FileNotFoundError: missing public weights: /app/third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
+[PASS] GET /api/execution-log -> 10 entries (fallback logged)
+[PASS] GET /api/uploads -> default=ephemeral, active=0
+[PASS] Docker DNS on agentlens_agentlens (http://star-tracker:8765/api/health) -> {"ok":true,"service":"star-tracker"}
+=== Running Containers on VPS ===
+NAMES                     STATUS                  IMAGE                                   NETWORKS              PORTS
+star-tracker              Up 27 seconds           star-tracker:latest                     agentlens_agentlens   127.0.0.1:8765->8765/tcp
+lunar-navigator           Up 13 days              nginx:alpine                            agentlens_agentlens   127.0.0.1:8088->80/tcp
+multi-agent-blog          Up 3 months (healthy)   multi-agent-blog:latest                 blog-writer_default   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+agentlens-cloudflared-1   Up 3 months             cloudflare/cloudflared:latest                                 
+agentlens-gateway-1       Up 3 months             caddy:2.10-alpine                       agentlens_agentlens   80/tcp, 443/tcp, 2019/tcp, 443/udp
+agentlens-backend-1       Up 3 months (healthy)   agentlens/backend:dev                   agentlens_agentlens   8000/tcp
+agentlens-frontend-1      Up 3 months (healthy)   agentlens/frontend:prod-20260825-1046   agentlens_agentlens   3000/tcp
+agentlens-worker-1        Up 3 months (healthy)   agentlens/backend:dev                   agentlens_agentlens   8000/tcp
+agentlens-postgres-1      Up 3 months (healthy)   pgvector/pgvector:pg16                  agentlens_agentlens   5432/tcp
+=== DEPLOY COMPLETE in 42.03s total ===
 ```
 
 ---

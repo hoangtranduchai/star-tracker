@@ -1,10 +1,10 @@
-=== Clean Git Clone Verification ===
-$ git clone . C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2
-Cloning into 'C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2'...
+=== Clean Git Clone Verification (Stage 2 Hardened) ===
+$ git clone . C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2
+Cloning into 'C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2'...
 done.
 
 $ python scripts/verify_repro_bundle.py
-  [PASS] checkpoint      third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt ( 18137.5 KB) sha256=e02d7723b832d12c...
+[PASS] checkpoint      third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt ( 18137.5 KB) sha256=e02d7723b832d12c...
   [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f5d6c27ac7e8e211...
   [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f288f6e1fb3a1299...
   [PASS] sample_real_sky data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy     (  2400.1 KB) sha256=57ec7838e430900b...
@@ -27,16 +27,100 @@ $ python scripts/run_clean_repro.py
 
 === [2/4] Clean-Clone Pipeline Runs (Seed 42 + Calibrated Real-Sky) ===
 Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
-  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.4463370537767079 | t=97.56930000003194ms
-  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=None | t=65.54270000015094ms
-  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=None | t=3138.432499999908ms
+  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.45" | gt=simulator_ground_truth | t=92.8ms
+  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=2.26" | gt=esa_tetra3_hipparcos_plus_scipy_f_k1 | t=65.5ms
+  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=48.26" | gt=zhao_heikkila_undistort_plus_hipparcos_3dof | t=3105.5ms
 Building angle table 0.02-71.5 deg for BSC5+filt (first time, then cached).
-  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=None | t=329.8821000003045ms
+  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=71.13" | gt=startracker_hipparcos_sky_only_scipy_f_k1_k2 | t=321.7ms
 
-=== [3/4] Explicit CNN -> CoG Fallback Proof (Simulated Missing Checkpoint) ===
-  [FALLBACK PROOF] req=cnn -> exe=classical | fallback=True | reason=FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt | status=SOLVED
+=== [3/4] Explicit CNN -> CoG Fallback Proof (Direct CNN & Auto-Router) ===
+  [FALLBACK DIRECT] req=cnn  -> exe=classical | fallback=True | summary=cnn -> classical [FALLBACK_TO_COG] | status=SOLVED
+  [FALLBACK AUTO  ] req=auto -> exe=classical | fallback=True | summary=auto -> classical [FALLBACK_TO_COG] | status=LOST (INSUFFICIENT_INLIER_PAIRS)
 
 === [4/4] Upload Isolation (Zero-Overwrite) & Verified Deletion Proof ===
-  [DATA CONTROL] Same filename -> isolated UUIDs (a9633fcb3edf4b0a, 3a7e343c72af433d); deleted & verified_gone=True; remaining=0
+  [DATA CONTROL] Same filename -> isolated UUIDs (5b21b99e2643458a, 171bd8025382499b); deleted & verified_gone=True; remaining=0
 
-[PASS] Clean-clone reproducibility & data-control audit completed in 6.67s -> C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2\data\outputs\clean_repro_log.json
+[PASS] Clean-clone reproducibility & data-control audit completed in 7.05s -> C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\clean_repro_log.json
+
+$ python scripts/benchmark_3way_centroid_e2e.py --real-only --clutter-frames 5
+[*] CNN warmed: torch=2.11.0+cu128 cuda=True device=NVIDIA GeForce RTX 5070 Laptop GPU
+
+=== Suite: real_calibrated (6 frames x 4 backends) ===
+  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not bundled on clean clone — running full primary BSC5 V<=6.0 suite and skipping supplementary Alt40 Hipparcos V<=7.0.
+Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff classical: LOST   dTh=n/a      valid=1/8 RMSE5=0.164px t=136.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff tetra3   : SOLVED dTh=27.08"   valid=4/23 RMSE5=0.142px t=161.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn_raw  : LOST   dTh=n/a      valid=4/38 RMSE5=0.167px t=295.2ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn      : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=217.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff auto     : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=333.4ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff classical: SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=63.9ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff tetra3   : SOLVED dTh=8.68"    valid=9/29 RMSE5=0.119px t=86.8ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn_raw  : SOLVED dTh=4.65"    valid=9/45 RMSE5=0.114px t=95.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn      : SOLVED dTh=6.77"    valid=9/45 RMSE5=0.102px t=110.1ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff auto     : SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=60.7ms
+  [Cal/BSC5] nightsky_june16_2021.npy             classical: LOST   dTh=n/a      valid=3/4 RMSE5=0.627px t=153.9ms
+  [Cal/BSC5] nightsky_june16_2021.npy             tetra3   : LOST   dTh=n/a      valid=5/5 RMSE5=0.486px t=158.6ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn_raw  : SOLVED dTh=54.70"   valid=8/8 RMSE5=0.380px t=67.3ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn      : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=59.9ms
+  [Cal/BSC5] nightsky_june16_2021.npy             auto     : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=234.0ms
+  [Cal/BSC5] verification_img.npy                 classical: LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=266.9ms
+  [Cal/BSC5] verification_img.npy                 tetra3   : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=279.2ms
+  [Cal/BSC5] verification_img.npy                 cnn_raw  : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=294.8ms
+  [Cal/BSC5] verification_img.npy                 cnn      : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=285.6ms
+  [Cal/BSC5] verification_img.npy                 auto     : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=562.8ms
+  [Cal/BSC5] mount_st_helens_1.png                classical: SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=147.6ms
+  [Cal/BSC5] mount_st_helens_1.png                tetra3   : LOST   dTh=n/a      valid=4/80 RMSE5=0.535px t=778.9ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn_raw  : SOLVED dTh=120.26"  valid=66/79 RMSE5=1.306px t=222.3ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn      : SOLVED dTh=71.13"   valid=72/77 RMSE5=0.976px t=318.0ms
+  [Cal/BSC5] mount_st_helens_1.png                auto     : SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=141.2ms
+Building angle table 0.02-78.5 deg for BSC5+filt (first time, then cached).
+  [Uncal Stress] 0006.png: detected counts = {'classical': 2729, 'tetra3': 80, 'cnn_raw': 80, 'cnn': 80, 'auto': 2729}
+
+=== Suite: sim_earth_clutter (5 frames x 4 backends) ===
+  classical : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
+  tetra3    : solved= 5/ 5 correct= 5 FL=0 med_dTh=3.14" Prec= 91.5% Rec= 73.2% FP= 17 RMSE5=0.0845px
+  cnn_raw   : solved= 5/ 5 correct= 5 FL=0 med_dTh=15.74" Prec= 88.8% Rec= 70.0% FP= 22 RMSE5=0.3009px
+  cnn       : solved= 5/ 5 correct= 5 FL=0 med_dTh=1.18" Prec= 91.7% Rec= 70.4% FP= 16 RMSE5=0.0536px
+  auto      : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
+
+[DONE] Saved 4-way audited benchmark to C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\benchmark_3way_clean_clone.json in 41.91s
+
+$ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 --no-show
+======================================================================
+   STAR TRACKER - STAR TRACKER DEMO (LAPTOP RUNTIME)
+======================================================================
+[*] Hardware: APS-C (Tùy chỉnh) + 50mm f/1.8 (Tùy chỉnh)
+[*] Pixel pitch: 3.72 um
+[*] Radiometry parameters are simulation assumptions, not a camera datasheet.
+[1/5] Loading catalog + K-vector...
+[2/5] Rendering or loading frame...
+[1/5] Catalog BSC5+filt: 5023 stars  V<=6.0
+[*] Mode=fast  1500x1000  FOV=25.16x16.93 deg  IFOV=61.38 arcsec/px
+      q_GT = [0.18817, -0.64223, 0.46343, 0.58083]
+      GT boresight RA=162.1367 deg (10h 48m 32.81s)  Dec=-14.7409 deg (-14d 44m 27.2s)
+      stars in FOV=36
+      image 1500x1000  source=simulator
+[3/5] Running deterministic pipeline...
+[4/5] Results
+-------------------------------------------------------
+  Centroiding : 34.23 ms
+  Star ID     : 12.53 ms
+  Wahba       : 1.22 ms
+  Total       : 90.72 ms
+-------------------------------------------------------
+  Exec mode   : cnn -> classical [FALLBACK_TO_COG] (checkpoint=simulated_missing)
+  [WARNING] FALLBACK TO CoG TRIGGERED! Reason: FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt
+  Status      : SOLVED
+  Valid pairs : 36 (initial=12, min_req=4)
+  Rejected outliers          : 0
+  Post-fit residual RMS/Max (arcsec): 3.286 / 7.037
+  Centroid precision/recall  : 100.0% / 100.0%
+  q_est       : [0.18817, -0.64223, 0.46343, 0.58083]
+  boresight   : RA 162.1367 deg (10h 48m 32.82s)   Dec -14.7408 deg (-14d 44m 26.8s)
+               (optical axis +Z in ICRS/J2000 celestial coordinates)
+  att err     : 0.446 arcsec
+  downlink    : a4b0403e036924bfb046ed3e7eb1143f  (16 bytes)
+  verdict     : PASS
+  matched HR  : 4232, 4382, 3994, 4094, 4405, 4287, 4343, 3970, 4163, 4402, 4171, 4314, 3977, 3989, 3991, 3996, 4042, 4055, 4082, 4092, 4116, 4123, 4158, 4214, 4233, 4237, 4251, 4255, 4284, 4289, 4305, 4317, 4334, 4395, 4416, 4488
+[5/5] Wrote C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\demo_result.png and C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_v2\data\outputs\demo_result.json
+======================================================================

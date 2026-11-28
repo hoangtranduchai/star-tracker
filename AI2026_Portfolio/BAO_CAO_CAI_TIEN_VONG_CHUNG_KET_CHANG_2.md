@@ -3,7 +3,7 @@
 **Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ nhân tạo năm 2026 (Bảng C)**  
 **Đội thi:** `DUT.StarTracker` (`AI26C0083`) — Trường Đại học Bách khoa, Đại học Đà Nẵng (Khoa Công nghệ thông tin)  
 **Đề tài:** *Star Tracker — Hệ thống định hướng camera bầu trời sao lai CoG | CNN (Demo nghiên cứu trên PC)*  
-**Ngày nộp:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit `e38c899`)  
+**Ngày nộp:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit `04549fc`)  
 
 ---
 
@@ -55,35 +55,40 @@ Theo đề bài Chặng 2 (**"1. Tái lập pipeline và kiểm soát dữ liệ
 
 | Kịch bản kiểm chứng | Chế độ (Yêu cầu → Thực thi) | Trạng thái | Cặp sao hợp lệ | Sai số góc / Ghi chú |
 |---|---|---|---|---|
-| `seed42_auto` | `auto -> classical` | **SOLVED** | `36 sao` | Δθ = 0.45″ (`97.6 ms`) |
-| `esa_alt60_auto` | `auto -> classical` | **SOLVED** | `9 sao` | Không có GT góc (`65.5 ms`) |
-| `zhao_nightsky_auto` | `auto -> cnn_hybrid` | **SOLVED** | `8 sao` | Không có GT góc (`3138.4 ms`) |
-| `mount_st_helens_cnn` | `cnn -> cnn_hybrid` | **SOLVED** | `72 sao` | Không có GT góc (`329.9 ms`) |
+| `seed42_auto` | `auto -> classical` | **SOLVED** | `36 sao` | Δθ = 0.45″ (`92.8 ms`) |
+| `esa_alt60_auto` | `auto -> classical` | **SOLVED** | `9 sao` | Δθ = 2.26″ (`65.5 ms`) |
+| `zhao_nightsky_auto` | `auto -> cnn_hybrid` | **SOLVED** | `8 sao` | Δθ = 48.26″ (`3105.5 ms`) |
+| `mount_st_helens_cnn` | `cnn -> cnn_hybrid` | **SOLVED** | `72 sao` | Δθ = 71.13″ (`321.7 ms`) |
 | `fallback_missing_checkpoint` | `cnn -> classical [FALLBACK_TO_COG]` | **SOLVED** | `fallback=True` | Kích hoạt đúng `FileNotFoundError → CoG` |
-| `upload_isolation_and_delete` | `UUID4 (a9633fcb3edf4b0a, 3a7e343c72af433d)` | **VERIFIED** | `0 tệp sót` | Chống ghi đè `mount_st_helens_1.png` & xóa sạch |
+| `auto_router_fallback_zhao` | `auto -> classical [FALLBACK_TO_COG]` | **LOST** | `fallback=True` | Auto-Router báo fallback CoG & 0% khóa sai |
+| `upload_isolation_and_delete` | `UUID4 (5b21b99e2643458a, 171bd8025382499b)` | **VERIFIED** | `0 tệp sót` | Chống ghi đè `mount_st_helens_1.png` & xóa sạch |
 
 ### 3.2. Kết quả Kiểm thử Tự động & Kiểm chứng Trực tuyến 24/7
 
-- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`137 passed, 2 skipped in 66.68s`** (0 lỗi). 4 ca kiểm thử mới trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL, (3) `ephemeral` xóa sạch 0s và không làm thay đổi SHA-256 của ảnh mẫu `mount_st_helens_1.png`, (4) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, xóa đơn lẻ xác minh `verified_gone=True`, tự động dọn khi quá hạn TTL và ghi dấu `DATA_DELETION`.
+- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`139 passed, 2 skipped in 43.12s`** (0 lỗi). 6 ca kiểm thử chuyên biệt trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL (cả chế độ `cnn` lẫn `auto`), (3) `ephemeral` trả preview inline base64, xóa sạch 0s cả ảnh gốc/sidecar/preview và không ghi đè ảnh mẫu `mount_st_helens_1.png`, (4) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, preview trả `200` rồi trả `404` ngay sau `DELETE`, tự dọn khi hết TTL & ghi `DATA_DELETION`, (5) xác minh 0 byte NUL UTF-8 trên toàn bộ báo cáo và minh chứng.
 - **Triển khai trực tuyến 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):** Đã đồng bộ đủ 13/13 tệp tái lập và xác minh toàn bộ endpoint `/api/repro-status`, `/api/execution-log`, `/api/uploads`, `DELETE /api/uploads/<id>` và kịch bản Fallback trực tiếp trên trình duyệt Chrome (0 lỗi console).
 
 ### 3.3. Hình ảnh Minh chứng Trực tiếp trên Web UI (`https://startracker.agentlens.dpdns.org`)
 
-![Hình 1. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.](stage2_evidence/ev1_repro_checksums_and_audit_log.png)
+![Hình 1. Sơ đồ kiến trúc tổng thể Pipeline định hướng sao J2000 & Tầng kiểm soát dữ liệu ảnh Chặng 2 (Gói tái lập SHA-256, Auto-Router + Fallback CoG tường minh, Cô lập UUID4 / Ephemeral 0s / TTL 15 phút & Quyền xóa).](stage2_evidence/stage2_pipeline_architecture.png)
 
-*Hình 1. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.*
+*Hình 1. Sơ đồ kiến trúc tổng thể Pipeline định hướng sao J2000 & Tầng kiểm soát dữ liệu ảnh Chặng 2 (Gói tái lập SHA-256, Auto-Router + Fallback CoG tường minh, Cô lập UUID4 / Ephemeral 0s / TTL 15 phút & Quyền xóa).*
 
-![Hình 2. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.](stage2_evidence/ev2_fallback_cog_banner.png)
+![Hình 2. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.](stage2_evidence/ev1_repro_checksums_and_audit_log.png)
 
-*Hình 2. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.*
+*Hình 2. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.*
 
-![Hình 3. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.](stage2_evidence/ev3_upload_ttl_and_zero_overwrite.png)
+![Hình 3. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.](stage2_evidence/ev2_fallback_cog_banner.png)
 
-*Hình 3. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.*
+*Hình 3. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.*
 
-![Hình 4. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa) và ghi dấu DATA_DELETION vào nhật ký.](stage2_evidence/ev4_delete_verified_empty.png)
+![Hình 4. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.](stage2_evidence/ev3_upload_ttl_and_zero_overwrite.png)
 
-*Hình 4. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa) và ghi dấu DATA_DELETION vào nhật ký.*
+*Hình 4. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.*
+
+![Hình 5. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa, URL preview trả 404) và ghi dấu DATA_DELETION vào nhật ký.](stage2_evidence/ev4_delete_verified_empty.png)
+
+*Hình 5. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa, URL preview trả 404) và ghi dấu DATA_DELETION vào nhật ký.*
 
 ---
 
