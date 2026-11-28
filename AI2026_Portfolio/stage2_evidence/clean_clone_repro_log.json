@@ -1,0 +1,107 @@
+{
+  "generated_at_utc": "2026-11-28T00:59:07Z",
+  "elapsed_s": 6.67,
+  "repro_bundle": {
+    "ok": true,
+    "n_verified": 13,
+    "n_total": 13,
+    "total_bundle_mb": 36.03,
+    "checkpoint_status": "verified",
+    "checkpoint_sha256": "e02d7723b832d12cf2535a8a9794eaedc822023722f07da3126dcd8473cbe062"
+  },
+  "clean_clone_runs": [
+    {
+      "case": "seed42_auto",
+      "requested_backend": "auto",
+      "executed_backend": "classical",
+      "auto_router_selected": "classical",
+      "fallback_triggered": false,
+      "fallback_reason": null,
+      "status": "SOLVED",
+      "reject_code": null,
+      "n_valid_pairs": 36,
+      "attitude_error_arcsec": 0.4463370537767079,
+      "total_ms": 97.56930000003194
+    },
+    {
+      "case": "esa_alt60_auto",
+      "requested_backend": "auto",
+      "executed_backend": "classical",
+      "auto_router_selected": "classical",
+      "fallback_triggered": false,
+      "fallback_reason": null,
+      "status": "SOLVED",
+      "reject_code": null,
+      "n_valid_pairs": 9,
+      "attitude_error_arcsec": null,
+      "total_ms": 65.54270000015094
+    },
+    {
+      "case": "zhao_nightsky_auto",
+      "requested_backend": "auto",
+      "executed_backend": "cnn_hybrid",
+      "auto_router_selected": "cnn",
+      "fallback_triggered": false,
+      "fallback_reason": null,
+      "status": "SOLVED",
+      "reject_code": null,
+      "n_valid_pairs": 8,
+      "attitude_error_arcsec": null,
+      "total_ms": 3138.432499999908
+    },
+    {
+      "case": "mount_st_helens_cnn",
+      "requested_backend": "cnn",
+      "executed_backend": "cnn_hybrid",
+      "auto_router_selected": null,
+      "fallback_triggered": false,
+      "fallback_reason": null,
+      "status": "SOLVED",
+      "reject_code": null,
+      "n_valid_pairs": 72,
+      "attitude_error_arcsec": null,
+      "total_ms": 329.8821000003045
+    }
+  ],
+  "fallback_proof": {
+    "requested_backend": "cnn",
+    "executed_backend": "classical",
+    "fallback_triggered": true,
+    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "status": "SOLVED",
+    "n_valid_pairs": 36,
+    "attitude_error_arcsec": 0.4463370537767079
+  },
+  "data_control_proof": {
+    "same_filename_tested": "mount_st_helens_1.png",
+    "upload_id_1": "a9633fcb3edf4b0a",
+    "upload_id_2": "3a7e343c72af433d",
+    "distinct_isolated_dirs": true,
+    "bundled_sample_untouched": true,
+    "delete_1": {
+      "deleted": true,
+      "upload_id": "a9633fcb3edf4b0a",
+      "storage_rel_dir": "data/user_uploads/a9633fcb3edf4b0a/",
+      "deleted_files": [
+        "img_mount_st_helens_1.png",
+        "meta.json",
+        "sidecar_meta.json"
+      ],
+      "verified_gone": true,
+      "deleted_at_utc": "2026-11-28T00:59:07Z"
+    },
+    "delete_2": {
+      "deleted": true,
+      "upload_id": "3a7e343c72af433d",
+      "storage_rel_dir": "data/user_uploads/3a7e343c72af433d/",
+      "deleted_files": [
+        "img_mount_st_helens_1.png",
+        "meta.json",
+        "sidecar_meta.json"
+      ],
+      "verified_gone": true,
+      "deleted_at_utc": "2026-11-28T00:59:07Z"
+    },
+    "remaining_user_uploads": 0
+  }
+}

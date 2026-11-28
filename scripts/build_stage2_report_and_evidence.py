@@ -74,13 +74,13 @@ EVIDENCE_IMAGES = (
 
 def _read_text_safe(p: Path, fallback: str = '') -> str:
     if p.is_file():
-        return p.read_text(encoding='utf-8', errors='replace').strip()
+        return p.read_text(encoding='utf-8-sig', errors='replace').strip()
     return fallback
 
 
 def _read_json_safe(p: Path) -> dict[str, Any]:
     if p.is_file():
-        return json.loads(p.read_text(encoding='utf-8'))
+        return json.loads(p.read_text(encoding='utf-8-sig'))
     return {}
 
 

@@ -430,6 +430,25 @@
     }
   }
 
+  // Independent utility fetch (does not cancel concurrent pipeline/audit requests)
+  async function fetchApiJson(url, opts, timeoutMs) {
+    const localCtrl = new AbortController();
+    const timer = setTimeout(() => localCtrl.abort(), timeoutMs || 30000);
+    try {
+      const res = await fetch(url, { ...opts, signal: localCtrl.signal });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        throw new Error("Hết thời gian chờ phản hồi máy chủ.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   /* =======================================================================
      Interactive 2D Sensor Starfield Canvas Overlay & 3D Hover Sync
      ======================================================================= */
@@ -2942,7 +2961,7 @@
 
   async function loadActiveUploads() {
     try {
-      const data = await fetchJson("/api/uploads", { method: "GET" }, 20000);
+      const data = await fetchApiJson("/api/uploads", { method: "GET" }, 20000);
       const uploads = Array.isArray(data.uploads) ? data.uploads : [];
       const n = uploads.length;
       if (uploadActiveCount) {
@@ -2966,7 +2985,7 @@
   async function deleteSingleUpload(uploadId) {
     if (!uploadId) return;
     try {
-      const res = await fetchJson(`/api/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE" }, 20000);
+      const res = await fetchApiJson(`/api/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE" }, 20000);
       if (uploadDeleteStatus) {
         uploadDeleteStatus.hidden = false;
         uploadDeleteStatus.classList.remove("is-warn");
@@ -2994,17 +3013,18 @@
 
   async function deleteAllTemporaryUploads() {
     try {
-      const res = await fetchJson("/api/uploads", { method: "DELETE" }, 20000);
+      const res = await fetchApiJson("/api/uploads", { method: "DELETE" }, 20000);
+      const nDel = res.n_deleted_sessions ?? res.deleted_count ?? 0;
       if (uploadDeleteStatus) {
         uploadDeleteStatus.hidden = false;
         uploadDeleteStatus.classList.remove("is-warn");
         uploadDeleteStatus.innerHTML =
-          `<strong>Đã xóa toàn bộ ảnh tạm (${res.deleted_count ?? 0} phiên):</strong> ` +
+          `<strong>Đã xóa toàn bộ ảnh tạm (${nDel} phiên):</strong> ` +
           `Xác minh thư mục <code>data/user_uploads/</code>: <strong>${res.verified_empty ? "TRỐNG HOÀN TOÀN" : "Đang kiểm tra"}</strong>.`;
       }
       if (statusEl) {
         statusEl.className = "status-banner success";
-        statusEl.innerHTML = `<strong>Đã dọn sạch toàn bộ ảnh người dùng tạm thời:</strong> ${res.deleted_count ?? 0} phiên đã xóa, thư mục lưu tạm trống hoàn toàn.`;
+        statusEl.innerHTML = `<strong>Đã dọn sạch toàn bộ ảnh người dùng tạm thời:</strong> ${nDel} phiên đã xóa, thư mục lưu tạm trống hoàn toàn.`;
       }
       await loadActiveUploads();
       await loadExecutionLog();
@@ -3034,7 +3054,7 @@
   async function loadReproStatus() {
     if (!reproBundleTbody) return;
     try {
-      const data = await fetchJson("/api/repro-status", { method: "GET" }, 30000);
+      const data = await fetchApiJson("/api/repro-status", { method: "GET" }, 30000);
       const b = data.bundle || {};
       if (reproStatusChip) {
         reproStatusChip.textContent = b.ok
@@ -3077,7 +3097,7 @@
   async function loadExecutionLog() {
     if (!execLogTbody) return;
     try {
-      const data = await fetchJson("/api/execution-log?limit=35", { method: "GET" }, 20000);
+      const data = await fetchApiJson("/api/execution-log?limit=35", { method: "GET" }, 20000);
       auditLogLoaded = true;
       const entries = Array.isArray(data.entries) ? data.entries : [];
       if (!entries.length) {

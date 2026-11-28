@@ -270,6 +270,7 @@ def delete_all_uploads(base: Path) -> dict[str, Any]:
     return {
         'deleted': True,
         'n_deleted_sessions': len(deleted_ids),
+        'deleted_count': len(deleted_ids),
         'deleted_upload_ids': deleted_ids,
         'deleted_files': deleted_files,
         'remaining_sessions': len(remaining),
