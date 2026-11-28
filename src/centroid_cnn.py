@@ -4,6 +4,7 @@ Uses the authors' public MobileUNet checkpoint. Classical CoG remains the defaul
 fallback when weights are missing or inference fails.
 """
 from __future__ import annotations
+import logging
 import os
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ from scipy.linalg import lstsq
 from .camera import CameraModel
 from .centroid import CentroidDetector, Centroids
 from .simulator import Radiometry
+_LOGGER = logging.getLogger(__name__)
 _AUTHOR_MEAN = (25.36114133,)
 _AUTHOR_STD = (44.31162568,)
 _D_TH = 2.0
@@ -293,6 +295,7 @@ class CNNCentroidDetector:
             self.last_backend = 'classical'
             self.last_fallback = True
             self.last_error = f'{type(exc).__name__}: {exc}'
+            _LOGGER.warning('CNN centroid backend unavailable (%s); falling back explicitly to classical CoG.', self.last_error)
             return self.classical.detect(image, mask=mask)
 
     def _detect_cnn(self, image: np.ndarray, mask: np.ndarray | None=None) -> Centroids:

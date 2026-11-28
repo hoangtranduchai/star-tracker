@@ -17,7 +17,7 @@ from src.execution_log import read_execution_log, record_data_deletion, record_p
 from src.quaternion import format_dec_both, format_dec_stellarium, format_ra_both, format_ra_hms, parse_dec_deg, parse_ra_deg, split_radec_text
 from src.repro_bundle import verify_repro_bundle
 from src.starnames import describe_index, n_iau_names, n_named_hr
-from src.upload_store import cleanup_expired_uploads, delete_all_uploads, delete_upload, list_uploads, normalize_retention_mode, save_uploaded_files, storage_policy_summary
+from src.upload_store import cleanup_expired_uploads, delete_all_uploads, delete_upload, encode_png_data_uri, list_uploads, normalize_retention_mode, resolve_upload_preview, save_uploaded_files, storage_policy_summary
 app = Flask(__name__, template_folder=str(BASE.joinpath('web', 'templates')), static_folder=str(BASE.joinpath('web', 'static')))
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0, TEMPLATES_AUTO_RELOAD=True, MAX_CONTENT_LENGTH=80 * 1024 * 1024)
 app.jinja_env.auto_reload = True
@@ -128,6 +128,17 @@ def _run_locked(req: object) -> object:
         clean_url='/output/demo_clean.png',
     )
     return res_dict
+
+def _run_upload_locked(req: object) -> dict:
+    """Run an uploaded frame synchronously inside its isolated UUID slot (never touches global data/outputs/demo_*.png)."""
+    if not LOCK.acquire(timeout=0.15):
+        raise EngineBusy('Hệ thống đang xử lý khung ảnh trước đó. Vui lòng đợi giây lát rồi thử lại.')
+    req.async_plots = False
+    try:
+        outcome: object = ENGINE.run(req)
+    finally:
+        LOCK.release()
+    return dict(outcome.payload)
 
 @app.after_request
 def _no_cache(resp: object) -> object:
@@ -360,6 +371,7 @@ def api_compare_upload() -> object:
         endpoint='/api/compare-upload',
     )
     upload_id: str = saved_slot['upload_id']
+    slot_dir: Path = saved_slot['slot_dir']
     saved_img: Path = saved_slot['image_path']
     saved_sidecar: Path | None = saved_slot['sidecar_path']
     meta: dict = saved_slot['meta']
@@ -380,9 +392,10 @@ def api_compare_upload() -> object:
             simulate_missing_weights=_bool_flag(form_get('simulate_missing_weights')),
             image=saved_img,
             sidecar=saved_sidecar,
-            out_dir=BASE.joinpath('data', 'outputs'),
+            out_dir=slot_dir,
             lookup=True,
             save_png=False,
+            write_result_json=False,
             **_optics_from(form_get),
         )
         if not LOCK.acquire(timeout=0.15):
@@ -391,6 +404,10 @@ def api_compare_upload() -> object:
             comp_payload = ENGINE.compare(req, backends=('classical', 'tetra3', 'cnn'))
         finally:
             LOCK.release()
+        if ret_mode == 'ephemeral':
+            comp_payload['clean_url'] = encode_png_data_uri(slot_dir / 'demo_compare_clean.png')
+        else:
+            comp_payload['clean_url'] = f'/api/uploads/{upload_id}/preview/demo_compare_clean.png'
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
     except Exception as err:
@@ -412,6 +429,8 @@ def api_compare_upload() -> object:
         original_image_name=safe_name,
         original_sidecar_name=sc_safe,
         overwrite_protected=True,
+        previews_isolated=True,
+        previews_deleted_with_slot=True,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
@@ -494,6 +513,7 @@ def api_run_upload() -> object:
         endpoint='/api/run-upload',
     )
     upload_id: str = saved_slot['upload_id']
+    slot_dir: Path = saved_slot['slot_dir']
     saved_img: Path = saved_slot['image_path']
     saved_sidecar: Path | None = saved_slot['sidecar_path']
     meta: dict = saved_slot['meta']
@@ -515,12 +535,35 @@ def api_run_upload() -> object:
             simulate_missing_weights=_bool_flag(form_get('simulate_missing_weights')),
             image=saved_img,
             sidecar=saved_sidecar,
-            out_dir=BASE.joinpath('data', 'outputs'),
+            out_dir=slot_dir,
             lookup=True,
             save_png=True,
+            write_result_json=False,
             **_optics_from(form_get),
         )
-        res_dict: dict = _run_locked(req)
+        res_dict: dict = _run_upload_locked(req)
+        if ret_mode == 'ephemeral':
+            res_dict.update(
+                clean_url=encode_png_data_uri(slot_dir / 'demo_clean.png'),
+                input_url=encode_png_data_uri(slot_dir / 'demo_input.png'),
+                output_url=encode_png_data_uri(slot_dir / 'demo_output.png'),
+                image_url=encode_png_data_uri(slot_dir / 'demo_result.png'),
+                png=None,
+                input_png=None,
+                output_png=None,
+                clean_png=None,
+            )
+        else:
+            res_dict.update(
+                clean_url=f'/api/uploads/{upload_id}/preview/demo_clean.png',
+                input_url=f'/api/uploads/{upload_id}/preview/demo_input.png',
+                output_url=f'/api/uploads/{upload_id}/preview/demo_output.png',
+                image_url=f'/api/uploads/{upload_id}/preview/demo_result.png',
+                png=f'data/user_uploads/{upload_id}/demo_result.png',
+                input_png=f'data/user_uploads/{upload_id}/demo_input.png',
+                output_png=f'data/user_uploads/{upload_id}/demo_output.png',
+                clean_png=f'data/user_uploads/{upload_id}/demo_clean.png',
+            )
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
     except Exception as err:
@@ -542,6 +585,8 @@ def api_run_upload() -> object:
         original_image_name=safe_name,
         original_sidecar_name=sc_safe,
         overwrite_protected=True,
+        previews_isolated=True,
+        previews_deleted_with_slot=True,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
@@ -550,6 +595,13 @@ def api_run_upload() -> object:
     )
     _log_run_payload('/api/run-upload', res_dict, source_name=safe_name, upload_id=upload_id, retention_mode=ret_mode, deleted_immediately=deleted_now)
     return jsonify(res_dict)
+
+@app.get('/api/uploads/<upload_id>/preview/<filename>')
+def api_upload_preview(upload_id: str, filename: str) -> object:
+    target = resolve_upload_preview(BASE, upload_id, filename)
+    if target is None:
+        return (jsonify(dict(error='Ảnh xem trước không tồn tại hoặc đã bị xóa/hết hạn TTL.')), 404)
+    return send_from_directory(target.parent, target.name)
 
 @app.get('/api/uploads')
 def api_list_uploads() -> object:

@@ -1479,12 +1479,17 @@
       `;
     }
 
-    // Image URLs (prefer borderless clean_url for primary optical viewer & PiP)
+    // Image URLs (prefer borderless clean_url for primary optical viewer & PiP; preserve inline data: URIs)
     const tstamp = Date.now();
-    const cleanUrl = payload.clean_url ? `${payload.clean_url}?t=${tstamp}` : "";
-    const inUrl = `${payload.input_url || "/output/demo_input.png"}?t=${tstamp}`;
-    const outUrl = `${payload.output_url || "/output/demo_output.png"}?t=${tstamp}`;
-    const hudUrl = `${payload.image_url || "/output/demo_result.png"}?t=${tstamp}`;
+    const withBust = (u) => {
+      if (!u) return "";
+      if (String(u).startsWith("data:")) return String(u);
+      return `${u}${String(u).includes("?") ? "&" : "?"}t=${tstamp}`;
+    };
+    const cleanUrl = withBust(payload.clean_url || "");
+    const inUrl = withBust(payload.input_url || "/output/demo_input.png");
+    const outUrl = withBust(payload.output_url || "/output/demo_output.png");
+    const hudUrl = withBust(payload.image_url || "/output/demo_result.png");
     lastCleanUrl = cleanUrl;
     lastInUrl = inUrl;
     lastOutUrl = outUrl;
@@ -2309,10 +2314,12 @@
     const methods = data.methods || {};
     const keys = ["classical", "tetra3", "cnn"];
 
-    // 1. Update shared borderless starfield image
+    // 1. Update shared borderless starfield image (preserve inline data: URIs for ephemeral uploads)
     if (cmpCleanImg && data.clean_url) {
       cmpCleanImg.hidden = false;
-      cmpCleanImg.src = `${data.clean_url}?t=${Date.now()}`;
+      cmpCleanImg.src = String(data.clean_url).startsWith("data:")
+        ? String(data.clean_url)
+        : `${data.clean_url}?t=${Date.now()}`;
       if (cmpPlaceholder) cmpPlaceholder.classList.add("hidden");
     }
     if (cmpFrameMeta) {

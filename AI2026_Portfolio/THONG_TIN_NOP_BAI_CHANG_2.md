@@ -65,12 +65,13 @@ v1.2.0-stage2 (nhánh main; Chặng 1 gắn tag v1.1.0-stage1; bản gốc trư�
 git clone https://github.com/hoangtranduchai/star-tracker.git
 cd star-tracker
 pip install -r requirements.txt
-python scripts/verify_repro_bundle.py          # Xác thực 13/13 tệp theo CHECKSUMS.sha256
-python scripts/run_clean_repro.py              # Chạy Seed 42 + Alt60 + Zhao + MSH + Fallback CoG + Demo xóa upload
-pytest -q                                      # 137 passed, 2 skipped (gồm tests/test_stage2_repro_and_privacy.py)
+python scripts/verify_repro_bundle.py                       # Xác thực 13/13 tệp theo CHECKSUMS.sha256
+python scripts/run_clean_repro.py                           # Chạy Seed 42 + Alt60 + Zhao + MSH (có Δθ GT) + Fallback CoG + Demo xóa upload
+pytest -q                                                   # Toàn bộ kiểm thử hồi quy & kiểm soát dữ liệu ảnh (tests/test_stage2_repro_and_privacy.py)
 python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 --no-show
-python scripts/benchmark_3way_centroid_e2e.py  # Benchmark đầy đủ 5 phương pháp
-python app.py                                  # Chạy Web cục bộ tại http://127.0.0.1:8765
+python scripts/benchmark_3way_centroid_e2e.py --real-only   # Benchmark 5 phương pháp trực tiếp trên bản clone sạch
+python scripts/benchmark_end_to_end.py --suites real seed42 stress
+python app.py                                               # Chạy Web cục bộ tại http://127.0.0.1:8765
 (Chi tiết đầy đủ xem tại REPRODUCIBILITY.md và CHECKSUMS.sha256)
 ```
 

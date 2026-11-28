@@ -54,28 +54,37 @@ BANNED_TERMS = (
 
 EVIDENCE_IMAGES = (
     (
+        'stage2_pipeline_architecture.png',
+        'Hình 1. Sơ đồ kiến trúc tổng thể Pipeline định hướng sao J2000 & Tầng kiểm soát dữ liệu ảnh Chặng 2 (Gói tái lập SHA-256, Auto-Router + Fallback CoG tường minh, Cô lập UUID4 / Ephemeral 0s / TTL 15 phút & Quyền xóa).',
+    ),
+    (
         'ev1_repro_checksums_and_audit_log.png',
-        'Hình 1. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.',
+        'Hình 2. Giao diện trực tuyến (https://startracker.agentlens.dpdns.org) — Tab Cấu hình, Checksum & Dữ liệu xác thực 13/13 tệp SHA-256 (36,03 MB) và hiển thị nhật ký thực thi thời gian thực.',
     ),
     (
         'ev2_fallback_cog_banner.png',
-        'Hình 2. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.',
+        'Hình 3. Minh chứng cơ chế báo rõ Fallback CNN → CoG: bấm "Thử nghiệm Fallback CNN → CoG" kích hoạt dải cảnh báo màu cam phía trên cùng và ghi sự kiện FALLBACK_TO_COG kèm nguyên nhân FileNotFoundError vào execution_log.jsonl.',
     ),
     (
         'ev3_upload_ttl_and_zero_overwrite.png',
-        'Hình 3. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.',
+        'Hình 4. Minh chứng chống ghi đè & lưu tạm TTL 15 phút: hai lượt tải cùng tên tệp được tách vào hai thư mục UUID4 độc lập trong data/user_uploads/<upload_id>/ kèm đếm ngược TTL và nút Xóa ngay.',
     ),
     (
         'ev4_delete_verified_empty.png',
-        'Hình 4. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa) và ghi dấu DATA_DELETION vào nhật ký.',
+        'Hình 5. Minh chứng quyền xóa dữ liệu tức thì: sau khi bấm Xóa ngay / Xóa toàn bộ ảnh tạm, thư mục data/user_uploads/ xác minh trống hoàn toàn (0 ảnh tạm trên đĩa, URL preview trả 404) và ghi dấu DATA_DELETION vào nhật ký.',
     ),
 )
 
 
 def _read_text_safe(p: Path, fallback: str = '') -> str:
-    if p.is_file():
-        return p.read_text(encoding='utf-8-sig', errors='replace').strip()
-    return fallback
+    if not p.is_file():
+        return fallback
+    raw = p.read_bytes()
+    if raw.startswith((b'\xff\xfe', b'\xfe\xff')):
+        txt = raw.decode('utf-16', errors='replace')
+    else:
+        txt = raw.replace(b'\x00', b'').decode('utf-8-sig', errors='replace')
+    return txt.replace('\r\n', '\n').strip()
 
 
 def _read_json_safe(p: Path) -> dict[str, Any]:
@@ -118,6 +127,7 @@ def build_all() -> None:
     # Summarize clean-repro metrics
     s_runs = clean_repro.get('clean_clone_runs') or []
     s_fb = clean_repro.get('fallback_proof') or {}
+    s_auto_fb = clean_repro.get('auto_fallback_proof') or {}
     s_up = clean_repro.get('data_control_proof') or {}
 
     cat_vi = {
@@ -197,6 +207,11 @@ def build_all() -> None:
         ev_lines.append(
             f"| `fallback_missing_checkpoint` | `{fb_mode}` | **{s_fb.get('status')}** (`fallback={s_fb.get('fallback_triggered')}`) | `{s_fb.get('n_valid_pairs')} sao` | Lý do: `{s_fb.get('fallback_reason')}` |"
         )
+    if s_auto_fb:
+        afb_mode = f"{s_auto_fb.get('requested_backend')} -> {s_auto_fb.get('executed_backend')} [FALLBACK_TO_COG]"
+        ev_lines.append(
+            f"| `auto_router_fallback_zhao` | `{afb_mode}` | **{s_auto_fb.get('status')}** (`{s_auto_fb.get('reject_code')}`) | `fallback={s_auto_fb.get('fallback_triggered')}` | Tự báo lỗi checkpoint trong Auto-Router & từ chối an toàn |"
+        )
     if s_up:
         ev_lines.append(
             f"| `upload_isolation_and_delete` | `same filename ({s_up.get('same_filename_tested')})` | **VERIFIED** (`remaining={s_up.get('remaining_user_uploads')}`) | 2 UUID: `{s_up.get('upload_id_1')}`, `{s_up.get('upload_id_2')}` | Chống ghi đè & xóa sạch đĩa (`bundled_untouched={s_up.get('bundled_sample_untouched')}`) |"
@@ -233,7 +248,7 @@ def build_all() -> None:
         '',
         '## 6. Kết quả Bộ kiểm thử tự động (`pytest`) & Smoke Test trực tuyến trên VPS',
         '',
-        f'- **Bộ kiểm thử tự động (`pytest -q`):** `{pytest_summary}` (bao gồm 4 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py)).',
+        f'- **Bộ kiểm thử tự động (`pytest -q`):** `{pytest_summary}` (bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, Fallback CNN→CoG trực tiếp, Fallback Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, và kiểm tra 0 NUL byte UTF-8).',
         '- **Kết quả triển khai & smoke test 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):**',
         '',
         '```text',
@@ -324,6 +339,11 @@ def build_all() -> None:
         rep_md.append(
             f"| `fallback_missing_checkpoint` | `{fb_mode}` | **{s_fb.get('status')}** | `fallback=True` | Kích hoạt đúng `FileNotFoundError → CoG` |"
         )
+    if s_auto_fb:
+        afb_mode = f"{s_auto_fb.get('requested_backend')} -> {s_auto_fb.get('executed_backend')} [FALLBACK_TO_COG]"
+        rep_md.append(
+            f"| `auto_router_fallback_zhao` | `{afb_mode}` | **{s_auto_fb.get('status')}** | `fallback=True` | Auto-Router báo fallback CoG & 0% khóa sai |"
+        )
     if s_up:
         rep_md.append(
             f"| `upload_isolation_and_delete` | `UUID4 ({s_up.get('upload_id_1')}, {s_up.get('upload_id_2')})` | **VERIFIED** | `0 tệp sót` | Chống ghi đè `mount_st_helens_1.png` & xóa sạch |"
@@ -333,7 +353,7 @@ def build_all() -> None:
         '',
         '### 3.2. Kết quả Kiểm thử Tự động & Kiểm chứng Trực tuyến 24/7',
         '',
-        f'- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`{pytest_summary}`** (0 lỗi). 4 ca kiểm thử mới trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL, (3) `ephemeral` xóa sạch 0s và không làm thay đổi SHA-256 của ảnh mẫu `mount_st_helens_1.png`, (4) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, xóa đơn lẻ xác minh `verified_gone=True`, tự động dọn khi quá hạn TTL và ghi dấu `DATA_DELETION`.',
+        f'- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`{pytest_summary}`** (0 lỗi). 6 ca kiểm thử chuyên biệt trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL (cả chế độ `cnn` lẫn `auto`), (3) `ephemeral` trả preview inline base64, xóa sạch 0s cả ảnh gốc/sidecar/preview và không ghi đè ảnh mẫu `mount_st_helens_1.png`, (4) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, preview trả `200` rồi trả `404` ngay sau `DELETE`, tự dọn khi hết TTL & ghi `DATA_DELETION`, (5) xác minh 0 byte NUL UTF-8 trên toàn bộ báo cáo và minh chứng.',
         '- **Triển khai trực tuyến 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):** Đã đồng bộ đủ 13/13 tệp tái lập và xác minh toàn bộ endpoint `/api/repro-status`, `/api/execution-log`, `/api/uploads`, `DELETE /api/uploads/<id>` và kịch bản Fallback trực tiếp trên trình duyệt Chrome (0 lỗi console).',
         '',
         '### 3.3. Hình ảnh Minh chứng Trực tiếp trên Web UI (`https://startracker.agentlens.dpdns.org`)',
@@ -527,10 +547,11 @@ def build_all() -> None:
         'git clone https://github.com/hoangtranduchai/star-tracker.git\n'
         'cd star-tracker\n'
         'pip install -r requirements.txt\n'
-        'python scripts/verify_repro_bundle.py          # Xác thực 13/13 SHA-256 (36,03 MB)\n'
-        'python scripts/run_clean_repro.py              # Chạy Seed 42, Alt60, Zhao, MSH + Fallback CoG + Demo xóa upload\n'
-        'pytest -q                                      # Toàn bộ bộ kiểm thử đơn vị & tích hợp\n'
-        'python scripts/benchmark_3way_centroid_e2e.py  # Lệnh benchmark đầy đủ 5 phương pháp',
+        'python scripts/verify_repro_bundle.py                 # Xác thực 13/13 SHA-256 (36,03 MB)\n'
+        'python scripts/run_clean_repro.py                     # Chạy Seed 42, Alt60, Zhao, MSH + Fallback CoG + Demo xóa\n'
+        'pytest -q                                             # Toàn bộ kiểm thử hồi quy, chốt chặn & quyền xóa\n'
+        'python scripts/benchmark_3way_centroid_e2e.py --real-only  # Benchmark 5 phương pháp trực tiếp trên bản clone sạch\n'
+        'python scripts/benchmark_end_to_end.py --suites real seed42 stress',
     )
 
     # Section 3
@@ -548,11 +569,11 @@ def build_all() -> None:
         bold_prefix='• ',
     )
     add_p(
-        '2) Hai chế độ lưu trữ minh bạch: Chế độ mặc định retention_mode="ephemeral" xóa vĩnh viễn thư mục tạm (ảnh + sidecar) trong khối finally: ngay sau khi pipeline chạy xong (kể cả khi phát sinh lỗi 400/409) và trả kèm trường verified_gone_on_disk=True (0 giây lưu đĩa). Chế độ tùy chọn retention_mode="ttl" giữ tạm tối đa 15 phút (900 giây), tự động quét dọn hết hạn (cleanup_expired_uploads) và hiển thị đếm ngược TTL trực tiếp.',
+        '2) Hai chế độ lưu trữ minh bạch & cách ly cả ảnh xem trước: Chế độ mặc định retention_mode="ephemeral" chạy render ảnh xem trước trong cùng thư mục UUID tạm, trả ảnh xem trước dạng inline data:image/png;base64 và xóa vĩnh viễn 100% thư mục tạm (ảnh gốc + sidecar + preview) trong khối finally: (0 giây / 0 byte lưu đĩa, không chạm data/outputs/demo_*.png, trả kèm verified_gone_on_disk=True). Chế độ tùy chọn retention_mode="ttl" giữ tạm tối đa 15 phút (900 giây), phục vụ preview cách ly tại /api/uploads/<upload_id>/preview/<name> và tự động quét dọn khi hết hạn (cleanup_expired_uploads).',
         bold_prefix='• ',
     )
     add_p(
-        '3) Quyền xóa tức thì & dấu vết kiểm toán: Người dùng có thể xem danh sách ảnh tạm đang lưu (GET /api/uploads), xóa từng phiên (DELETE /api/uploads/<upload_id>) hoặc xóa sạch toàn bộ (DELETE /api/uploads) ngay trên ngăn Tải ảnh và Tab Cấu hình. Mọi thao tác xóa (tự động hay thủ công) đều ghi sự kiện DATA_DELETION kèm verified_gone vào execution_log.jsonl. Đồng thời, đoạn P184 trong Hồ sơ dự án ([StarTracker] - Hồ sơ dự án.docx) và README.md đã được sửa đồng nhất 100% với mã nguồn.',
+        '3) Quyền xóa tức thì & dấu vết kiểm toán: Người dùng có thể xem danh sách ảnh tạm đang lưu (GET /api/uploads), xóa từng phiên (DELETE /api/uploads/<upload_id>) hoặc xóa sạch toàn bộ (DELETE /api/uploads) ngay trên ngăn Tải ảnh và Tab Cấu hình — xóa đồng thời cả ảnh gốc, sidecar và ảnh xem trước (URL preview trả 404 ngay lập tức). Mọi thao tác xóa đều ghi sự kiện DATA_DELETION kèm verified_gone vào execution_log.jsonl. Đồng thời, đoạn P184 trong Hồ sơ dự án ([StarTracker] - Hồ sơ dự án.docx), AI2026_Ho-so-du-an_StarTracker.md và README.md đã được đồng bộ 100% với mã nguồn.',
         bold_prefix='• ',
     )
 
@@ -579,6 +600,14 @@ def build_all() -> None:
             f"{s_fb.get('n_valid_pairs')} sao",
             'FileNotFoundError → CoG',
         ])
+    if s_auto_fb:
+        repro_rows.append([
+            'auto_router_fallback_zhao',
+            f"{s_auto_fb.get('requested_backend')} -> {s_auto_fb.get('executed_backend')} [FALLBACK]",
+            f"{s_auto_fb.get('status')} (FB=True)",
+            '0% FL',
+            f"Auto-Router báo fallback ({s_auto_fb.get('reject_code')})",
+        ])
     if s_up:
         repro_rows.append([
             'upload_isolation_delete',
@@ -596,13 +625,13 @@ def build_all() -> None:
     )
 
     # Truncate clean clone log neatly if huge so PDF stays crisp
-    log_preview = '\n'.join(clean_log_txt.splitlines()[:34])
+    log_preview = '\n'.join(clean_log_txt.splitlines()[:48])
     add_code_box('Trích lục stdout nguyên văn khi chạy trong thư mục git clone sạch mới tạo:', log_preview)
 
     add_h2('4.2. Kiểm thử tự động (pytest) & Bằng chứng chụp trực tiếp trên VPS 24/7')
     add_p(
-        f'Bộ kiểm thử tự động pytest đạt {pytest_summary} (0 lỗi, bao gồm 4 bài kiểm thử chuyên biệt Chặng 2 tại tests/test_stage2_repro_and_privacy.py). '
-        'Hệ thống trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org đã được cập nhật, kiểm tra smoke test 100% PASS và chụp 4 minh chứng giao diện trực tiếp qua Chrome DevTools (0 lỗi console):'
+        f'Bộ kiểm thử tự động pytest đạt {pytest_summary} (0 lỗi, bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 tại tests/test_stage2_repro_and_privacy.py kiểm chứng SHA-256, Fallback CNN & Auto-Router, cô lập preview inline 0s, trả 404 sau DELETE và sạch 0 byte NUL UTF-8). '
+        'Hệ thống trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org đã được cập nhật, kiểm tra smoke test 100% PASS và chụp minh chứng giao diện trực tiếp qua Chrome DevTools (0 lỗi console):'
     )
 
     for img_name, cap in EVIDENCE_IMAGES:
@@ -665,7 +694,13 @@ def build_all() -> None:
             hits.append(f'{REPORT_DOCX.name}: "{bt}"')
     if hits:
         raise AssertionError('Zero-GVHD audit failed:\n  ' + '\n  '.join(hits))
-    print('[OK] Zero-GVHD compliance verified across all Stage 2 artifacts!')
+    # Zero-NUL & valid UTF-8 check on generated Markdown files
+    for md_p in (REPORT_MD, EVIDENCE_MD, EV_DIR / 'vps_deploy_and_smoke.txt'):
+        if md_p.is_file():
+            raw_b = md_p.read_bytes()
+            assert raw_b.count(0) == 0, f'NUL byte found in {md_p}'
+            raw_b.decode('utf-8')
+    print('[OK] Zero-GVHD & Clean UTF-8 (0 NUL bytes) verified across all Stage 2 artifacts!')
 
 
 if __name__ == '__main__':

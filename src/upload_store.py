@@ -14,6 +14,7 @@ Design invariants (Stage 2 data-control compliance):
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -29,6 +30,13 @@ DEFAULT_TTL_SECONDS: int = int(os.environ.get('STAR_TRACKER_UPLOAD_TTL_S', '900'
 DEFAULT_RETENTION_MODE: str = 'ephemeral'
 VALID_RETENTION_MODES: tuple[str, ...] = ('ephemeral', 'ttl')
 USER_UPLOADS_REL: str = 'data/user_uploads'
+PREVIEW_FILENAMES: tuple[str, ...] = (
+    'demo_clean.png',
+    'demo_input.png',
+    'demo_output.png',
+    'demo_result.png',
+    'demo_compare_clean.png',
+)
 
 _UPLOAD_ID_RE = re.compile(r'^[0-9a-f]{16}$')
 
@@ -59,13 +67,15 @@ def storage_policy_summary(base: Path) -> dict[str, Any]:
         'bundled_samples_dir': 'data/uploads/ (read-only, separated from user uploads)',
         'default_retention_mode': DEFAULT_RETENTION_MODE,
         'supported_retention_modes': {
-            'ephemeral': 'Xóa vĩnh viễn ngay sau khi xử lý xong (0 giây lưu đĩa, trong khối finally).',
-            'ttl': f'Lưu tạm tối đa {DEFAULT_TTL_SECONDS // 60} phút ({DEFAULT_TTL_SECONDS}s) trong thư mục UUID riêng; tự động dọn khi hết hạn hoặc người dùng bấm Xóa ngay.',
+            'ephemeral': 'Xóa vĩnh viễn ảnh gốc, sidecar.json và toàn bộ ảnh xem trước tạm ngay sau khi xử lý xong (0 giây lưu đĩa trong khối finally; xem trước trả trực tiếp dạng inline data URI).',
+            'ttl': f'Lưu tạm ảnh gốc, sidecar và ảnh xem trước tối đa {DEFAULT_TTL_SECONDS // 60} phút ({DEFAULT_TTL_SECONDS}s) trong thư mục UUID riêng; tự động dọn khi hết hạn hoặc xóa toàn bộ cùng lúc khi bấm Xóa ngay (URL preview trả 404).',
         },
         'ttl_seconds': DEFAULT_TTL_SECONDS,
-        'overwrite_protection': 'Mỗi lượt tải lên sinh thư mục UUID4 16 ký tự độc lập — tuyệt đối không ghi đè tệp trùng tên hay ảnh mẫu.',
+        'overwrite_protection': 'Mỗi lượt tải lên sinh thư mục UUID4 16 ký tự độc lập cho cả ảnh gốc, sidecar và ảnh xem trước — tuyệt đối không ghi đè tệp trùng tên, ảnh mẫu hay data/outputs/demo_*.png.',
+        'preview_isolation': True,
         'right_to_delete_endpoints': [
             'GET /api/uploads',
+            'GET /api/uploads/<upload_id>/preview/<filename>',
             'DELETE /api/uploads/<upload_id>',
             'DELETE /api/uploads',
         ],
@@ -221,6 +231,31 @@ def list_uploads(base: Path) -> list[dict[str, Any]]:
         m['files_on_disk'] = sorted(f.name for f in item.iterdir() if f.is_file() and f.name != 'meta.json')
         rows.append(m)
     return rows
+
+
+def encode_png_data_uri(path: Path) -> str | None:
+    """Encode a PNG file on disk as an inline base64 data URI so ephemeral mode leaves 0 bytes on disk."""
+    p = Path(path)
+    if not p.is_file():
+        return None
+    b64 = base64.b64encode(p.read_bytes()).decode('ascii')
+    return f'data:image/png;base64,{b64}'
+
+
+def resolve_upload_preview(base: Path, upload_id: str, filename: str) -> Path | None:
+    """Resolve an allowlisted preview PNG inside an active TTL upload slot (returns None if expired/deleted)."""
+    cleanup_expired_uploads(base)
+    uid = str(upload_id or '').strip().lower()
+    fname = str(filename or '').strip()
+    if not _UPLOAD_ID_RE.match(uid) or fname not in PREVIEW_FILENAMES:
+        return None
+    root = user_uploads_root(base).resolve()
+    target = (root / uid / fname).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError:
+        return None
+    return target if target.is_file() else None
 
 
 def delete_upload(base: Path, upload_id: str) -> dict[str, Any]:

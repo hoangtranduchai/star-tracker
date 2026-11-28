@@ -104,9 +104,14 @@ def test_upload_ephemeral_zero_retention_and_no_bundled_overwrite(star_tracker_r
     sc = j['storage_control']
     assert sc['retention_mode'] == 'ephemeral'
     assert sc['overwrite_protected'] is True
+    assert sc['previews_isolated'] is True
     assert sc['deleted_immediately'] is True
     assert sc['verified_gone_on_disk'] is True
     assert sc['storage_rel_dir'].startswith('data/user_uploads/')
+    # Ephemeral previews must be returned inline as data URIs (0 bytes written to shared data/outputs)
+    assert str(j['clean_url']).startswith('data:image/png;base64,')
+    assert str(j['input_url']).startswith('data:image/png;base64,')
+    assert j['clean_png'] is None
 
     # Verify slot is truly absent on disk and bundled mount_st_helens_1.png was NEVER overwritten
     slot_dir = star_tracker_root / sc['storage_rel_dir'].rstrip('/')
@@ -156,18 +161,22 @@ def test_upload_ttl_collision_isolation_and_right_to_delete(star_tracker_root: P
     assert sc1['deleted_immediately'] is False
     assert sc2['deleted_immediately'] is False
 
-    # Both slots must appear in GET /api/uploads
+    # Both slots must appear in GET /api/uploads and serve isolated previews until deleted
     r_list = client.get('/api/uploads')
     assert r_list.status_code == 200
     ids = {u['upload_id'] for u in r_list.get_json()['uploads']}
     assert sc1['upload_id'] in ids and sc2['upload_id'] in ids
+    prev_url_1 = r1.get_json()['clean_url']
+    assert prev_url_1 == f"/api/uploads/{sc1['upload_id']}/preview/demo_clean.png"
+    assert client.get(prev_url_1).status_code == 200
 
-    # Delete slot 1 individually -> verified gone on disk, slot 2 still present
+    # Delete slot 1 individually -> verified gone on disk, preview returns 404, slot 2 still present
     r_del1 = client.delete(f"/api/uploads/{sc1['upload_id']}")
     assert r_del1.status_code == 200
     j_del1 = r_del1.get_json()
     assert j_del1['deleted'] is True and j_del1['verified_gone'] is True
     assert not (user_uploads_root(star_tracker_root) / sc1['upload_id']).exists()
+    assert client.get(prev_url_1).status_code == 404
     assert (user_uploads_root(star_tracker_root) / sc2['upload_id']).exists()
 
     # Force-expire slot 2 metadata and confirm TTL auto-cleanup purges it
@@ -193,3 +202,43 @@ def test_upload_ttl_collision_isolation_and_right_to_delete(star_tracker_root: P
     r_clr = client.delete('/api/uploads')
     assert r_clr.status_code == 200
     assert r_clr.get_json()['verified_empty'] is True
+
+
+def test_auto_router_explicit_fallback_when_cnn_checkpoint_missing(star_tracker_root: Path) -> None:
+    import app as web_app
+
+    zhao_p = star_tracker_root / 'data' / 'real_calibrated' / 'zhao_mt9v022' / 'nightsky_june16_2021.npy'
+    assert zhao_p.is_file()
+    client = web_app.app.test_client()
+    r = client.post(
+        '/api/run',
+        json={
+            'image': 'real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy',
+            'centroid_backend': 'auto',
+            'simulate_missing_weights': True,
+        },
+    )
+    assert r.status_code == 200
+    j = r.get_json()
+    assert j['requested_backend'] == 'auto'
+    assert j['executed_backend'] == 'classical'
+    assert j['centroid_fallback'] is True
+    assert 'FALLBACK_TO_COG' in j['execution_mode_summary']
+    assert j['fallback_reason'] and '__simulated_missing_checkpoint__' in j['fallback_reason']
+    # On Zhao nightsky with CoG only, safety guard must still return LOST (0% False Lock)
+    assert j['status'] == 'LOST'
+
+
+def test_stage2_evidence_markdown_has_zero_null_bytes(star_tracker_root: Path) -> None:
+    for rel in (
+        'AI2026_Portfolio/MINH_CHUNG_CAI_TIEN_CHANG_2.md',
+        'AI2026_Portfolio/BAO_CAO_CAI_TIEN_VONG_CHUNG_KET_CHANG_2.md',
+        'AI2026_Portfolio/stage2_evidence/vps_deploy_and_smoke.txt',
+        'REPRODUCIBILITY.md',
+        'CHECKSUMS.sha256',
+    ):
+        fp = star_tracker_root / rel
+        if fp.is_file():
+            raw = fp.read_bytes()
+            assert raw.count(0) == 0, f'Found NUL bytes in {rel} (UTF-16 corruption)'
+            raw.decode('utf-8')

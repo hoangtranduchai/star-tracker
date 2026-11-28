@@ -79,20 +79,23 @@ Chi tiết đầy đủ hướng dẫn chạy từ bản tải sạch nằm tron
 - **Minh bạch chế độ thực thi & Fallback CoG:** Mọi lượt chạy qua CLI (`demo_star_tracker.py --centroid ... [--simulate-cnn-fallback]`) và Web API (`/api/run`, `/api/compare`, `/api/run-upload`) đều ghi nhật ký cấu trúc JSONL tại `data/outputs/execution_log.jsonl` (`GET /api/execution-log`) phân biệt rõ `requested_backend` vs `executed_backend`, `fallback_triggered`, `fallback_reason` và hiển thị dải cảnh báo `FALLBACK → CoG` trực tiếp trên giao diện khi CNN phải chuyển về CoG.
 - **Kiểm soát lưu ảnh người dùng, chống ghi đè & quyền xóa (`src/upload_store.py`):**
   - Ảnh mẫu đọc-chỉ nằm cố định tại `data/uploads/` và **không bao giờ bị ghi đè hay xóa** khi người dùng tải ảnh lên.
-  - Ảnh người dùng + sidecar JSON tải lên qua Web được cách ly vào thư mục UUID4 16 ký tự độc lập tại **`data/user_uploads/<upload_id>/`** (hai tệp trùng tên, kể cả `mount_st_helens_1.png`, luôn nhận hai thư mục khác nhau — **0% nguy cơ ghi đè**).
-  - **Chế độ mặc định (`retention_mode=ephemeral`):** xóa vĩnh viễn ảnh và sidecar ngay trong khối `finally:` sau khi giải tư thế xong (**0 giây lưu đĩa**, xác minh `verified_gone_on_disk=True`).
-  - **Chế độ lưu tạm tùy chọn (`retention_mode=ttl`):** giữ tạm tối đa **15 phút (`900 s`)**, tự động dọn khi hết hạn, đồng thời người dùng có thể kiểm tra và xóa tức thì từng tệp hoặc toàn bộ qua giao diện hoặc API (`GET /api/uploads`, `DELETE /api/uploads/<upload_id>`, `DELETE /api/uploads`), mọi thao tác xóa đều ghi dấu `DATA_DELETION` vào `execution_log.jsonl`.
+  - Ảnh người dùng + sidecar JSON + ảnh xem trước tải lên qua Web được cách ly hoàn toàn vào thư mục UUID4 16 ký tự độc lập tại **`data/user_uploads/<upload_id>/`** (hai tệp trùng tên, kể cả `mount_st_helens_1.png`, luôn nhận hai thư mục khác nhau — **0% nguy cơ ghi đè** tệp mẫu hay `data/outputs/demo_*.png` dùng chung).
+  - **Chế độ mặc định (`retention_mode=ephemeral`):** ảnh xem trước trả inline dạng `data:image/png;base64,...` và toàn bộ tệp gốc, sidecar, preview tạm bị xóa vĩnh viễn ngay trong khối `finally:` sau khi giải tư thế xong (**0 giây / 0 byte lưu đĩa**, xác minh `verified_gone_on_disk=True`).
+  - **Chế độ lưu tạm tùy chọn (`retention_mode=ttl`):** giữ tạm tối đa **15 phút (`900 s`)**, phục vụ preview cách ly tại `/api/uploads/<upload_id>/preview/<name>`, tự động dọn khi hết hạn, đồng thời người dùng có thể kiểm tra và xóa tức thì từng tệp hoặc toàn bộ qua giao diện hoặc API (`GET /api/uploads`, `DELETE /api/uploads/<upload_id>`, `DELETE /api/uploads`, sau khi xóa preview trả `404` ngay lập tức), mọi thao tác xóa đều ghi dấu `DATA_DELETION` vào `execution_log.jsonl`.
+
+![Sơ đồ kiến trúc Pipeline & Kiểm soát Dữ liệu Ảnh (Chặng 2)](data/outputs/e2e_figures/stage2_pipeline_architecture.png)
 
 ## Chạy & Tái lập kiểm thử
 
 ```text
 pip install -r requirements.txt
 pytest -v
-python scripts/benchmark_end_to_end.py --suites all
-python scripts/benchmark_3way_centroid_e2e.py
+python scripts/verify_repro_bundle.py
+python scripts/run_clean_repro.py
+python scripts/benchmark_3way_centroid_e2e.py --real-only
+python scripts/benchmark_end_to_end.py --suites real seed42 stress
 python scripts/benchmark_stress_curves.py
 python scripts/benchmark_embedded_cubesat.py
-python scripts/make_stage1_upgrade_figures.py
 python scripts/reconcile_logs.py
 python demo_star_tracker.py --mode fast --seed 42 --lookup --no-show
 python app.py

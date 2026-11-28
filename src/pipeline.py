@@ -196,6 +196,23 @@ class StarTrackerPipeline:
             res_cnn.timing_ms['auto_cog_attempt_ms'] = cog_ms
             res_cnn.timing_ms['total_pipeline_ms'] = float(res_cnn.timing_ms.get('total_pipeline_ms', 0.0)) + cog_ms
         trigger_tag = res_cog.reject_code if not res_cog.success else f'CLUTTER_{n_det_cog}'
+        cnn_fell_back = bool(getattr(cnn_det, 'last_fallback', False))
+        cnn_err = getattr(cnn_det, 'last_error', None)
+        if cnn_fell_back:
+            chosen = res_cog if res_cog.success else res_cnn
+            if isinstance(chosen.quality, dict):
+                chosen.quality.update(
+                    centroid_backend='auto',
+                    centroid_detector='classical',
+                    centroid_fallback=True,
+                    centroid_error=cnn_err,
+                    auto_router_used=True,
+                    auto_router_selected='classical',
+                    auto_router_reason=f'CoG trả {res_cog.status} [{trigger_tag}] → thử nâng cấp CNN nhưng lỗi checkpoint ({cnn_err}) → FALLBACK về CoG',
+                    auto_cog_status=res_cog.status,
+                    auto_cog_reject_code=res_cog.reject_code,
+                )
+            return chosen
         if res_cnn.success or not res_cog.success:
             if isinstance(res_cnn.quality, dict):
                 res_cnn.quality.update(

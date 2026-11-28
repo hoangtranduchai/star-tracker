@@ -1095,7 +1095,7 @@
             <div class="privacy-policy-box">
               <div class="privacy-policy-title">Kiểm soát dữ liệu ảnh &amp; Quyền xóa</div>
               <p class="privacy-policy-text">
-                Ảnh tải lên và nhãn JSON được cách ly vào thư mục UUID riêng <code>data/user_uploads/&lt;id&gt;/</code> (tuyệt đối không ghi đè tệp trùng tên hay ảnh mẫu <code>data/uploads/</code>). Chế độ mặc định xóa sạch ngay trong khối <code>finally</code> sau khi trả kết quả.
+                Ảnh tải lên, nhãn JSON và cả ảnh xem trước đều được cách ly vào thư mục UUID riêng <code>data/user_uploads/&lt;id&gt;/</code> (tuyệt đối không ghi đè tệp trùng tên, ảnh mẫu <code>data/uploads/</code> hay <code>demo_*.png</code> dùng chung). Chế độ mặc định trả ảnh xem trước dạng inline và xóa vĩnh viễn 100% tệp trên đĩa ngay trong khối <code>finally</code>.
               </p>
               <div class="upload-mgr-bar">
                 <span class="count-pill" id="upload-active-count">0 ảnh tạm trên đĩa</span>

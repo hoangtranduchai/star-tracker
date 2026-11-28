@@ -391,7 +391,9 @@ def test_api_compare_upload_and_zhao_auto_router(
     )
     assert up_res.status_code == 200
     up_json = up_res.get_json()
-    assert up_json['clean_url'] == '/output/demo_compare_clean.png'
+    assert str(up_json['clean_url']).startswith('data:image/png;base64,')
+    assert up_json['storage_control']['deleted_immediately'] is True
+    assert up_json['storage_control']['verified_gone_on_disk'] is True
     assert set(up_json['methods'].keys()) >= {'classical', 'tetra3'}
     # Blank sky MUST safely reject with LOST (0% False Lock)
     for m in up_json['methods'].values():

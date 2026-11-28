@@ -14,23 +14,9 @@ OUT = ROOT / 'data' / 'outputs' / 'ai2026_figures'
 OUT.mkdir(parents=True, exist_ok=True)
 
 def fig_pipeline() -> Path:
-    fig, ax = plt.subplots(figsize=(12.5, 3.6), dpi=160)
-    ax.set_xlim(0, 12.5)
-    ax.set_ylim(0, 3.6)
-    ax.axis('off')
-    boxes: object = [(0.3, 1.1, 1.9, 1.4, 'Ảnh sao\n(FAST demo)'), (2.5, 1.1, 2.0, 1.4, 'Centroid\nCoG | CNN*'), (4.8, 1.1, 2.2, 1.4, 'Pyramid +\nK-vector'), (7.3, 1.1, 2.0, 1.4, 'Wahba\nSVD/QUEST'), (9.6, 1.1, 2.4, 1.4, 'Quaternion\n16 byte')]
-    for x, y, w, h, label in boxes:
-        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0.04,rounding_size=0.12', facecolor='#e8f1fb', edgecolor='#1f4e79', linewidth=1.6))
-        ax.text(x + w / 2, y + h / 2, label, ha='center', va='center', fontsize=11, color='#123')
-    for x0, x1 in [(2.3, 2.5), (4.5, 4.8), (7.0, 7.3), (9.3, 9.6)]:
-        ax.annotate('', xy=(x1, 1.8), xytext=(x0, 1.8), arrowprops=dict(arrowstyle='->', color='#1f4e79', lw=1.8))
-    ax.text(6.25, 0.35, '* CNN = MobileUNet công khai (Zhao et al., arXiv:2404.19108), tùy chọn — không thay lõi nhận dạng/Wahba', ha='center', fontsize=8.5, color='#444')
-    ax.set_title('Đường ống star tracker (demo laptop)', fontsize=13, pad=8, color='#1f4e79')
-    path: object = OUT / 'pipeline.png'
-    fig.tight_layout()
-    fig.savefig(path, bbox_inches='tight', facecolor='white')
-    plt.close(fig)
-    return path
+    from scripts.make_stage2_pipeline_diagram import build_stage2_pipeline_diagram
+    written = build_stage2_pipeline_diagram()
+    return written[0]
 
 def fig_camera_geometry() -> Path:
     fig, ax = plt.subplots(figsize=(10, 5.2), dpi=160)

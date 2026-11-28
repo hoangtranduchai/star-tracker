@@ -23,7 +23,7 @@ THETA_MIN_DEG = 0.02
 THETA_MAX_LOCKED_DEG = 30.5
 MAX_SIM_PIXELS = 20000000
 _RAD_DEFAULTS = dict(e_per_s_v0=3300000.0, qe=1.0, read_noise_e=5.0, dark_e_per_s=10.0, gain_dn_per_e=1.0, full_well_e=12000.0, bit_depth=12, bias_dn=64.0, hot_pixel_frac=1e-05, cosmic_rate_per_frame=2.0)
-_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None, k1=None, k2=None, async_plots=False, simulate_missing_weights=False)
+_RUN_REQ_DEFAULTS = dict(mode='fast', scale=None, seed=42, catalog='bsc5', max_mag=6.0, omega=0.06, omega_axis='y', exposure=0.15, glare='none', sky_clutter='none', false_stars=0, solver='svd', centroid_backend='classical', image=None, sidecar=None, out_dir=None, lookup=True, save_png=True, save_raw=False, show=False, point_hr=None, ra_deg=None, dec_deg=None, focal_mm=None, pixel_um=None, image_width=None, image_height=None, angular_tol_arcsec=None, k1=None, k2=None, async_plots=False, simulate_missing_weights=False, write_result_json=True)
 
 def load_specs(root: object=None) -> object:
     cfg_file: object = Path(root or ROOT).joinpath('config', 'camera_specs.json')
@@ -510,6 +510,35 @@ class DemoEngine:
         except Exception:
             return (None, None)
 
+    def _manifest_fov_rows(self, image_path: object) -> list[dict]:
+        """Build human-readable FOV ground-truth star rows directly from calibrated manifest metadata."""
+        entry = self._manifest_entry_for(image_path)
+        if entry is None:
+            return []
+        stars = entry.get('stars_in_fov') or []
+        if not stars:
+            return []
+        uv_pts = asarray([[s['u_px'], s['v_px']] for s in stars], dtype=float64)
+        if 'heikkila_p' in entry and len(uv_pts):
+            uv_pts = _heikkila_undistort_uv(uv_pts, entry['heikkila_p'], float(entry['calibrated_cx']), float(entry['calibrated_cy']))
+        rows: list[dict] = []
+        for pos, s in enumerate(stars):
+            hr_id = s.get('hr')
+            hip_id = s.get('hip')
+            rows.append(dict(
+                id=int(hr_id) if hr_id is not None else int(hip_id or pos),
+                id_scheme='HR' if hr_id is not None else 'HIP',
+                iau_name=s.get('iau_name'),
+                designation=s.get('designation'),
+                label=s.get('label') or (f'HR {hr_id}' if hr_id is not None else f'HIP {hip_id}'),
+                mag=float(s.get('mag', 0.0)),
+                u_px=float(uv_pts[pos, 0]),
+                v_px=float(uv_pts[pos, 1]),
+                ra_deg=s.get('ra_deg'),
+                dec_deg=s.get('dec_deg'),
+            ))
+        return rows
+
     def stack(self, kind: object, max_mag: object, theta_max_deg: object=THETA_MAX_LOCKED_DEG) -> object:
         cache_key: object = (kind, float(max_mag), float(theta_max_deg))
         if cache_key in self._stack:
@@ -610,6 +639,16 @@ class DemoEngine:
         t_max: object = theta_max_deg_for_fov(float(camera.fov_deg[2]))
         catalog, synthetic, kvector = self.stack(req.catalog, req.max_mag, t_max)
         image, truth, q_gt, omega, have_gt = self._prepare_frame(req, loaded_img, camera, catalog)
+        gt_source: str = 'simulator_ground_truth' if (req.image is None) else ('sidecar_json' if have_gt else 'none')
+        used_manifest_gt: bool = False
+        if not have_gt and req.image is not None:
+            m_truth, m_src = self._manifest_truth_for(req.image)
+            if m_truth is not None:
+                truth = m_truth
+                q_gt = m_truth.q_gt
+                have_gt = True
+                gt_source = str(m_src)
+                used_manifest_gt = True
         is_small: object = locked and scale > 1 or (not locked and camera.width * camera.height < 4000000)
         cfg: object = load_pipeline_cfg('fast' if is_small else 'full', self.root)
         tol_arc: object = None if locked else match_tolerance_arcsec(camera, req.angular_tol_arcsec)
@@ -631,7 +670,7 @@ class DemoEngine:
                 self._cnn_cache = pipe._auto_cnn_detector
         metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
         status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
-        fov_rows: object = star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
+        fov_rows: object = self._manifest_fov_rows(req.image) if used_manifest_gt else star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
         ident_rows: object = []
         if result.ident is not None and len(result.ident.cat_idx):
             obs_indices: object = result.ident.obs_idx
@@ -671,9 +710,13 @@ class DemoEngine:
                 _do_static_plots()
         q_est: object = None if result.q is None else asarray(result.q, dtype=float64)
         qual_d: dict = result.quality if isinstance(result.quality, dict) else {}
-        det_obj: object = pipe._auto_cnn_detector if (cfg.centroid_backend == 'auto' and qual_d.get('auto_router_selected') == 'cnn' and pipe._auto_cnn_detector is not None) else pipe.centroid_detector
+        auto_cnn_obj = getattr(pipe, '_auto_cnn_detector', None)
+        if cfg.centroid_backend == 'auto' and auto_cnn_obj is not None and (qual_d.get('auto_router_selected') == 'cnn' or bool(getattr(auto_cnn_obj, 'last_fallback', False))):
+            det_obj: object = auto_cnn_obj
+        else:
+            det_obj = pipe.centroid_detector
         fallback_flag: bool = bool(qual_d.get('centroid_fallback', getattr(det_obj, 'last_fallback', False)))
-        fallback_err: object = getattr(det_obj, 'last_error', None)
+        fallback_err: object = qual_d.get('centroid_error') or getattr(det_obj, 'last_error', None)
         auto_used_flag: bool = bool(qual_d.get('auto_router_used', False))
         auto_sel: object = qual_d.get('auto_router_selected')
         if fallback_flag:
@@ -694,8 +737,9 @@ class DemoEngine:
         theta_max_actual: object = float(degrees(kvector.theta_max))
         bore_est_dict: object = None if metrics.get('boresight_est_ra_deg') is None else dict(ra_deg=metrics['boresight_est_ra_deg'], dec_deg=metrics['boresight_est_dec_deg'], ra_hms=metrics['boresight_est_ra_hms'], dec_dms=metrics['boresight_est_dec_dms'], frame='Trục quang học +Z trong hệ quy chiếu J2000')
         bore_gt_dict: object = None if not have_gt else dict(ra_deg=metrics['boresight_gt_ra_deg'], dec_deg=metrics['boresight_gt_dec_deg'], ra_hms=metrics['boresight_gt_ra_hms'], dec_dms=metrics['boresight_gt_dec_dms'])
-        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, requested_backend=cfg.centroid_backend, executed_backend=executed_be, execution_mode_summary=exec_summary, checkpoint_status=ckpt_status, centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', cfg.centroid_backend)), centroid_fallback=fallback_flag, fallback_reason=fallback_err if fallback_flag else None, centroid_error=fallback_err, centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), auto_router_used=auto_used_flag, auto_router_selected=auto_sel, auto_router_reason=qual_d.get('auto_router_reason'), sky_clutter=req.sky_clutter, have_gt=have_gt, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), telemetry_frame_hex=tlm_bytes.hex(), telemetry_frame_bytes=len(tlm_bytes), telemetry_crc16_hex=tlm_bytes[-2:].hex().upper(), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
-        out_dir.joinpath('demo_result.json').write_text(json_dumps(payload, indent=2), encoding='utf-8')
+        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, requested_backend=cfg.centroid_backend, executed_backend=executed_be, execution_mode_summary=exec_summary, checkpoint_status=ckpt_status, centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', cfg.centroid_backend)), centroid_fallback=fallback_flag, fallback_reason=fallback_err if fallback_flag else None, centroid_error=fallback_err, centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), auto_router_used=auto_used_flag, auto_router_selected=auto_sel, auto_router_reason=qual_d.get('auto_router_reason'), sky_clutter=req.sky_clutter, have_gt=have_gt, gt_source=gt_source, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), telemetry_frame_hex=tlm_bytes.hex(), telemetry_frame_bytes=len(tlm_bytes), telemetry_crc16_hex=tlm_bytes[-2:].hex().upper(), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
+        if bool(getattr(req, 'write_result_json', True)):
+            out_dir.joinpath('demo_result.json').write_text(json_dumps(payload, indent=2), encoding='utf-8')
         if req.save_raw and req.image is None:
             imwrite(str(out_dir / 'demo_raw.tif'), image)
             raw_meta: object = dict(q_gt=q_gt.tolist(), omega_deg_s=asarray(omega).tolist(), t_exp_s=req.exposure, stars_in_fov=fov_rows)

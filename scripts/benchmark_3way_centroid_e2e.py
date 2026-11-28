@@ -14,6 +14,7 @@ Outputs:
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import time
@@ -108,10 +109,17 @@ def _run_sim_dir_suite(
     cnn_tmpl: CNNCentroidDetector | None,
     limit: int | None = None,
 ) -> dict[str, Any]:
-    tifs = sorted(sim_dir.glob('*.tif'))
+    tifs = sorted(sim_dir.glob('*.tif')) if sim_dir.is_dir() else []
     if limit is not None:
         tifs = tifs[:limit]
-    print(f'\n=== Suite: {suite_name} ({len(tifs)} frames x 4 backends) ===', flush=True)
+    if not tifs:
+        print(
+            f'\n=== Suite: {suite_name} [SKIPPED — {sim_dir} not present on clean clone] ===\n'
+            f'  (Hint: run with `--real-only` on a clean clone, or generate synthetic frames with `python scripts/generate_sim_dataset.py`)',
+            flush=True,
+        )
+        return {'n_frames': 0, 'skipped': True, 'reason': f'Missing directory or .tif frames: {sim_dir}', 'summary': {}}
+    print(f'\n=== Suite: {suite_name} ({len(tifs)} frames x {len(BACKENDS)} backends) ===', flush=True)
     cat, _, kv = engine.stack('bsc5', 6.0, 30.5)
     recs: dict[str, list[dict[str, Any]]] = {be: [] for be in BACKENDS}
 
@@ -221,13 +229,18 @@ def _run_real_4way_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector | Non
     frames = manifest['frames']
 
     tsv_path = ROOT / 'data' / 'catalogs' / 'starcat.tsv'
-    cat_hip7 = CatalogManager.filter_close_pairs(
-        CatalogManager.load_hipparcos_tsv(tsv_path, max_mag=7.0, epoch_year=2026.7),
-        60.0,
-    )
+    cat_hip7 = None
+    if tsv_path.is_file():
+        cat_hip7 = CatalogManager.filter_close_pairs(
+            CatalogManager.load_hipparcos_tsv(tsv_path, max_mag=7.0, epoch_year=2026.7),
+            60.0,
+        )
+    else:
+        print('  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not bundled on clean clone — running full primary BSC5 V<=6.0 suite and skipping supplementary Alt40 Hipparcos V<=7.0.', flush=True)
     kv_hip7_cache: dict[float, KVectorTable] = {}
 
     def get_hip7_kv(tmax: float) -> KVectorTable:
+        assert cat_hip7 is not None
         key = round(float(tmax), 2)
         if key not in kv_hip7_cache:
             kv_hip7_cache[key] = KVectorTable.build(cat_hip7, theta_min_deg=0.02, theta_max_deg=float(tmax))
@@ -299,7 +312,7 @@ def _run_real_4way_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector | Non
                 flush=True,
             )
 
-        if 'Alt40' in fname:
+        if 'Alt40' in fname and cat_hip7 is not None:
             kv_h7 = get_hip7_kv(tmax_cal)
             for be in BACKENDS:
                 cfg_h, tol_h = _build_custom_cfg(cam_cal, be, calibrated=True)
@@ -329,7 +342,14 @@ def _run_real_4way_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector | Non
     }
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description='5-Method Star Tracker End-to-End Benchmark (CoG, tetra3, CNN-Raw, CNN-Hybrid, Auto)')
+    parser.add_argument('--real-only', action='store_true', help='Clean-clone mode: run 6 calibrated real-sky frames + synthetic Earth-clutter stress (no external hd1024 dataset required)')
+    parser.add_argument('--clutter-frames', type=int, default=20, help='Number of synthetic Earth-limb + clutter stress frames (default 20)')
+    parser.add_argument('--limit-sim', type=int, default=None, help='Optional frame cap for hd1024 / hd1024_glare suites')
+    parser.add_argument('--out', type=Path, default=None, help='Output JSON path')
+    args = parser.parse_args(argv)
+
     t_all = time.perf_counter()
     engine = DemoEngine(ROOT)
     cnn_tmpl, device_name, cnn_err = _init_cnn_template()
@@ -337,12 +357,19 @@ def main() -> None:
         print(f'[WARN] CNN unavailable: {cnn_err}', flush=True)
 
     real_data = _run_real_4way_suite(engine, cnn_tmpl)
-    glare_data = _run_sim_dir_suite('sim_glare', ROOT / 'data' / 'sim_dataset' / 'hd1024_glare', engine, cnn_tmpl)
-    clutter_data = _run_clutter_stress_suite(engine, cnn_tmpl, n_frames=20)
-    clean_data = _run_sim_dir_suite('sim_hd1024', ROOT / 'data' / 'sim_dataset' / 'hd1024', engine, cnn_tmpl)
+    clutter_data = _run_clutter_stress_suite(engine, cnn_tmpl, n_frames=max(0, int(args.clutter_frames)))
 
+    if args.real_only:
+        glare_data = {'n_frames': 0, 'skipped': True, 'reason': '--real-only selected', 'summary': {}}
+        clean_data = {'n_frames': 0, 'skipped': True, 'reason': '--real-only selected', 'summary': {}}
+    else:
+        glare_data = _run_sim_dir_suite('sim_glare', ROOT / 'data' / 'sim_dataset' / 'hd1024_glare', engine, cnn_tmpl, limit=args.limit_sim)
+        clean_data = _run_sim_dir_suite('sim_hd1024', ROOT / 'data' / 'sim_dataset' / 'hd1024', engine, cnn_tmpl, limit=args.limit_sim)
+
+    partial_run = bool(args.real_only or glare_data.get('skipped') or clean_data.get('skipped') or args.limit_sim is not None)
     payload = {
         'benchmark': '4way_centroid_e2e_comparison',
+        'mode': 'clean_clone_partial' if partial_run else 'full_566_frames',
         'generated_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
         'evaluation_scope': 'PC/laptop benchmark (not flight-qualified spacecraft hardware)',
         'device': device_name,
@@ -354,7 +381,12 @@ def main() -> None:
         'real_calibrated': real_data,
         'elapsed_s': round(time.perf_counter() - t_all, 2),
     }
-    out_path = OUT_DIR / 'benchmark_3way_comparison.json'
+    if args.out is not None:
+        out_path = args.out
+    elif partial_run:
+        out_path = OUT_DIR / 'benchmark_3way_clean_clone.json'
+    else:
+        out_path = OUT_DIR / 'benchmark_3way_comparison.json'
     _write_json_strict(out_path, payload)
     print(f'\n[DONE] Saved 4-way audited benchmark to {out_path} in {payload["elapsed_s"]}s', flush=True)
 

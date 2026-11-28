@@ -364,13 +364,18 @@ def _run_real_calibrated_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector
 
     # Pre-warm Hipparcos V<=7.0 catalog & k-vectors in memory for supplementary check on sparse fields
     tsv_path = ROOT / 'data' / 'catalogs' / 'starcat.tsv'
-    cat_hip7 = CatalogManager.filter_close_pairs(
-        CatalogManager.load_hipparcos_tsv(tsv_path, max_mag=7.0, epoch_year=2026.7),
-        60.0,
-    )
+    cat_hip7 = None
+    if tsv_path.is_file():
+        cat_hip7 = CatalogManager.filter_close_pairs(
+            CatalogManager.load_hipparcos_tsv(tsv_path, max_mag=7.0, epoch_year=2026.7),
+            60.0,
+        )
+    else:
+        print('  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not present on clean clone — skipping supplementary Hipparcos V<=7.0 check.', flush=True)
     kv_hip7_cache: dict[float, KVectorTable] = {}
 
     def get_hip7_kv(tmax: float) -> KVectorTable:
+        assert cat_hip7 is not None
         key = round(float(tmax), 2)
         if key not in kv_hip7_cache:
             kv_hip7_cache[key] = KVectorTable.build(cat_hip7, theta_min_deg=0.02, theta_max_deg=float(tmax))
@@ -472,7 +477,7 @@ def _run_real_calibrated_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector
                 )
 
         # Supplementary Hipparcos V<=6.0 & V<=7.0 diagnostic for tetra3 Alt40/Alt60 & Zhao nightsky
-        if entry['dataset_group'] in ('esa_tetra3', 'zhao_mt9v022') and have_gt:
+        if entry['dataset_group'] in ('esa_tetra3', 'zhao_mt9v022') and have_gt and cat_hip7 is not None:
             img_cal = (
                 _undistort_zhao_image(raw, entry['heikkila_p'], entry['calibrated_cx'], entry['calibrated_cy'])
                 if has_heikkila
@@ -564,6 +569,15 @@ def _eval_sim_dataset(
     device_name: str,
 ) -> dict[str, Any]:
     """Suite 2 helper: run CoG vs CNN full E2E pipeline on existing hd1024 or hd1024_glare frames without regenerating."""
+    if not (ds_dir / '0000.tif').is_file():
+        print(
+            f'\n=== Suite 2: {ds_name} [SKIPPED — {ds_dir} not present on clean clone] ===\n'
+            f'  (Hint: run `--suites real seed42 stress` on a clean clone, or generate sim data first.)',
+            flush=True,
+        )
+        if out_json.is_file():
+            return json.loads(out_json.read_text(encoding='utf-8'))
+        return {'suite': f'{ds_name}_e2e', 'skipped': True, 'reason': f'Missing {ds_dir}'}
     print(f'\n=== Suite 2: {ds_name} ({n_expected} existing frames) ===', flush=True)
     cam = demo_camera_long_side(1024)
     tmax = theta_max_deg_for_fov(float(cam.fov_deg[2]))

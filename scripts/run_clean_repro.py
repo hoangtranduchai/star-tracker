@@ -84,26 +84,48 @@ def main() -> int:
             'reject_code': p.get('reject_code'),
             'n_valid_pairs': (p.get('match_stats') or {}).get('n_valid_pairs'),
             'attitude_error_arcsec': (p.get('metrics') or {}).get('attitude_error_arcsec'),
+            'gt_source': p.get('gt_source'),
             'total_ms': (p.get('timing_ms') or {}).get('total_pipeline_ms'),
         }
         runs.append(rec)
+        err_disp = f"{rec['attitude_error_arcsec']:.2f}\"" if rec['attitude_error_arcsec'] is not None else 'n/a'
         print(
             f"  [{label:22s}] req={rec['requested_backend']} -> exe={rec['executed_backend']} "
             f"| fallback={rec['fallback_triggered']} | {rec['status']} "
-            f"| pairs={rec['n_valid_pairs']} | dTh={rec['attitude_error_arcsec']} | t={rec['total_ms']}ms"
+            f"| pairs={rec['n_valid_pairs']} | dTh={err_disp} | gt={rec['gt_source']} | t={rec['total_ms']:.1f}ms"
         )
 
-    print('\n=== [3/4] Explicit CNN -> CoG Fallback Proof (Simulated Missing Checkpoint) ===')
+    print('\n=== [3/4] Explicit CNN -> CoG Fallback Proof (Direct CNN & Auto-Router) ===')
     fb_out = engine.run(RunRequest(mode='fast', seed=42, centroid_backend='cnn', simulate_missing_weights=True, save_png=False))
     fb_p = fb_out.payload
     fallback_demo = {
         'requested_backend': fb_p.get('centroid_backend'),
         'executed_backend': fb_p.get('executed_backend', fb_p.get('centroid_detector')),
+        'execution_mode_summary': fb_p.get('execution_mode_summary'),
         'fallback_triggered': bool(fb_p.get('centroid_fallback')),
-        'fallback_reason': fb_p.get('centroid_error'),
+        'fallback_reason': fb_p.get('fallback_reason') or fb_p.get('centroid_error'),
         'status': fb_p.get('status'),
         'n_valid_pairs': (fb_p.get('match_stats') or {}).get('n_valid_pairs'),
         'attitude_error_arcsec': (fb_p.get('metrics') or {}).get('attitude_error_arcsec'),
+    }
+    auto_fb_out = engine.run(
+        RunRequest(
+            image=ROOT / 'data' / 'real_calibrated' / 'zhao_mt9v022' / 'nightsky_june16_2021.npy',
+            centroid_backend='auto',
+            simulate_missing_weights=True,
+            save_png=False,
+        )
+    )
+    auto_fb_p = auto_fb_out.payload
+    auto_fallback_demo = {
+        'case': 'zhao_nightsky_auto_missing_ckpt',
+        'requested_backend': auto_fb_p.get('centroid_backend'),
+        'executed_backend': auto_fb_p.get('executed_backend'),
+        'execution_mode_summary': auto_fb_p.get('execution_mode_summary'),
+        'fallback_triggered': bool(auto_fb_p.get('centroid_fallback')),
+        'fallback_reason': auto_fb_p.get('fallback_reason') or auto_fb_p.get('centroid_error'),
+        'status': auto_fb_p.get('status'),
+        'reject_code': auto_fb_p.get('reject_code'),
     }
     record_pipeline_run(
         ROOT,
@@ -119,11 +141,17 @@ def main() -> int:
         checkpoint_status='simulated_missing',
     )
     print(
-        f"  [FALLBACK PROOF] req=cnn -> exe={fallback_demo['executed_backend']} "
-        f"| fallback={fallback_demo['fallback_triggered']} | reason={fallback_demo['fallback_reason']} "
+        f"  [FALLBACK DIRECT] req=cnn  -> exe={fallback_demo['executed_backend']} "
+        f"| fallback={fallback_demo['fallback_triggered']} | summary={fallback_demo['execution_mode_summary']} "
         f"| status={fallback_demo['status']}"
     )
+    print(
+        f"  [FALLBACK AUTO  ] req=auto -> exe={auto_fallback_demo['executed_backend']} "
+        f"| fallback={auto_fallback_demo['fallback_triggered']} | summary={auto_fallback_demo['execution_mode_summary']} "
+        f"| status={auto_fallback_demo['status']} ({auto_fallback_demo['reject_code']})"
+    )
     assert fallback_demo['fallback_triggered'] is True and fallback_demo['executed_backend'] == 'classical'
+    assert auto_fallback_demo['fallback_triggered'] is True and auto_fallback_demo['executed_backend'] == 'classical'
 
     print('\n=== [4/4] Upload Isolation (Zero-Overwrite) & Verified Deletion Proof ===')
     ok1, b1 = cv2.imencode('.png', np.full((64, 64), 12, dtype=np.uint8))
@@ -158,6 +186,7 @@ def main() -> int:
         'repro_bundle': {k: bundle[k] for k in ('ok', 'n_verified', 'n_total', 'total_bundle_mb', 'checkpoint_status', 'checkpoint_sha256')},
         'clean_clone_runs': runs,
         'fallback_proof': fallback_demo,
+        'auto_fallback_proof': auto_fallback_demo,
         'data_control_proof': privacy_demo,
     }
     out_j = ROOT / 'data' / 'outputs' / 'clean_repro_log.json'
