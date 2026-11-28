@@ -1,7 +1,7 @@
 # MINH CHỨNG CẢI TIẾN VÒNG CHUNG KẾT · CHẶNG 2 (HACKATHON)
 
 > **Đội thi:** `DUT.StarTracker` (`AI26C0083`) · Bảng C · Trường Đại học Bách khoa, Đại học Đà Nẵng — Khoa Công nghệ thông tin  
-> **Ngày kiểm chứng:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `04549fc`)  
+> **Ngày kiểm chứng:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `5107b08`)  
 > **Đề cải tiến Chặng 2 (Phiên bản 1):** *1. Tái lập pipeline và kiểm soát dữ liệu ảnh*  
 > **Sản phẩm trực tuyến 24/7:** https://startracker.agentlens.dpdns.org  
 > **Hướng dẫn tái lập từ bản clone sạch:** [`REPRODUCIBILITY.md`](../REPRODUCIBILITY.md) · **Bảng Checksum:** [`CHECKSUMS.sha256`](../CHECKSUMS.sha256)
@@ -532,28 +532,32 @@ Các bản ghi JSONL thực tế trích xuất trực tiếp từ `https://start
 
 ## 6. Kết quả Bộ kiểm thử tự động (`pytest`) & Smoke Test trực tuyến trên VPS
 
-- **Bộ kiểm thử tự động (`pytest -q`):** `139 passed, 2 skipped in 43.12s` (bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, Fallback CNN→CoG trực tiếp, Fallback Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, và kiểm tra 0 NUL byte UTF-8).
+- **Bộ kiểm thử tự động (`pytest -q`):** `141 passed, 2 skipped in 45.14s` (bao gồm 8 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, chặn checkpoint giả mạo trước `torch.load`, Fallback CNN→CoG trực tiếp & Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, CLI `--focal-mm/--pixel-um` trên ảnh thật `Alt60`, và kiểm tra 0 byte NUL UTF-8).
 - **Kết quả triển khai & smoke test 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):**
 
 ```text
-[1/4] Packed application source bundle (504.0 KB compressed).
-[2/4] Synced code to /opt/star-tracker/app in 9.68s.
-[3/4] Built star-tracker:latest & started container star-tracker in 2.60s (sha256:54cc4).
+# DUT.StarTracker Stage 2 VPS Deploy & Live HTTPS Verification Log
+# Timestamp (UTC): 2026-11-28T01:50:04Z
+
+=== [1/2] ARM64 VPS DOCKER DEPLOY & INTERNAL SMOKE ===
+[1/4] Packed application source bundle (517.8 KB compressed).
+[2/4] Synced code to /opt/star-tracker/app in 7.26s.
+[3/4] Built star-tracker:latest & started container star-tracker in 3.87s (sha256:78adb).
 [4/4] Running remote HTTP & Docker-network smoke tests...
-[PASS] GET /api/health -> 200 in 0.20s: {'ok': True, 'service': 'star-tracker'}
-[PASS] GET / -> 200 (75,206 bytes)
+[PASS] GET /api/health -> 200 in 0.03s: {'ok': True, 'service': 'star-tracker'}
+[PASS] GET / -> 200 (75,321 bytes)
 [PASS] GET /api/frames -> 200 (17 staged frames)
 [PASS] GET /api/sky-catalog -> 200 (source=BSC5+filt, synthetic=False, n=5023, named=462)
-[PASS] POST /api/run (seed=42 classical) -> SOLVED in 0.81s (n_matched=36, att_err=0.45")
-       GET /output/demo_result.png -> 200 (343,404 bytes)
+[PASS] POST /api/run (seed=42 classical) -> SOLVED in 1.07s (n_matched=36, att_err=0.45")
+       GET /output/demo_result.png -> 200 (344,750 bytes)
        GET /output/demo_input.png -> 200 (97,880 bytes)
        GET /output/demo_output.png -> 200 (170,300 bytes)
        GET /output/demo_clean.png -> 200 (21,711 bytes)
-[PASS] POST /api/run (mount_st_helens_1.png CNN) -> SOLVED in 5.21s (detector=cnn_zhao2024, fallback=False, n_matched=72, RA=20h 41m 58.20s, Dec=+35d 59m 27.9s)
-[PASS] POST /api/run (tetra3 Alt60 real frame) -> SOLVED in 0.36s (n_matched=9)
-[PASS] POST /api/run (Zhao nightsky Auto-Router) -> SOLVED in 2.13s (selected=cnn)
-[PASS] POST /api/compare (Zhao nightsky) in 3.02s -> CoG=LOST, tetra3=LOST, CNN-Hybrid=SOLVED
-[PASS] POST /api/compare (Mount St. Helens) in 7.59s -> CoG=SOLVED, tetra3=LOST, CNN-Hybrid=SOLVED (72/77)
+[PASS] POST /api/run (mount_st_helens_1.png CNN) -> SOLVED in 5.28s (detector=cnn_zhao2024, fallback=False, n_matched=72, RA=20h 41m 58.20s, Dec=+35d 59m 27.9s)
+[PASS] POST /api/run (tetra3 Alt60 real frame) -> SOLVED in 0.34s (n_matched=9)
+[PASS] POST /api/run (Zhao nightsky Auto-Router) -> SOLVED in 2.14s (selected=cnn)
+[PASS] POST /api/compare (Zhao nightsky) in 2.55s -> CoG=LOST, tetra3=LOST, CNN-Hybrid=SOLVED
+[PASS] POST /api/compare (Mount St. Helens) in 7.35s -> CoG=SOLVED, tetra3=LOST, CNN-Hybrid=SOLVED (72/77)
 [PASS] GET /api/benchmark-summary -> available=True stress=True device=NVIDIA GeForce RTX 5070 Laptop GPU
 [PASS] GET /api/repro-status -> ok=True (13/13 verified, 36.03 MB)
 [PASS] POST /api/run (simulate_missing_weights=True) -> cnn -> classical [FALLBACK_TO_COG] reason=FileNotFoundError: missing public weights: /app/third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
@@ -571,7 +575,20 @@ agentlens-backend-1       Up 3 months (healthy)   agentlens/backend:dev         
 agentlens-frontend-1      Up 3 months (healthy)   agentlens/frontend:prod-20260825-1046   agentlens_agentlens   3000/tcp
 agentlens-worker-1        Up 3 months (healthy)   agentlens/backend:dev                   agentlens_agentlens   8000/tcp
 agentlens-postgres-1      Up 3 months (healthy)   pgvector/pgvector:pg16                  agentlens_agentlens   5432/tcp
-=== DEPLOY COMPLETE in 42.03s total ===
+=== DEPLOY COMPLETE in 40.05s total ===
+[1/4] Packed application source bundle (517.8 KB compressed).
+
+=== [2/2] PUBLIC HTTPS VERIFICATION (https://startracker.agentlens.dpdns.org) ===
+[PASS] Raw Evidence MD UTF-8  -> HTTP 200 (34,407 bytes) | utf8=OK nul_bytes=0
+[PASS] Raw Report PDF         -> HTTP 200 (1,214,991 bytes)
+[PASS] Raw Checksums          -> HTTP 200 (1,578 bytes)
+[PASS] Raw Diagram PNG        -> HTTP 200 (651,247 bytes)
+[PASS] Live /api/repro-status -> 13/13 SHA-256 verified, preview_isolation=True
+[PASS] Live Auto-Router fallback -> auto -> classical [FALLBACK_TO_COG] | status=LOST
+[PASS] Live ephemeral upload -> inline base64 preview (518 chars), deleted_immediately=True, verified_gone=True
+[PASS] Live TTL upload (51fbffeead2b49ef) -> preview HTTP 200 -> DELETE verified_gone=True -> preview HTTP 404
+
+[ALL LIVE PUBLIC HTTPS CHECKS PASSED 100%]
 ```
 
 ---
