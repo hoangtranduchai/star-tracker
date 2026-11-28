@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-28T01:28:42Z",
-  "elapsed_s": 7.05,
+  "generated_at_utc": "2026-11-28T02:24:44Z",
+  "elapsed_s": 12.11,
   "repro_bundle": {
     "ok": true,
     "n_verified": 13,
@@ -22,7 +22,7 @@
       "n_valid_pairs": 36,
       "attitude_error_arcsec": 0.4463370537767079,
       "gt_source": "simulator_ground_truth",
-      "total_ms": 92.78910000057294
+      "total_ms": 93.650499999967
     },
     {
       "case": "esa_alt60_auto",
@@ -36,7 +36,7 @@
       "n_valid_pairs": 9,
       "attitude_error_arcsec": 2.2632107772614365,
       "gt_source": "esa_tetra3_hipparcos_plus_scipy_f_k1",
-      "total_ms": 65.48019999991084
+      "total_ms": 61.877999999524036
     },
     {
       "case": "zhao_nightsky_auto",
@@ -50,7 +50,7 @@
       "n_valid_pairs": 8,
       "attitude_error_arcsec": 48.25534172069045,
       "gt_source": "zhao_heikkila_undistort_plus_hipparcos_3dof",
-      "total_ms": 3105.508400000417
+      "total_ms": 6010.930000001281
     },
     {
       "case": "mount_st_helens_cnn",
@@ -64,7 +64,7 @@
       "n_valid_pairs": 72,
       "attitude_error_arcsec": 71.13119703047542,
       "gt_source": "startracker_hipparcos_sky_only_scipy_f_k1_k2",
-      "total_ms": 321.7177999995329
+      "total_ms": 638.9866000008624
     }
   ],
   "fallback_proof": {
@@ -72,7 +72,7 @@
     "executed_backend": "classical",
     "execution_mode_summary": "cnn -> classical [FALLBACK_TO_COG]",
     "fallback_triggered": true,
-    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_v2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_final\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
     "status": "SOLVED",
     "n_valid_pairs": 36,
     "attitude_error_arcsec": 0.4463370537767079
@@ -83,39 +83,39 @@
     "executed_backend": "classical",
     "execution_mode_summary": "auto -> classical [FALLBACK_TO_COG]",
     "fallback_triggered": true,
-    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_v2\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_final\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
     "status": "LOST",
     "reject_code": "INSUFFICIENT_INLIER_PAIRS"
   },
   "data_control_proof": {
     "same_filename_tested": "mount_st_helens_1.png",
-    "upload_id_1": "5b21b99e2643458a",
-    "upload_id_2": "171bd8025382499b",
+    "upload_id_1": "43f00363df42484d",
+    "upload_id_2": "f97d0607da02485c",
     "distinct_isolated_dirs": true,
     "bundled_sample_untouched": true,
     "delete_1": {
       "deleted": true,
-      "upload_id": "5b21b99e2643458a",
-      "storage_rel_dir": "data/user_uploads/5b21b99e2643458a/",
+      "upload_id": "43f00363df42484d",
+      "storage_rel_dir": "data/user_uploads/43f00363df42484d/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T01:28:42Z"
+      "deleted_at_utc": "2026-11-28T02:24:44Z"
     },
     "delete_2": {
       "deleted": true,
-      "upload_id": "171bd8025382499b",
-      "storage_rel_dir": "data/user_uploads/171bd8025382499b/",
+      "upload_id": "f97d0607da02485c",
+      "storage_rel_dir": "data/user_uploads/f97d0607da02485c/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T01:28:42Z"
+      "deleted_at_utc": "2026-11-28T02:24:44Z"
     },
     "remaining_user_uploads": 0
   }

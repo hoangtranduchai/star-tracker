@@ -182,7 +182,9 @@ def add_stage2_slides() -> int:
                     if bt in low:
                         raise AssertionError(f'Banned term "{bt}" found in Slide {idx}')
 
-    prs.save(str(PPTX_PATH))
+    tmp_out = PPTX_PATH.with_name(PPTX_PATH.stem + '.tmp.pptx')
+    prs.save(str(tmp_out))
+    tmp_out.replace(PPTX_PATH)
     print(f'[OK] Updated {PPTX_PATH} -> {total_slides} slides (inserted 3 Stage 2 slides at #{insert_pos + 1}..#{insert_pos + 3})')
     return total_slides
 
