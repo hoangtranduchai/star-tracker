@@ -28,6 +28,36 @@ _R2_BG = _XX_BG * _XX_BG + _YY_BG * _YY_BG
 _ANNULUS_BG = (_R2_BG >= 16) & (_R2_BG <= _R_BG * _R_BG)
 _DEFAULT_WEIGHTS = Path(__file__).resolve().parent.parent / 'third_party' / 'cnn_star_centroid' / 'saved_models' / 'MobileUNet_B10_50.pt'
 _VENDOR_DIR = _DEFAULT_WEIGHTS.parent.parent
+_DEFAULT_CHECKPOINT_REL = 'third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt'
+_DEFAULT_CHECKPOINT_SHA256 = 'e02d7723b832d12cf2535a8a9794eaedc822023722f07da3126dcd8473cbe062'
+
+
+def expected_default_checkpoint_sha256() -> str:
+    """Read canonical checkpoint SHA-256 from CHECKSUMS.sha256 (with hardcoded fallback)."""
+    try:
+        from .repro_bundle import CHECKSUM_FILE, parse_checksums_file
+        repo_root = Path(__file__).resolve().parent.parent
+        cs = parse_checksums_file(repo_root / CHECKSUM_FILE)
+        if _DEFAULT_CHECKPOINT_REL in cs:
+            return cs[_DEFAULT_CHECKPOINT_REL]
+    except Exception:
+        pass
+    return _DEFAULT_CHECKPOINT_SHA256
+
+
+def verify_checkpoint_integrity(weights_path: Path, expected_sha256: str | None = None) -> str:
+    """Verify SHA-256 digest of a checkpoint BEFORE calling torch.load(..., weights_only=False)."""
+    from .repro_bundle import sha256_file
+    p = Path(weights_path)
+    actual = sha256_file(p)
+    exp = expected_sha256
+    if exp is None and (p.resolve() == _DEFAULT_WEIGHTS.resolve() or p.name == _DEFAULT_WEIGHTS.name):
+        exp = expected_default_checkpoint_sha256()
+    if exp is not None and actual.lower() != str(exp).strip().lower():
+        raise ValueError(
+            f'CHECKPOINT_SHA256_MISMATCH: expected {str(exp)[:16]}..., got {actual[:16]}... ({p})'
+        )
+    return actual
 
 def peak_dn_for_magnitude(mag: float, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2) -> float:
     """Expected peak DN for a Gaussian PSF star of visual magnitude ``mag`` (simulator radiometry)."""
@@ -227,10 +257,12 @@ class CNNCentroidDetector:
     zero CNN centroids so Pyramid / KPIs reflect the CNN path.
     """
 
-    def __init__(self, camera: CameraModel, classical: CentroidDetector | None=None, weights_path: Path | None=None, device: str | None=None, radius: int=7, max_stars: int=80, min_mag_gate: float | None=6.0, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2, seg_prob_min: float=_SEG_PROB_MIN, refine_subpixel: bool=True) -> object:
+    def __init__(self, camera: CameraModel, classical: CentroidDetector | None=None, weights_path: Path | None=None, device: str | None=None, radius: int=7, max_stars: int=80, min_mag_gate: float | None=6.0, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2, seg_prob_min: float=_SEG_PROB_MIN, refine_subpixel: bool=True, expected_sha256: str | None=None) -> object:
         self.camera = camera
         self.classical = classical or CentroidDetector(camera)
         self.weights_path = Path(weights_path) if weights_path else _DEFAULT_WEIGHTS
+        self.expected_sha256 = expected_sha256
+        self.checkpoint_sha256: str | None = None
         self.radius = int(radius)
         self.max_stars = int(max_stars)
         self.min_mag_gate = min_mag_gate
@@ -260,6 +292,8 @@ class CNNCentroidDetector:
             return
         if not weights_available(self.weights_path):
             raise FileNotFoundError(f'missing public weights: {self.weights_path}')
+        # Verify SHA-256 BEFORE torch.load(..., weights_only=False) to block corrupted/tampered pickles
+        self.checkpoint_sha256 = verify_checkpoint_integrity(self.weights_path, expected_sha256=self.expected_sha256)
         import torch
         from torchvision.transforms import Normalize
         self._torch = torch

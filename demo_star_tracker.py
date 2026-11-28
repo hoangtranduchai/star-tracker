@@ -29,7 +29,33 @@ def print_star_table(title: object, rows: object) -> object:
 
 def _build_cli_parser() -> object:
     cli: object = ArgumentParser(description='Star tracker laptop demo')
-    specs: object = ((('--mode',), dict(choices=('fast', 'full'), default='fast')), (('--scale',), dict(type=int, default=None)), (('--seed',), dict(type=int, default=42)), (('--catalog',), dict(choices=('bsc5', 'hipparcos', 'synthetic'), default='bsc5')), (('--max-mag',), dict(type=float, default=6.0)), (('--omega',), dict(type=float, default=0.06)), (('--omega-axis',), dict(choices=('random', 'x', 'y', 'z'), default='y')), (('--exposure',), dict(type=float, default=0.15)), (('--glare',), dict(choices=('none', 'earth', 'sun', 'sun_strong', 'moon'), default='none')), (('--centroid',), dict(choices=('auto', 'classical', 'tetra3', 'cnn'), default='auto', help='Centroid mode: auto (CoG->CNN), classical CoG, tetra3 threshold, or CNN-Hybrid')), (('--simulate-cnn-fallback',), dict(action='store_true', help='Simulate missing CNN checkpoint to verify explicit fallback to CoG')), (('--sky-clutter',), dict(choices=_CLUTTER_CHOICES, default='none')), (('--false-stars',), dict(type=int, default=0)), (('--solver',), dict(choices=('svd', 'quest'), default='svd')), (('--no-show',), dict(action='store_true')), (('--out',), dict(type=Path, default=BASE_DIR.joinpath('data', 'outputs'))), (('--lookup',), dict(action='store_true')), (('--image',), dict(type=Path, default=None)), (('--save-raw',), dict(action='store_true')))
+    specs: object = (
+        (('--mode',), dict(choices=('fast', 'full'), default='fast')),
+        (('--scale',), dict(type=int, default=None)),
+        (('--seed',), dict(type=int, default=42)),
+        (('--catalog',), dict(choices=('bsc5', 'hipparcos', 'synthetic'), default='bsc5')),
+        (('--max-mag',), dict(type=float, default=6.0)),
+        (('--omega',), dict(type=float, default=0.06)),
+        (('--omega-axis',), dict(choices=('random', 'x', 'y', 'z'), default='y')),
+        (('--exposure',), dict(type=float, default=0.15)),
+        (('--glare',), dict(choices=('none', 'earth', 'sun', 'sun_strong', 'moon'), default='none')),
+        (('--centroid',), dict(choices=('auto', 'classical', 'tetra3', 'cnn'), default='auto', help='Centroid mode: auto (CoG->CNN), classical CoG, tetra3 threshold, or CNN-Hybrid')),
+        (('--simulate-cnn-fallback',), dict(action='store_true', help='Simulate missing CNN checkpoint to verify explicit fallback to CoG')),
+        (('--sky-clutter',), dict(choices=_CLUTTER_CHOICES, default='none')),
+        (('--false-stars',), dict(type=int, default=0)),
+        (('--solver',), dict(choices=('svd', 'quest'), default='svd')),
+        (('--no-show',), dict(action='store_true')),
+        (('--out',), dict(type=Path, default=BASE_DIR.joinpath('data', 'outputs'))),
+        (('--lookup',), dict(action='store_true')),
+        (('--image',), dict(type=Path, default=None)),
+        (('--sidecar',), dict(type=Path, default=None, help='Optional ground-truth sidecar JSON path')),
+        (('--focal-mm',), dict(type=float, default=None, help='Calibrated lens focal length in mm (for custom images)')),
+        (('--pixel-um',), dict(type=float, default=None, help='Sensor pixel pitch in um (for custom images)')),
+        (('--k1',), dict(type=float, default=None, help='Optional radial distortion coefficient k1')),
+        (('--k2',), dict(type=float, default=None, help='Optional radial distortion coefficient k2')),
+        (('--angular-tol-arcsec',), dict(type=float, default=None, help='Optional star-pair angular match tolerance (arcsec)')),
+        (('--save-raw',), dict(action='store_true')),
+    )
     for flags, kw in specs:
         cli.add_argument(*flags, **kw)
     return cli
@@ -45,7 +71,34 @@ def main(argv: object=None) -> object:
     print(f"[*] Pixel pitch: {hw_specs['sensor']['pixel_size_um']} um")
     if runner.radiometry.assumption:
         print('[*] Radiometry parameters are simulation assumptions, not a camera datasheet.')
-    req: object = RunRequest(mode=opts.mode, scale=opts.scale, seed=opts.seed, catalog=opts.catalog, max_mag=opts.max_mag, omega=opts.omega, omega_axis=opts.omega_axis, exposure=opts.exposure, glare=opts.glare, sky_clutter=opts.sky_clutter, false_stars=opts.false_stars, solver=opts.solver, centroid_backend=opts.centroid, simulate_missing_weights=bool(opts.simulate_cnn_fallback), image=opts.image, out_dir=opts.out, lookup=bool(opts.lookup), save_png=True, save_raw=opts.save_raw, show=not opts.no_show)
+    req: object = RunRequest(
+        mode=opts.mode,
+        scale=opts.scale,
+        seed=opts.seed,
+        catalog=opts.catalog,
+        max_mag=opts.max_mag,
+        omega=opts.omega,
+        omega_axis=opts.omega_axis,
+        exposure=opts.exposure,
+        glare=opts.glare,
+        sky_clutter=opts.sky_clutter,
+        false_stars=opts.false_stars,
+        solver=opts.solver,
+        centroid_backend=opts.centroid,
+        simulate_missing_weights=bool(opts.simulate_cnn_fallback),
+        image=opts.image,
+        sidecar=opts.sidecar,
+        focal_mm=opts.focal_mm,
+        pixel_um=opts.pixel_um,
+        k1=opts.k1,
+        k2=opts.k2,
+        angular_tol_arcsec=opts.angular_tol_arcsec,
+        out_dir=opts.out,
+        lookup=bool(opts.lookup),
+        save_png=True,
+        save_raw=opts.save_raw,
+        show=not opts.no_show,
+    )
     print('[1/5] Loading catalog + K-vector...\n[2/5] Rendering or loading frame...')
     outcome: object = runner.run(req)
     info: object = outcome.payload

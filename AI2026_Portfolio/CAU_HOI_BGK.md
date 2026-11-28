@@ -113,6 +113,51 @@ Số đo chỉ lấy từ `data/outputs/log_reconciliation_audit.json` và các 
 
 ---
 
+## Phần B — Câu hỏi Phản biện Chặng 2 (Hackathon: Tái lập Pipeline & Kiểm soát Dữ liệu Ảnh)
+
+### 24. Làm sao chứng minh kho mã nguồn tải sạch (`git clone`) chạy lại được độc lập mà không cần môi trường máy của đội?
+
+**Trả lời:** Đội đã đóng gói **đủ 13/13 tệp cốt lõi (`36,03 MB`, mọi tệp `< 19 MB`, không cần Git LFS)** ngay trên nhánh `main` kèm [CHECKSUMS.sha256](CHECKSUMS.sha256) và [REPRODUCIBILITY.md](REPRODUCIBILITY.md): checkpoint `MobileUNet_B10_50.pt`, 6 ảnh bầu trời thật hiệu chuẩn (`Alt40`, `Alt60`, `Zhao nightsky/verification`, `Mount St. Helens`, `NTNU 0006.png`), manifest hiệu chuẩn, config và danh mục `BSC5`/`IAU-CSN.txt`. Đồng thời `requirements.txt` đã đủ `flask`, `Pillow`, `psutil`, `python-pptx`, và tất cả lệnh benchmark (`verify_repro_bundle.py`, `run_clean_repro.py`, `benchmark_3way_centroid_e2e.py --real-only`, `demo_star_tracker.py --focal-mm ...`) đều đã chạy kiểm chứng trực tiếp bên trong một bản `git clone` trống hoàn toàn (`RC=0`, log nguyên văn tại `stage2_evidence/clean_clone_terminal_log.txt`).
+
+### 25. Tại sao trong `src/centroid_cnn.py` dùng `torch.load(..., weights_only=False)`? Nếu tệp `.pt` bị sửa hoặc tải lỗi thì sao?
+
+**Trả lời:** Trọng số công khai `MobileUNet_B10_50.pt` của tác giả Zhao et al. được lưu bằng `torch.save(model)` toàn đối tượng nên PyTorch 2.6+ cần `weights_only=False`. Để loại bỏ rủi ro giải tuần tự pickle từ tệp hỏng hoặc bị chỉnh sửa, đội đã bổ sung **`verify_checkpoint_integrity()` trong `src/centroid_cnn.py`** đối chiếu mã băm **SHA-256** khớp với `CHECKSUMS.sha256` (`e02d7723b832d12c...`) **trước** khi gọi `torch.load`. Nếu sai lệch dù chỉ 1 byte, hệ thống **chặn tuyệt đối `torch.load`** (không giải tuần tự), ném `CHECKPOINT_SHA256_MISMATCH` và tự chuyển về `CoG` kèm cảnh báo/nhật ký `FALLBACK_TO_COG` (đã có test hồi quy riêng trong `tests/test_stage2_repro_and_privacy.py`).
+
+### 26. Khi CNN lỗi hoặc thiếu checkpoint, hệ thống có âm thầm dùng CoG không? Kể cả ở chế độ mặc định `Auto-Router` thì sao?
+
+**Trả lời:** **Tuyệt đối không âm thầm.** Ở cả chế độ chọn trực tiếp `cnn` lẫn chế độ mặc định `auto` (khi `Auto-Router` thử nâng cấp sang CNN mà gặp thiếu/lỗi checkpoint):
+1. `src/centroid_cnn.py` ghi `logging.warning(...)` và lưu nguyên nhân thực (`FileNotFoundError` / `CHECKPOINT_SHA256_MISMATCH`).
+2. `src/pipeline.py` và `src/demo_session.py` phân biệt tường minh `requested_backend` (`cnn`/`auto`) với `executed_backend` (`classical`), gắn `centroid_fallback=True`, `execution_mode_summary="... -> classical [FALLBACK_TO_COG]"` và `fallback_reason`.
+3. `src/execution_log.py` ghi ngay bản ghi có cấu trúc vào `data/outputs/execution_log.jsonl` (`GET /api/execution-log`).
+4. Giao diện Web bật dải cảnh báo màu hổ phách **`FALLBACK → CoG`** nổi bật ngay đầu trang; CLI `demo_star_tracker.py` in rõ `[WARNING] FALLBACK TO CoG TRIGGERED!`. BGK có thể bấm nút 1 chạm **"Thử nghiệm Fallback CNN → CoG"** ngay trên bản trực tuyến để kiểm chứng mà không ảnh hưởng checkpoint thật.
+
+### 27. Trước đây hồ sơ ghi «không lưu ảnh người xem» nhưng `app.py` lại ghi tệp & sidecar vào `data/uploads/`. Đội sửa mâu thuẫn này ra sao?
+
+**Trả lời:** Đội đã sửa **cả mã nguồn lẫn tài liệu** cho khớp 100%:
+- **Tách vùng lưu trữ & chống ghi đè:** Ảnh mẫu kiểm chuẩn chỉ đọc nằm cố định tại `data/uploads/`; mọi ảnh và nhãn `sidecar.json` do người dùng tải lên được cách ly vào `data/user_uploads/<upload_id>/` với `upload_id` là UUID4 16 ký tự tạo bằng `mkdir(exist_ok=False)` → hai tệp trùng tên (kể cả trùng tên ảnh mẫu `mount_st_helens_1.png`) tuyệt đối không ghi đè nhau hay ảnh mẫu.
+- **2 chế độ lưu minh bạch:** Mặc định **`ephemeral` (0 giây lưu đĩa)** xóa vĩnh viễn toàn bộ thư mục tạm trong khối `finally:` ngay sau khi xử lý xong (`verified_gone_on_disk=True`); tùy chọn **`ttl` (tối đa 15 phút / 900s)** tự dọn hết hạn và cho phép người dùng bấm **Xóa ngay** / **Xóa tất cả** qua UI hoặc API (`GET /api/uploads`, `DELETE /api/uploads/<id>`, `DELETE /api/uploads`).
+- **Đồng bộ tài liệu:** Đã sửa đoạn P184 trong `[StarTracker] - Hồ sơ dự án.docx`, mục 11 trong `AI2026_Ho-so-du-an_StarTracker.md`, `README.md`, `REPRODUCIBILITY.md` và công bố ngay trên giao diện tải ảnh.
+
+### 28. Khi nói chế độ `ephemeral` xóa «0 giây lưu đĩa», thế còn các ảnh kết xuất `demo_clean.png`, `demo_input.png`, `demo_output.png`, `demo_result.png` có bị lưu đè ở `data/outputs/` không?
+
+**Trả lời:** **Không hề.** Toàn bộ ảnh xem trước cho lượt tải lên (`/api/run-upload` và `/api/compare-upload`) được kết xuất trong chính thư mục cách ly `data/user_uploads/<upload_id>/`, **không chạm tới** `data/outputs/demo_*.png` dùng chung:
+- Ở chế độ **`ephemeral`**: ảnh xem trước được mã hóa trả trực tiếp dạng inline `data:image/png;base64,...` trong JSON response, sau đó `finally:` xóa trọn thư mục `data/user_uploads/<upload_id>/` → **0 byte ảnh gốc, 0 sidecar, 0 ảnh preview** sót lại trên đĩa.
+- Ở chế độ **`ttl`**: ảnh xem trước phục vụ qua `GET /api/uploads/<upload_id>/preview/<filename>`; ngay khi người dùng bấm Xóa (`DELETE /api/uploads/<id>`) hoặc hết hạn TTL, cả tệp gốc + sidecar + preview đều bị xóa đồng thời và URL preview trả **`404`** tức thì (đã kiểm chứng trên cả `pytest` lẫn VPS live).
+
+### 29. Vì sao không đóng gói luôn 540 khung mô phỏng `hd1024` (~373 MB) vào kho Git?
+
+**Trả lời:** Kho Git được tối ưu ở mức `36,03 MB` cho gói tái lập cốt lõi (13/13 tệp thật + checkpoint, dưới giới hạn 50 MB/tệp của GitHub để `git clone` nhanh trong vài giây không cần Git LFS). Trên bản tải sạch, BGK vẫn chạy được ngay `scripts/run_clean_repro.py`, `scripts/benchmark_3way_centroid_e2e.py --real-only` (6 ảnh trời thật hiệu chuẩn + 20 khung stress Rìa TĐ/mây) và `scripts/benchmark_end_to_end.py --suites real seed42 stress` mà không bị lỗi thiếu dữ liệu; nếu cần tái sinh hàng trăm khung mô phỏng thì chạy `python scripts/generate_sim_dataset.py`.
+
+---
+
+## Kịch bản Demo trực tiếp Chặng 2 (90 giây trước Ban Giám khảo trên `https://startracker.agentlens.dpdns.org`)
+
+1. **Giây 0–25 — Gói tái lập & Checksum SHA-256:** Mở Tab **«Cấu hình, Checksum & Dữ liệu»** → chỉ bảng **13/13 tệp `verified` (`36,03 MB`)** gọi trực tiếp từ `GET /api/repro-status` (gồm checkpoint `MobileUNet_B10_50.pt`, 6 ảnh thật hiệu chuẩn, manifest, catalog BSC5).
+2. **Giây 25–50 — Báo rõ Fallback CNN → CoG:** Bấm nút 1 chạm **«Thử nghiệm Fallback CNN → CoG»** → chỉ ngay dải cảnh báo màu cam **`FALLBACK → CoG`** hiện ở đầu trang kèm lý do `FileNotFoundError` và bản ghi `cnn -> classical [FALLBACK_TO_COG]` vừa xuất hiện trên bảng **Nhật ký Mode Thực thi (`execution_log.jsonl`)**.
+3. **Giây 50–90 — Chống ghi đè & Quyền xóa tức thì:** Mở ngăn **«Tùy chỉnh & Tải ảnh»** → chọn chế độ **Lưu tạm 15 phút (TTL)**, tải lên **2 lần liên tiếp cùng tên tệp `mount_st_helens_1.png`** → chỉ 2 thư mục UUID4 hoàn toàn riêng biệt trong `data/user_uploads/<id>/` (ảnh mẫu `data/uploads/` giữ nguyên SHA-256) → bấm **«Xóa ngay»** / **«Xóa tất cả»** → xác nhận danh sách về **0 ảnh tạm trên đĩa**, preview trả `404` và sự kiện **`DATA_DELETION`** ghi dấu ngay trong Nhật ký kiểm toán.
+
+---
+
 ## Không được nói
 
 1. Chỉ trình bày đúng cấu hình camera demo (APS-C 50 mm trên Laptop) và dữ liệu thật công khai (`ESA tetra3`, `Zhao MT9V022`, `UW LOST Mount St. Helens`, `NTNU 0006.png`).

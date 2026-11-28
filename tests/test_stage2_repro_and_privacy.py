@@ -242,3 +242,52 @@ def test_stage2_evidence_markdown_has_zero_null_bytes(star_tracker_root: Path) -
             raw = fp.read_bytes()
             assert raw.count(0) == 0, f'Found NUL bytes in {rel} (UTF-16 corruption)'
             raw.decode('utf-8')
+
+
+def test_tampered_checkpoint_blocked_before_torch_load_and_falls_back_to_cog(tmp_path: Path, monkeypatch) -> None:
+    import torch
+    from src.camera import demo_camera
+    from src.centroid_cnn import CNNCentroidDetector
+
+    # Create a >1MB fake/corrupted file named MobileUNet_B10_50.pt
+    bad_ckpt = tmp_path / 'MobileUNet_B10_50.pt'
+    bad_ckpt.write_bytes(b'\x00' * (1_100_000) + b'TAMPERED')
+
+    torch_load_called = False
+
+    def _forbid_torch_load(*args, **kwargs):
+        nonlocal torch_load_called
+        torch_load_called = True
+        raise AssertionError('torch.load must NEVER be called when SHA-256 mismatches!')
+
+    monkeypatch.setattr(torch, 'load', _forbid_torch_load)
+
+    cam = demo_camera().downscaled(4)
+    det = CNNCentroidDetector(cam, weights_path=bad_ckpt)
+    img = np.full((128, 128), 64, dtype=np.uint16)
+    det.detect(img)
+
+    assert torch_load_called is False
+    assert det.last_fallback is True
+    assert det.last_backend == 'classical'
+    assert det.last_error and 'CHECKPOINT_SHA256_MISMATCH' in det.last_error
+
+
+def test_cli_accepts_custom_optics_flags_on_real_calibrated_frame(star_tracker_root: Path, tmp_path: Path, capsys) -> None:
+    import demo_star_tracker
+
+    alt60 = star_tracker_root / 'data' / 'tetra3' / '2019-07-29T204726_Alt60_Azi-135_Try1.tiff'
+    assert alt60.is_file()
+    rc = demo_star_tracker.main([
+        '--image', str(alt60),
+        '--focal-mm', '35.291113627236776',
+        '--pixel-um', '6.9',
+        '--k1', '0.10021753616812087',
+        '--centroid', 'auto',
+        '--no-show',
+        '--out', str(tmp_path),
+    ])
+    out = capsys.readouterr().out
+    assert rc == 0, out
+    assert 'Status      : SOLVED' in out
+    assert 'att err' in out

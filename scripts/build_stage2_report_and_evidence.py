@@ -248,7 +248,7 @@ def build_all() -> None:
         '',
         '## 6. Kết quả Bộ kiểm thử tự động (`pytest`) & Smoke Test trực tuyến trên VPS',
         '',
-        f'- **Bộ kiểm thử tự động (`pytest -q`):** `{pytest_summary}` (bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, Fallback CNN→CoG trực tiếp, Fallback Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, và kiểm tra 0 NUL byte UTF-8).',
+        f'- **Bộ kiểm thử tự động (`pytest -q`):** `{pytest_summary}` (bao gồm 8 bài kiểm thử chuyên biệt Chặng 2 trong [`tests/test_stage2_repro_and_privacy.py`](../tests/test_stage2_repro_and_privacy.py): SHA-256 13/13, chặn checkpoint giả mạo trước `torch.load`, Fallback CNN→CoG trực tiếp & Auto-Router trên Zhao, cô lập preview base64 0s `ephemeral`, cô lập preview & trả `404` sau `DELETE` ở `ttl`, CLI `--focal-mm/--pixel-um` trên ảnh thật `Alt60`, và kiểm tra 0 byte NUL UTF-8).',
         '- **Kết quả triển khai & smoke test 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):**',
         '',
         '```text',
@@ -295,8 +295,8 @@ def build_all() -> None:
         '### 2.1. Gói Tái lập Độc lập kèm Checksum SHA-256 (`CHECKSUMS.sha256` & `REPRODUCIBILITY.md`)',
         '',
         f'- **Đóng gói đầy đủ vào kho Git (không cần Git LFS):** Cập nhật `.gitignore` với danh sách ngoại lệ tường minh để theo dõi đúng **13 tệp cốt lõi (`{bundle["total_bundle_mb"]} MB` tổng cộng, tệp lớn nhất `18,57 MB < 100 MB`)** gồm checkpoint `MobileUNet_B10_50.pt`, 6 ảnh bầu trời thật hiệu chuẩn, 2 manifest hiệu chuẩn (`manifest_real_calibrated.json`, `metadata.yaml`), 2 tệp cấu hình quang học/pipeline (`camera_specs.json`, `pipeline_default.json`) và 2 tệp danh mục sao (`BSC5`, `IAU-CSN.txt`). Đồng thời loại trừ tuyệt đối thư mục tạm của người dùng (`data/user_uploads/`).',
-        '- **Kiểm chứng toàn vẹn SHA-256 (`src/repro_bundle.py`, `scripts/verify_repro_bundle.py`, `CHECKSUMS.sha256`):** Bảng checksum định dạng chuẩn GNU `sha256sum`, kiểm tra được bằng cả `python scripts/verify_repro_bundle.py`, `sha256sum -c CHECKSUMS.sha256`, lẫn API `GET /api/repro-status` trên Web trực tuyến.',
-        '- **Tái lập 1 lệnh từ bản clone sạch (`scripts/run_clean_repro.py` & `REPRODUCIBILITY.md`):** Chạy tuần tự 4 pha: (1) Xác thực 13/13 SHA-256 → (2) Chạy tái lập các kịch bản đại diện (`Seed 42 CoG`, `ESA Alt60 CoG`, `Zhao nightsky Auto→CNN`, `Mount St. Helens Auto→CNN`) → (3) Kiểm chứng cơ chế Fallback `CNN → CoG` → (4) Kiểm chứng chống ghi đè & xóa sạch dữ liệu tải lên.',
+        '- **Kiểm chứng toàn vẹn SHA-256 (`src/repro_bundle.py`, `scripts/verify_repro_bundle.py`, `CHECKSUMS.sha256` & `src/centroid_cnn.py`):** Bảng checksum định dạng chuẩn GNU `sha256sum`, kiểm tra được bằng cả `python scripts/verify_repro_bundle.py`, `sha256sum -c CHECKSUMS.sha256`, API `GET /api/repro-status`, và đặc biệt **xác thực SHA-256 ngay trong runtime trước khi `torch.load(..., weights_only=False)`** (chặn tuyệt đối checkpoint hỏng/bị sửa 1 byte và kích hoạt fallback CoG an toàn).',
+        '- **Tái lập 1 lệnh & CLI đủ tham số quang học (`scripts/run_clean_repro.py`, `demo_star_tracker.py`, `REPRODUCIBILITY.md`):** Hỗ trợ đầy đủ cờ CLI `--focal-mm`, `--pixel-um`, `--k1`, `--k2`, `--sidecar`, `--simulate-cnn-fallback`; lệnh benchmark `benchmark_3way_centroid_e2e.py --real-only` và `run_clean_repro.py` chạy thông suốt từ bản `git clone` trống.',
         '',
         '### 2.2. Minh bạch Chế độ Thực thi & Cảnh báo Fallback CoG (`src/execution_log.py`, `src/demo_session.py`, `demo_star_tracker.py`)',
         '',
@@ -310,9 +310,9 @@ def build_all() -> None:
         '|---|---|---|',
         '| **Vị trí lưu ảnh tải lên** | Ghi phẳng vào `data/uploads/<safe_name>` (chung thư mục ảnh mẫu) | Cách ly hoàn toàn vào **`data/user_uploads/<upload_id>/`** (UUID4 16 ký tự hex, tách khỏi ảnh mẫu đọc-chỉ `data/uploads/`) |',
         '| **Chống ghi đè (Overlap/Collision)** | Ghi đè trực tiếp khi trùng tên (có thể phá hủy `mount_st_helens_1.png`) | **0% nguy cơ ghi đè**: mỗi lượt tải tạo thư mục `upload_id` riêng (`mkdir(exist_ok=False)`) |',
-        '| **Thời gian lưu mặc định** | Lưu vĩnh viễn trên đĩa | **`retention_mode=ephemeral` (mặc định): 0 giây lưu đĩa** — xóa vĩnh viễn ảnh + sidecar trong khối `finally:` ngay sau khi xử lý xong, xác minh `verified_gone_on_disk=True` |',
-        '| **Chế độ lưu tạm tùy chọn** | Không có | **`retention_mode=ttl`: lưu tạm tối đa 15 phút (`900 s`)**, tự động dọn khi hết hạn (`cleanup_expired_uploads`) |',
-        '| **Quyền kiểm tra & Xóa tức thì** | Không có API hoặc nút xóa | Giao diện quản lý ảnh tạm (Ngăn Tải ảnh & Tab Cấu hình) + 3 REST API: `GET /api/uploads`, `DELETE /api/uploads/<upload_id>`, `DELETE /api/uploads` |',
+        '| **Thời gian lưu mặc định** | Lưu vĩnh viễn trên đĩa & ghi đè `demo_*.png` | **`retention_mode=ephemeral` (mặc định): 0 giây / 0 byte lưu đĩa** — preview trả inline `data:image/png;base64`, xóa vĩnh viễn ảnh + sidecar + preview trong `finally:` (`verified_gone_on_disk=True`) |',
+        '| **Chế độ lưu tạm tùy chọn** | Không có | **`retention_mode=ttl`: lưu tạm tối đa 15 phút (`900 s`)**, cách ly cả ảnh xem trước tại `/api/uploads/<id>/preview/<name>`, tự động dọn khi hết hạn |',
+        '| **Quyền kiểm tra & Xóa tức thì** | Không có API hoặc nút xóa | Giao diện quản lý ảnh tạm + 4 REST API (`GET /api/uploads`, `GET /api/uploads/<id>/preview/<name>`, `DELETE /api/uploads/<id>`, `DELETE /api/uploads` — sau xóa preview trả `404` ngay) |',
         '| **Nhất quán với Hồ sơ dự án** | Mâu thuẫn (*"không lưu ảnh người xem"*) | Đã cập nhật chính xác P184 trong `[StarTracker] - Hồ sơ dự án.docx`, `README.md`, `REPRODUCIBILITY.md` và công bố trực tiếp ngay tại khung tải ảnh trên Web |',
         '',
         '---',
@@ -353,7 +353,7 @@ def build_all() -> None:
         '',
         '### 3.2. Kết quả Kiểm thử Tự động & Kiểm chứng Trực tuyến 24/7',
         '',
-        f'- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`{pytest_summary}`** (0 lỗi). 6 ca kiểm thử chuyên biệt trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL (cả chế độ `cnn` lẫn `auto`), (3) `ephemeral` trả preview inline base64, xóa sạch 0s cả ảnh gốc/sidecar/preview và không ghi đè ảnh mẫu `mount_st_helens_1.png`, (4) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, preview trả `200` rồi trả `404` ngay sau `DELETE`, tự dọn khi hết TTL & ghi `DATA_DELETION`, (5) xác minh 0 byte NUL UTF-8 trên toàn bộ báo cáo và minh chứng.',
+        f'- **Kiểm thử tự động toàn dự án (`pytest -q`):** **`{pytest_summary}`** (0 lỗi). 8 ca kiểm thử chuyên biệt trong `tests/test_stage2_repro_and_privacy.py` xác minh toàn bộ: (1) 13/13 SHA-256, (2) chặn checkpoint bị sửa 1 byte trước `torch.load` (`CHECKPOINT_SHA256_MISMATCH` → Fallback CoG), (3) `simulate_missing_weights=True` → `FALLBACK_TO_COG` + log JSONL (cả `cnn` lẫn `auto`), (4) `ephemeral` trả preview inline base64, xóa sạch 0s ảnh gốc/sidecar/preview và giữ nguyên `mount_st_helens_1.png`, (5) tải 2 ảnh trùng tên chế độ `ttl` sinh 2 UUID riêng, preview trả `200` rồi `404` ngay sau `DELETE`, tự dọn TTL & ghi `DATA_DELETION`, (6) CLI `demo_star_tracker.py --focal-mm --pixel-um --k1` giải đúng ảnh thật `Alt60`, (7) xác minh 0 byte NUL UTF-8 trên toàn bộ báo cáo và minh chứng.',
         '- **Triển khai trực tuyến 24/7 trên VPS ARM64 (`https://startracker.agentlens.dpdns.org`):** Đã đồng bộ đủ 13/13 tệp tái lập và xác minh toàn bộ endpoint `/api/repro-status`, `/api/execution-log`, `/api/uploads`, `DELETE /api/uploads/<id>` và kịch bản Fallback trực tiếp trên trình duyệt Chrome (0 lỗi console).',
         '',
         '### 3.3. Hình ảnh Minh chứng Trực tiếp trên Web UI (`https://startracker.agentlens.dpdns.org`)',
@@ -630,7 +630,7 @@ def build_all() -> None:
 
     add_h2('4.2. Kiểm thử tự động (pytest) & Bằng chứng chụp trực tiếp trên VPS 24/7')
     add_p(
-        f'Bộ kiểm thử tự động pytest đạt {pytest_summary} (0 lỗi, bao gồm 6 bài kiểm thử chuyên biệt Chặng 2 tại tests/test_stage2_repro_and_privacy.py kiểm chứng SHA-256, Fallback CNN & Auto-Router, cô lập preview inline 0s, trả 404 sau DELETE và sạch 0 byte NUL UTF-8). '
+        f'Bộ kiểm thử tự động pytest đạt {pytest_summary} (0 lỗi, bao gồm 8 bài kiểm thử chuyên biệt Chặng 2 tại tests/test_stage2_repro_and_privacy.py kiểm chứng SHA-256 13/13, chặn checkpoint giả mạo trước torch.load, Fallback CNN & Auto-Router, cô lập preview inline 0s, trả 404 sau DELETE, CLI quang học tùy chỉnh và sạch 0 byte NUL UTF-8). '
         'Hệ thống trực tuyến 24/7 tại https://startracker.agentlens.dpdns.org đã được cập nhật, kiểm tra smoke test 100% PASS và chụp minh chứng giao diện trực tiếp qua Chrome DevTools (0 lỗi console):'
     )
 
