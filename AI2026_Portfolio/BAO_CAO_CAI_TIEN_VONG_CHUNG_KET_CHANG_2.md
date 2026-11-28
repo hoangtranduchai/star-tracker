@@ -3,7 +3,7 @@
 **Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ nhân tạo năm 2026 (Bảng C)**  
 **Đội thi:** `DUT.StarTracker` (`AI26C0083`) — Trường Đại học Bách khoa, Đại học Đà Nẵng (Khoa Công nghệ thông tin)  
 **Đề tài:** *Star Tracker — Hệ thống định hướng camera bầu trời sao lai CoG | CNN (Demo nghiên cứu trên PC)*  
-**Ngày nộp:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `2ce05be`)  
+**Ngày nộp:** `28/11/2026` · **Phiên bản mã nguồn:** `v1.2.0-stage2` (nhánh `main`, commit nền `3c6d5a6`)  
 **Đề cải tiến Phiên bản 1:** *1. Tái lập pipeline và kiểm soát dữ liệu ảnh*
 
 ---

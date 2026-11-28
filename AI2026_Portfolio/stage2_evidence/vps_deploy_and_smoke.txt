@@ -1,54 +1,50 @@
 # DUT.StarTracker Stage 2 VPS Deploy & Live HTTPS Verification Log
-# Timestamp (UTC): 2026-11-28T02:18:21Z
+# Timestamp (UTC): 2026-11-28T03:50:25Z
+# Source Commit: 3c6d5a6 (main, v1.2.0-stage2)
 
 === [1/2] ARM64 VPS DOCKER DEPLOY & INTERNAL SMOKE ===
-[1/4] Packed application source bundle (520.7 KB compressed).
-[2/4] Synced code to /opt/star-tracker/app in 11.05s.
-[3/4] Built star-tracker:latest & started container star-tracker in 2.82s (sha256:0c3b8).
-[4/4] Running remote HTTP & Docker-network smoke tests...
-[PASS] GET /api/health -> 200 in 0.09s: {'ok': True, 'service': 'star-tracker'}
-[PASS] GET / -> 200 (75,439 bytes)
-[PASS] GET /api/frames -> 200 (17 staged frames)
-[PASS] GET /api/sky-catalog -> 200 (source=BSC5+filt, synthetic=False, n=5023, named=462)
-[PASS] POST /api/run (seed=42 classical) -> SOLVED in 0.78s (n_matched=36, att_err=0.45")
-       GET /output/demo_result.png -> 200 (343,899 bytes)
-       GET /output/demo_input.png -> 200 (97,880 bytes)
-       GET /output/demo_output.png -> 200 (170,300 bytes)
-       GET /output/demo_clean.png -> 200 (21,711 bytes)
-[PASS] POST /api/run (mount_st_helens_1.png CNN) -> SOLVED in 5.20s (detector=cnn_zhao2024, fallback=False, n_matched=72, RA=20h 41m 58.20s, Dec=+35d 59m 27.9s)
-[PASS] POST /api/run (tetra3 Alt60 real frame) -> SOLVED in 0.36s (n_matched=9)
-[PASS] POST /api/run (Zhao nightsky Auto-Router) -> SOLVED in 2.12s (selected=cnn)
-[PASS] POST /api/compare (Zhao nightsky) in 2.67s -> CoG=LOST, tetra3=LOST, CNN-Hybrid=SOLVED
-[PASS] POST /api/compare (Mount St. Helens) in 7.90s -> CoG=SOLVED, tetra3=LOST, CNN-Hybrid=SOLVED (72/77)
-[PASS] GET /api/benchmark-summary -> available=True stress=True device=NVIDIA GeForce RTX 5070 Laptop GPU
-[PASS] GET /api/repro-status -> ok=True (13/13 verified, 36.03 MB)
-[PASS] POST /api/run (simulate_missing_weights=True) -> cnn -> classical [FALLBACK_TO_COG] reason=FileNotFoundError: missing public weights: /app/third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
-[PASS] GET /api/execution-log -> 10 entries (fallback logged)
-[PASS] GET /api/uploads -> default=ephemeral, active=0
+[1/4] Packed LF-normalized 3c6d5a6 app bundle (528.8 KB) + runtime_data LF delta (1,339.7 KB).
+[2/4] Synced code to /opt/star-tracker/app & LF data delta to /opt/star-tracker/runtime_data in 5.97s (staged data/sim_dataset/ preserved).
+[3/4] Built star-tracker:latest (sha256:a893244a7708) & started container star-tracker in 4s.
+[4/4] Running internal container & Docker-network checks...
+[PASS] docker exec star-tracker python scripts/verify_repro_bundle.py -> verified=13/13 (36.02 MB) | checkpoint=verified | ok=True
+[PASS] Local container health (http://127.0.0.1:8765/api/health) -> {"ok":true,"service":"star-tracker"}
 [PASS] Docker DNS on agentlens_agentlens (http://star-tracker:8765/api/health) -> {"ok":true,"service":"star-tracker"}
 === Running Containers on VPS ===
 NAMES                     STATUS                  IMAGE                                   NETWORKS              PORTS
-star-tracker              Up 27 seconds           star-tracker:latest                     agentlens_agentlens   127.0.0.1:8765->8765/tcp
+star-tracker              Up 2 seconds            star-tracker:latest                     agentlens_agentlens   127.0.0.1:8765->8765/tcp
 lunar-navigator           Up 13 days              nginx:alpine                            agentlens_agentlens   127.0.0.1:8088->80/tcp
 multi-agent-blog          Up 3 months (healthy)   multi-agent-blog:latest                 blog-writer_default   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
-agentlens-cloudflared-1   Up 3 months             cloudflare/cloudflared:latest                                 
+agentlens-cloudflared-1   Up 3 months             cloudflare/cloudflared:latest
 agentlens-gateway-1       Up 3 months             caddy:2.10-alpine                       agentlens_agentlens   80/tcp, 443/tcp, 2019/tcp, 443/udp
 agentlens-backend-1       Up 3 months (healthy)   agentlens/backend:dev                   agentlens_agentlens   8000/tcp
 agentlens-frontend-1      Up 3 months (healthy)   agentlens/frontend:prod-20260825-1046   agentlens_agentlens   3000/tcp
 agentlens-worker-1        Up 3 months (healthy)   agentlens/backend:dev                   agentlens_agentlens   8000/tcp
 agentlens-postgres-1      Up 3 months (healthy)   pgvector/pgvector:pg16                  agentlens_agentlens   5432/tcp
-=== DEPLOY COMPLETE in 43.94s total ===
-[1/4] Packed application source bundle (520.7 KB compressed).
+=== DEPLOY COMPLETE in 13.47s total ===
 
 === [2/2] PUBLIC HTTPS VERIFICATION (https://startracker.agentlens.dpdns.org) ===
-[PASS] Raw Evidence MD UTF-8    -> HTTP 200 (35,502 bytes) | utf8=OK nul_bytes=0
-[PASS] Raw Report PDF           -> HTTP 200 (1,215,184 bytes)
-[PASS] Raw Checksums            -> HTTP 200 (1,578 bytes)
-[PASS] Raw Diagram PNG          -> HTTP 200 (651,247 bytes)
-[PASS] Live /api/repro-status -> 13/13 SHA-256 verified, preview_isolation=True, session_isolation=True, error_rollback=True, sweeper=60s
-[PASS] Live Auto-Router fallback -> auto -> classical [FALLBACK_TO_COG] | status=LOST
-[PASS] Live ephemeral upload -> inline base64 preview (518 chars), deleted_immediately=True, verified_gone=True
+[PASS] GET /api/health -> 200 in 0.85s: {'ok': True, 'service': 'star-tracker'}
+[PASS] GET / -> 200 (75,763 bytes) | st_sid issued (HttpOnly, SameSite=Lax, distinct sessions)
+[PASS] GET /api/frames -> 200 (17 staged frames)
+[PASS] GET /api/sky-catalog -> 200 (source=BSC5+filt, synthetic=False, n=5023, named=462)
+[PASS] GET /api/repro-status -> ok=True (13/13 verified, 36.02 MB, checkpoint=verified, preview_isolation=True, session_isolation=True, error_rollback=True, sweeper=60s)
+[PASS] GET /static/app.js -> 200 (140,504 bytes) | SHA-256=514d9ed372bb5ac0... (100% match with 3c6d5a6)
+[PASS] GET /static/app.css -> 200 (68,830 bytes) | SHA-256=f48dec48276eff5f... (100% match with 3c6d5a6)
+[PASS] GET /output/execution_log.jsonl -> HTTP 404 (raw JSONL download blocked)
+[PASS] GET /output/..%2f..%2fapp.py -> HTTP 400 (blocked safely, never 500)
+[PASS] POST /api/run (seed=42 classical) -> SOLVED in 1.39s (n_matched=36, att_err=0.45")
+[PASS] POST /api/run (tetra3 Alt60 real frame) -> SOLVED in 0.55s (n_matched=9)
+[PASS] POST /api/run (Zhao nightsky Auto-Router) -> SOLVED in 2.73s (selected=cnn, n_matched=8)
+[PASS] POST /api/run (cnn simulate_missing_weights=True) -> cnn -> classical [FALLBACK_TO_COG] | checkpoint_status=simulated_missing | reason=FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
+[PASS] POST /api/run (Zhao auto simulate_missing_weights=True) -> auto -> classical [FALLBACK_TO_COG] | status=LOST | reason=FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
+[PASS] Live ephemeral upload (581bf38d62db4c30) -> inline base64 preview (890 chars), deleted_immediately=True, verified_gone=True | Browser A log sees own entries (2), Browser B log leak=0
 [PASS] Live TTL error rollback -> HTTP 400 rolled back cleanly (0 orphan uploads on disk)
-[PASS] Live session isolation (7501f86293944c85) -> Browser A preview 200 | Browser B list=0 & preview/DELETE 404 | Browser A DELETE verified_gone=True -> preview 404
+[PASS] Live session isolation (7e1451430ca34435) -> Browser A preview 200 | Browser B list=0 & preview/DELETE 404 | Browser A DELETE verified_gone=True -> preview 404
+[PASS] Live cookieless anti-IDOR (ab06f4888eb44588) -> auto-minted st_sid (session_scoped=True) | Browser B preview/DELETE 404 | Owner DELETE verified_gone=True -> preview 404 | active=0
+[PASS] Raw Evidence MD UTF-8    -> HTTP 200 (48,492 bytes) | utf8=OK nul_bytes=0
+[PASS] Raw Report PDF           -> HTTP 200 (1,440,866 bytes)
+[PASS] Raw Checksums            -> HTTP 200 (1,578 bytes) | utf8=OK nul_bytes=0
+[PASS] Raw Diagram PNG          -> HTTP 200 (660,556 bytes)
 
 [ALL LIVE PUBLIC HTTPS CHECKS PASSED 100%]
