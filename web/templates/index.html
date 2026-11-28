@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=35" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=36" />
   <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=34" />
 </head>
 <body>
@@ -158,12 +158,24 @@
           <rect x="3" y="4" width="18" height="16" rx="2" />
           <circle cx="12" cy="12" r="3.5" />
         </svg>
-        <span>Cấu hình Quang học &amp; Thuật toán</span>
+        <span>Cấu hình, Checksum &amp; Dữ liệu</span>
       </button>
     </nav>
 
     <div id="status" class="status-banner" title="Trạng thái xử lý định hướng sao">
       Sẵn sàng quan sát · Chọn một kịch bản phía trên hoặc bấm <strong>Giải tư thế</strong> để khóa hướng camera sao.
+    </div>
+  </div>
+
+  <!-- Explicit CoG Fallback Warning Strip (Visible whenever CNN falls back to classical CoG) -->
+  <div id="fallback-alert-bar" class="fallback-alert-bar" role="alert" hidden>
+    <div class="fallback-alert-content">
+      <span class="fallback-badge">FALLBACK → CoG</span>
+      <span id="fallback-alert-text" class="fallback-alert-text"></span>
+    </div>
+    <div class="fallback-alert-actions">
+      <button type="button" id="btn-goto-audit-log" class="fallback-action-btn">Xem nhật ký thực thi</button>
+      <button type="button" id="btn-dismiss-fallback" class="fallback-dismiss-btn" title="Ẩn thông báo này">Ẩn</button>
     </div>
   </div>
 
@@ -371,6 +383,10 @@
             <input type="file" id="cmp-upload-file" class="cmp-upload-input" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,.npy" />
             <input type="number" id="cmp-upload-focal" class="cmp-num-input" step="any" min="0.1" placeholder="Tiêu cự mm (tùy chọn)" />
             <input type="number" id="cmp-upload-pixel" class="cmp-num-input" step="any" min="0.1" placeholder="Pixel µm (tùy chọn)" />
+            <select id="cmp-upload-retention" class="cmp-select-input" title="Chính sách lưu ảnh tạm thời trong thư mục UUID riêng data/user_uploads/<id>/">
+              <option value="ephemeral" selected>Xóa ngay sau xử lý (0s)</option>
+              <option value="ttl">Lưu tạm 15 phút (TTL · Xóa tay)</option>
+            </select>
             <button type="button" id="btn-cmp-upload" class="exp-pill" title="Tải tệp ảnh lên và chạy đồng thời CoG, tetra3, CNN-Hybrid">Tải ảnh &amp; So sánh 3pp</button>
             <button type="button" id="btn-cmp-export-json" class="exp-pill" title="Tải xuống tệp JSON kết quả đối chiếu hiện tại để kiểm chứng">Xuất JSON</button>
           </div>
@@ -776,8 +792,86 @@
             <ul class="guideline-list">
               <li><strong>Đối chiếu song song 2D &amp; 3D:</strong> Rê chuột lên bất kỳ ngôi sao nào trên khung ảnh cảm biến để xem thông số cấp sáng và làm sáng đồng thời ngôi sao đó trên thiên cầu 3D.</li>
               <li><strong>Góc nhìn Cảm biến 1:1:</strong> Nhấn nút <em>Góc nhìn Cảm biến 1:1</em> bên dưới khung 3D để đặt camera ngay trong ống kính vệ tinh, so khớp từng ngôi sao với ảnh chụp thực tế.</li>
-              <li><strong>Thử nghiệm ảnh chụp riêng:</strong> Bấm <em>Tùy chỉnh &amp; Tải ảnh</em> ở góc trên bên phải để tải lên ảnh TIFF/PNG/JPEG và khai báo tiêu cự thực (mm) cùng cỡ điểm ảnh (µm).</li>
+              <li><strong>Thử nghiệm ảnh chụp riêng:</strong> Bấm <em>Tùy chỉnh &amp; Tải ảnh</em> ở góc trên bên phải để tải lên ảnh TIFF/PNG/JPEG, chọn chế độ xóa ngay (0s) hoặc lưu tạm 15 phút (TTL) và xóa dữ liệu bất kỳ lúc nào.</li>
             </ul>
+          </div>
+        </div>
+
+        <!-- Stage 2 Card A: Standalone Reproducibility Bundle & SHA-256 Checksum Verification -->
+        <div class="glass-card repro-audit-card" id="repro-bundle-card">
+          <div class="card-head">
+            <div>
+              <h3>Gói Tái lập Độc lập &amp; Kiểm chứng Checksum SHA-256 (<code>CHECKSUMS.sha256</code>)</h3>
+              <p class="card-desc">Gói tái lập đóng gói sẵn checkpoint <code>MobileUNet_B10_50.pt</code>, 6 ảnh trời thực hiệu chuẩn, danh mục BSC5/IAU và tệp cấu hình quang học để chạy lại hoàn toàn từ bản tải sạch.</p>
+            </div>
+            <div class="repro-head-actions">
+              <span class="glass-chip" id="repro-status-chip">Đang kiểm tra SHA-256...</span>
+              <button type="button" id="btn-repro-refresh" class="exp-pill" title="Kiểm chứng lại SHA-256 của toàn bộ 13 tệp tái lập">Kiểm tra SHA-256</button>
+              <button type="button" id="btn-test-fallback" class="exp-pill is-warn-pill" title="Mô phỏng thiếu checkpoint MobileUNet để kiểm chứng cơ chế báo Fallback → CoG minh bạch">Thử nghiệm Fallback CNN → CoG</button>
+            </div>
+          </div>
+
+          <div class="repro-cmd-box">
+            <span class="repro-cmd-label">Lệnh chạy tái lập từ bản clone sạch:</span>
+            <code>git clone https://github.com/hoangtranduchai/star-tracker.git &amp;&amp; cd star-tracker &amp;&amp; python scripts/verify_repro_bundle.py &amp;&amp; python scripts/run_clean_repro.py</code>
+          </div>
+
+          <div class="table-responsive">
+            <table id="repro-bundle-table" class="data-table repro-table">
+              <thead>
+                <tr>
+                  <th>Nhóm</th>
+                  <th>Đường dẫn tệp (tương đối gốc repo)</th>
+                  <th>Kích thước</th>
+                  <th>SHA-256 (16 ký tự đầu)</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody id="repro-bundle-tbody">
+                <tr><td colspan="5" class="empty">Đang xác thực gói tái lập...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Stage 2 Card B: Execution Mode Audit Log & Temporary Image Control -->
+        <div class="glass-card repro-audit-card" id="audit-log-card">
+          <div class="card-head">
+            <div>
+              <h3>Nhật ký Mode Thực thi, Fallback CoG &amp; Kiểm soát Dữ liệu Ảnh (<code>execution_log.jsonl</code>)</h3>
+              <p class="card-desc">Ghi nhận mọi lượt chạy pipeline (yêu cầu vs thực thi, trạng thái fallback CoG) và bằng chứng xóa ảnh người dùng khỏi đĩa (<code>data/user_uploads/&lt;upload_id&gt;/</code>).</p>
+            </div>
+            <div class="repro-head-actions">
+              <button type="button" id="btn-exec-log-refresh" class="exp-pill" title="Tải lại nhật ký thực thi và danh sách ảnh tạm">Làm mới nhật ký</button>
+              <button type="button" id="btn-specs-clear-uploads" class="exp-pill is-danger-pill" title="Xóa vĩnh viễn toàn bộ ảnh người dùng đang lưu tạm trong data/user_uploads/">Xóa toàn bộ ảnh tạm</button>
+            </div>
+          </div>
+
+          <div class="specs-storage-panel">
+            <div class="specs-storage-summary" id="specs-storage-summary">
+              <strong>Nơi lưu ảnh người dùng:</strong> <code>data/user_uploads/&lt;uuid4&gt;/</code> (chống ghi đè 100%, tách biệt khỏi ảnh mẫu đọc-chỉ <code>data/uploads/</code>) · Mặc định <strong>xóa ngay (0s)</strong> trong khối <code>finally</code>; chế độ TTL giữ tối đa <strong>15 phút</strong> và có nút Xóa ngay.
+            </div>
+            <div id="specs-uploads-list" class="upload-mgr-list is-compact">
+              <div class="upload-mgr-empty">Hiện không có ảnh người dùng nào lưu trên đĩa (0 tệp tạm).</div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table id="exec-log-table" class="data-table audit-table">
+              <thead>
+                <tr>
+                  <th>Thời điểm (UTC)</th>
+                  <th>Sự kiện / Endpoint</th>
+                  <th>Nguồn ảnh</th>
+                  <th>Mode (Yêu cầu → Thực thi)</th>
+                  <th>Kết quả / Xóa đĩa</th>
+                  <th>Ghi chú / Lý do Fallback</th>
+                </tr>
+              </thead>
+              <tbody id="exec-log-tbody">
+                <tr><td colspan="6" class="empty">Đang tải nhật ký thực thi...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -986,9 +1080,35 @@
               </label>
             </div>
             <p id="local-file-hint" class="field-hint">Ưu tiên ảnh TIFF/PNG không nén. Với ảnh chụp từ máy ảnh riêng, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Quang học bên dưới.</p>
-            <button type="button" id="btn-upload" class="btn btn-secondary btn-block" style="margin-top: 0.45rem;">
+            <div class="field-group" style="margin-top: 0.45rem;">
+              <label>Chính sách lưu ảnh tải lên
+                <select id="upload-retention-mode">
+                  <option value="ephemeral" selected>Xóa vĩnh viễn ngay sau xử lý (0s lưu đĩa — mặc định)</option>
+                  <option value="ttl">Lưu tạm 15 phút (TTL 900s, tự dọn / bấm Xóa tay)</option>
+                </select>
+              </label>
+            </div>
+            <button type="button" id="btn-upload" class="btn btn-secondary btn-block" style="margin-top: 0.4rem;">
               <span>Tải ảnh lên &amp; Giải tư thế</span>
             </button>
+
+            <div class="privacy-policy-box">
+              <div class="privacy-policy-title">Kiểm soát dữ liệu ảnh &amp; Quyền xóa</div>
+              <p class="privacy-policy-text">
+                Ảnh tải lên và nhãn JSON được cách ly vào thư mục UUID riêng <code>data/user_uploads/&lt;id&gt;/</code> (tuyệt đối không ghi đè tệp trùng tên hay ảnh mẫu <code>data/uploads/</code>). Chế độ mặc định xóa sạch ngay trong khối <code>finally</code> sau khi trả kết quả.
+              </p>
+              <div class="upload-mgr-bar">
+                <span class="count-pill" id="upload-active-count">0 ảnh tạm trên đĩa</span>
+                <div class="upload-mgr-btns">
+                  <button type="button" id="btn-uploads-refresh" class="mini-action-btn" title="Cập nhật danh sách ảnh tạm">Làm mới</button>
+                  <button type="button" id="btn-uploads-clear-all" class="mini-action-btn is-danger" title="Xóa vĩnh viễn mọi ảnh tạm đang lưu">Xóa tất cả</button>
+                </div>
+              </div>
+              <div id="upload-delete-status" class="upload-delete-status" hidden></div>
+              <div id="upload-manager-list" class="upload-mgr-list">
+                <div class="upload-mgr-empty">Chưa có ảnh người dùng nào đang lưu trên máy chủ.</div>
+              </div>
+            </div>
           </div>
         </details>
 
@@ -1181,6 +1301,6 @@
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
   <script src="{{ url_for('static', filename='orbit3d.js') }}?v=34"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=35"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=36"></script>
 </body>
 </html>

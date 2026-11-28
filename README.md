@@ -66,6 +66,23 @@ Chi tiết đầy đủ nằm tại `data/outputs/benchmark_3way_comparison.json
   - **Mưa hạt Proton vùng SAA (`0–100` vệt xiên/khung):** `CoG` & `Auto` giữ **`100,0%`** (`2,2″`, `0% FL`) ở cả `100` vệt/khung (khi `tetra3` giảm còn `0,0%` từ `50` vệt).
   - **Gói Telemetry 32 byte bảo vệ bằng `CRC-16-CCITT` (`src/telemetry.py`):** phát hiện **`10.512 / 10.512` (`100,0000%`)** lỗi lật bit SEU (`512` 1-bit vét cạn + `5.000` 2-bit + `5.000` burst 4–16 bit).
 
+## Tái lập Độc lập, Minh bạch Fallback CoG & Kiểm soát Dữ liệu Ảnh (Chặng 2)
+
+Chi tiết đầy đủ hướng dẫn chạy từ bản tải sạch nằm trong [REPRODUCIBILITY.md](REPRODUCIBILITY.md) và bảng mã băm [CHECKSUMS.sha256](CHECKSUMS.sha256).
+
+- **Gói tái lập độc lập đóng gói sẵn (13/13 tệp, `36,03 MB`, kiểm chứng SHA-256):** Bao gồm checkpoint `MobileUNet_B10_50.pt`, toàn bộ 6 ảnh bầu trời thật hiệu chuẩn (`Alt40`, `Alt60`, `nightsky_june16_2021.npy`, `verification_img.npy`, `mount_st_helens_1.png`, `0006.png`), `manifest_real_calibrated.json`, `metadata.yaml`, `config/camera_specs.json`, `config/pipeline_default.json`, `data/catalogs/BSC5` và `IAU-CSN.txt`.
+- **Chạy kiểm chứng 1 lệnh từ bản clone sạch:**
+  ```text
+  python scripts/verify_repro_bundle.py
+  python scripts/run_clean_repro.py
+  ```
+- **Minh bạch chế độ thực thi & Fallback CoG:** Mọi lượt chạy qua CLI (`demo_star_tracker.py --centroid ... [--simulate-cnn-fallback]`) và Web API (`/api/run`, `/api/compare`, `/api/run-upload`) đều ghi nhật ký cấu trúc JSONL tại `data/outputs/execution_log.jsonl` (`GET /api/execution-log`) phân biệt rõ `requested_backend` vs `executed_backend`, `fallback_triggered`, `fallback_reason` và hiển thị dải cảnh báo `FALLBACK → CoG` trực tiếp trên giao diện khi CNN phải chuyển về CoG.
+- **Kiểm soát lưu ảnh người dùng, chống ghi đè & quyền xóa (`src/upload_store.py`):**
+  - Ảnh mẫu đọc-chỉ nằm cố định tại `data/uploads/` và **không bao giờ bị ghi đè hay xóa** khi người dùng tải ảnh lên.
+  - Ảnh người dùng + sidecar JSON tải lên qua Web được cách ly vào thư mục UUID4 16 ký tự độc lập tại **`data/user_uploads/<upload_id>/`** (hai tệp trùng tên, kể cả `mount_st_helens_1.png`, luôn nhận hai thư mục khác nhau — **0% nguy cơ ghi đè**).
+  - **Chế độ mặc định (`retention_mode=ephemeral`):** xóa vĩnh viễn ảnh và sidecar ngay trong khối `finally:` sau khi giải tư thế xong (**0 giây lưu đĩa**, xác minh `verified_gone_on_disk=True`).
+  - **Chế độ lưu tạm tùy chọn (`retention_mode=ttl`):** giữ tạm tối đa **15 phút (`900 s`)**, tự động dọn khi hết hạn, đồng thời người dùng có thể kiểm tra và xóa tức thì từng tệp hoặc toàn bộ qua giao diện hoặc API (`GET /api/uploads`, `DELETE /api/uploads/<upload_id>`, `DELETE /api/uploads`), mọi thao tác xóa đều ghi dấu `DATA_DELETION` vào `execution_log.jsonl`.
+
 ## Chạy & Tái lập kiểm thử
 
 ```text

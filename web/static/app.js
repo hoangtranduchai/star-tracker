@@ -168,6 +168,28 @@
   const cmpBenchDevice = document.getElementById("cmp-bench-device");
   const cmpBenchScope = document.getElementById("cmp-bench-scope");
 
+  // Stage 2: Explicit Fallback Alert, Repro Checksums, Audit Log & Upload Control
+  const fallbackAlertBar = document.getElementById("fallback-alert-bar");
+  const fallbackAlertText = document.getElementById("fallback-alert-text");
+  const btnGotoAuditLog = document.getElementById("btn-goto-audit-log");
+  const btnDismissFallback = document.getElementById("btn-dismiss-fallback");
+  const uploadRetentionMode = document.getElementById("upload-retention-mode");
+  const cmpUploadRetention = document.getElementById("cmp-upload-retention");
+  const uploadActiveCount = document.getElementById("upload-active-count");
+  const uploadDeleteStatus = document.getElementById("upload-delete-status");
+  const uploadManagerList = document.getElementById("upload-manager-list");
+  const btnUploadsRefresh = document.getElementById("btn-uploads-refresh");
+  const btnUploadsClearAll = document.getElementById("btn-uploads-clear-all");
+  const reproStatusChip = document.getElementById("repro-status-chip");
+  const reproBundleTbody = document.getElementById("repro-bundle-tbody");
+  const btnReproRefresh = document.getElementById("btn-repro-refresh");
+  const btnTestFallback = document.getElementById("btn-test-fallback");
+  const btnExecLogRefresh = document.getElementById("btn-exec-log-refresh");
+  const btnSpecsClearUploads = document.getElementById("btn-specs-clear-uploads");
+  const specsStorageSummary = document.getElementById("specs-storage-summary");
+  const specsUploadsList = document.getElementById("specs-uploads-list");
+  const execLogTbody = document.getElementById("exec-log-tbody");
+
   let modalZoomLevel = 1.0;
   let activePointHr = null;
   let activePointingMode = "target-seed";
@@ -839,6 +861,11 @@
         runCompareScenario("zhao");
       }
     }
+    if (tabId === "tab-specs") {
+      loadReproStatus();
+      loadExecutionLog();
+      loadActiveUploads();
+    }
   }
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -1404,8 +1431,22 @@
       const initTxt = nInit != null ? String(nInit) : "—";
       const prLine = hasPrecRec ? `<dt>Độ chụm tâm sao</dt><dd>Precision ${precTxt} · Recall ${recTxt}</dd>` : "";
       const fovSpan = Array.isArray(cam.fov_deg) ? cam.fov_deg.map((x) => Number(x).toFixed(2)).join("° × ") + "°" : "—";
+      const execSummary = escapeHtml(payload.execution_mode_summary || `${payload.requested_backend || payload.centroid_backend || "classical"} -> ${payload.executed_backend || payload.centroid_detector || "classical"}`);
+      const fbSuffix = payload.centroid_fallback
+        ? ` · <strong style="color:var(--status-warn)">FALLBACK CoG: ${escapeHtml(payload.fallback_reason || "CNN không khả dụng")}</strong>`
+        : "";
+      let storageLine = "";
+      if (payload.storage_control) {
+        const sc = payload.storage_control;
+        const delState = sc.deleted_immediately
+          ? (sc.verified_gone_on_disk ? "Đã xóa ngay trên đĩa (0s, xác minh không còn tệp)" : "Đã xóa ngay")
+          : `Lưu tạm TTL ${Math.round((sc.ttl_seconds || 900) / 60)} phút (hết hạn ${escapeHtml(sc.expires_at_utc || "")})`;
+        storageLine = `<dt>Kiểm soát tệp tải lên</dt><dd><code>${escapeHtml(sc.storage_rel_dir || "")}</code> · ${delState}</dd>`;
+      }
       metaDl.innerHTML = `
         <dt>Trạng thái</dt><dd>${status}${rejectCode ? ` (${rejectCode})` : ""}</dd>
+        <dt>Mode thực thi</dt><dd><code>${execSummary}</code>${fbSuffix}</dd>
+        ${storageLine}
         <dt>Cặp sao hợp lệ</dt><dd>${nValid} hợp lệ / ${nRejected} loại nhiễu (sơ bộ ${initTxt}, tối thiểu ${minReq})</dd>
         <dt>Phần dư khớp góc</dt><dd>RMS ${rmsTxt} · Cực đại ${maxTxt}</dd>
         ${prLine}
@@ -1534,6 +1575,15 @@
     if (opticsReadout && payload.angle_table && payload.camera) {
       opticsReadout.className = "radec-status-card";
       opticsReadout.textContent = payload.angle_table.note || "";
+    }
+
+    updateFallbackAlertBar(payload);
+    if (payload.storage_control) {
+      showStorageControlFeedback(payload.storage_control);
+      loadActiveUploads();
+    }
+    if (auditLogLoaded) {
+      loadExecutionLog();
     }
   }
 
@@ -1939,9 +1989,13 @@
       Object.entries(body).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
       });
+      const retMode = uploadRetentionMode ? uploadRetentionMode.value : "ephemeral";
+      fd.append("retention_mode", retMode);
       const customUpload = body.focal_mm != null || body.pixel_um != null || body.image_width != null;
       highlightActiveScenario(null);
-      closeDrawer();
+      if (retMode !== "ttl") {
+        closeDrawer();
+      }
       setBusy(
         true,
         customUpload
@@ -1952,6 +2006,8 @@
         const data = await fetchJson("/api/run-upload", { method: "POST", body: fd }, customUpload ? 600000 : 180000);
         activateTab("tab-imagery");
         renderPayload(data);
+        loadActiveUploads();
+        if (auditLogLoaded) loadExecutionLog();
       } catch (err) {
         if (statusEl) {
           statusEl.className = "status-banner err";
@@ -2331,11 +2387,27 @@
           `Kết quả trên cùng khung ảnh: CoG = <strong>${mCog.status || "—"}</strong>, ` +
           `tetra3 = <strong>${mT3.status || "—"}</strong>, CNN-Hybrid = <strong>${mCnn.status || "—"}</strong>.`;
       }
+      if (mCnn.centroid_fallback) {
+        cmpVerdictBanner.innerHTML +=
+          `<br /><span style="color:var(--status-warn);font-weight:700">[Cảnh báo FALLBACK → CoG]</span> ` +
+          `Nhánh CNN không khả dụng và đã tự động chuyển về CoG: ${escapeHtml(mCnn.fallback_reason || "không tìm thấy trọng số MobileUNet")}.`;
+      }
     }
 
     // 4. Populate Live Comparison Table
     if (cmpLiveBody) {
       const rows = [
+        {
+          label: "Chế độ thực thi (Fallback)",
+          vals: keys.map((k) => {
+            const m = methods[k] || {};
+            if (m.centroid_fallback) {
+              return `<span class="audit-pill is-warn">FALLBACK → CoG</span>`;
+            }
+            const ex = escapeHtml(m.executed_backend || m.centroid_detector || k);
+            return `<span class="audit-pill is-ok">${ex}</span>`;
+          })
+        },
         {
           label: "Trạng thái khóa tư thế",
           vals: keys.map((k) => {
@@ -2564,6 +2636,8 @@
       fd.append("image", cmpUploadFile.files[0]);
       if (cmpUploadFocal && cmpUploadFocal.value) fd.append("focal_mm", cmpUploadFocal.value);
       if (cmpUploadPixel && cmpUploadPixel.value) fd.append("pixel_um", cmpUploadPixel.value);
+      const cmpRetMode = cmpUploadRetention ? cmpUploadRetention.value : "ephemeral";
+      fd.append("retention_mode", cmpRetMode);
       compareLoading = true;
       const msg = `Đang tải lên "${cmpUploadFile.files[0].name}" và đối chiếu đồng thời CoG, Ngưỡng kiểu tetra3 và CNN-Hybrid...`;
       setBusy(true, msg);
@@ -2574,9 +2648,19 @@
       try {
         const data = await fetchJson("/api/compare-upload", { method: "POST", body: fd }, 180000);
         renderComparePayload(data);
+        if (data.storage_control) {
+          showStorageControlFeedback(data.storage_control);
+          loadActiveUploads();
+        }
+        if (auditLogLoaded) loadExecutionLog();
         if (statusEl) {
+          const scNote = data.storage_control
+            ? (data.storage_control.deleted_immediately
+                ? " · Đã xóa ngay tệp tạm (0s)"
+                : ` · Lưu tạm ${data.storage_control.storage_rel_dir} (TTL 15p)`)
+            : "";
           statusEl.className = "status-banner ok";
-          statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên ảnh tải lên (${cmpUploadFile.files[0].name}).`;
+          statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên ảnh tải lên (${escapeHtml(cmpUploadFile.files[0].name)})${scNote}.`;
         }
       } catch (err) {
         if (cmpVerdictBanner) {
@@ -2753,6 +2837,341 @@
     } catch (_) {
       // Ignore silent preload failures
     }
+  }
+
+  /* =======================================================================
+     Stage 2: Reproducibility Checksums, Execution Audit Log & Upload Control
+     ======================================================================= */
+  let auditLogLoaded = false;
+
+  function escapeHtml(raw) {
+    return String(raw == null ? "" : raw)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function fmtBytes(n) {
+    const num = Number(n);
+    if (!Number.isFinite(num) || num < 0) return "—";
+    if (num >= 1024 * 1024) return `${(num / (1024 * 1024)).toFixed(2)} MB`;
+    if (num >= 1024) return `${(num / 1024).toFixed(1)} KB`;
+    return `${num} B`;
+  }
+
+  function updateFallbackAlertBar(payload) {
+    if (!fallbackAlertBar || !fallbackAlertText) return;
+    const reqBe = String(payload?.requested_backend || payload?.centroid_backend || "classical");
+    const exeBe = String(payload?.executed_backend || payload?.centroid_detector || reqBe);
+    const fellBack = Boolean(payload?.centroid_fallback) || (reqBe === "cnn" && exeBe === "classical");
+    if (!fellBack) {
+      fallbackAlertBar.hidden = true;
+      fallbackAlertText.textContent = "";
+      return;
+    }
+    const reason = payload?.fallback_reason || "Trọng số CNN không sẵn sàng; pipeline tự động chuyển về tách tâm cổ điển CoG.";
+    fallbackAlertText.innerHTML =
+      `Yêu cầu <code>${escapeHtml(reqBe)}</code> nhưng hệ thống thực thi <code>${escapeHtml(exeBe)}</code> (CoG): ` +
+      `${escapeHtml(reason)}`;
+    fallbackAlertBar.hidden = false;
+  }
+
+  function showStorageControlFeedback(sc, isWarn = false) {
+    if (!uploadDeleteStatus || !sc) return;
+    uploadDeleteStatus.hidden = false;
+    uploadDeleteStatus.classList.toggle("is-warn", Boolean(isWarn));
+    if (sc.deleted_immediately) {
+      uploadDeleteStatus.innerHTML =
+        `<strong>Đã xóa ngay sau xử lý (0s):</strong> <code>${escapeHtml(sc.storage_rel_dir)}</code> · ` +
+        `Xác minh đĩa: <strong>${sc.verified_gone_on_disk ? "KHÔNG CÒN TỆP" : "Đang dọn"}</strong> (không ghi đè ảnh mẫu).`;
+    } else {
+      const mins = Math.max(1, Math.round((Number(sc.ttl_seconds) || 900) / 60));
+      uploadDeleteStatus.innerHTML =
+        `<strong>Lưu tạm TTL ${mins} phút:</strong> <code>${escapeHtml(sc.storage_rel_dir)}</code> ` +
+        `(tệp: ${escapeHtml(sc.original_image_name || "")}) · Hết hạn lúc <code>${escapeHtml(sc.expires_at_utc || "")}</code>. Bấm <em>Xóa ngay</em> để xóa tức thì.`;
+    }
+  }
+
+  if (btnDismissFallback) {
+    btnDismissFallback.addEventListener("click", () => {
+      if (fallbackAlertBar) fallbackAlertBar.hidden = true;
+    });
+  }
+
+  if (btnGotoAuditLog) {
+    btnGotoAuditLog.addEventListener("click", () => {
+      activateTab("tab-specs");
+      const card = document.getElementById("audit-log-card");
+      if (card) {
+        requestAnimationFrame(() => card.scrollIntoView({ behavior: "smooth", block: "start" }));
+      }
+    });
+  }
+
+  function renderUploadListInto(container, uploads) {
+    if (!container) return;
+    if (!Array.isArray(uploads) || uploads.length === 0) {
+      container.innerHTML = `<div class="upload-mgr-empty">Hiện không có ảnh người dùng nào lưu trên đĩa (0 tệp tạm).</div>`;
+      return;
+    }
+    container.innerHTML = uploads
+      .map((u) => {
+        const uid = escapeHtml(u.upload_id || "");
+        const name = escapeHtml(u.original_image_name || "(không rõ)");
+        const scPart = u.original_sidecar_name ? ` + ${escapeHtml(u.original_sidecar_name)}` : "";
+        const rem = Number(u.remaining_seconds ?? 0);
+        const mins = Math.floor(rem / 60);
+        const secs = rem % 60;
+        const ttlTxt = `${mins}p ${String(secs).padStart(2, "0")}s`;
+        const sizeTxt = fmtBytes(u.total_size_bytes);
+        const relDir = escapeHtml(u.storage_rel_dir || `data/user_uploads/${uid}/`);
+        return (
+          `<div class="upload-mgr-item">` +
+            `<div class="upload-mgr-meta">` +
+              `<span class="upload-mgr-name" title="${name}${scPart}">${name}${scPart}</span>` +
+              `<span class="upload-mgr-sub"><code>${relDir}</code> · ${sizeTxt} · Còn ${ttlTxt}</span>` +
+            `</div>` +
+            `<button type="button" class="mini-action-btn is-danger btn-upload-del" data-upload-id="${uid}">Xóa ngay</button>` +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
+  async function loadActiveUploads() {
+    try {
+      const data = await fetchJson("/api/uploads", { method: "GET" }, 20000);
+      const uploads = Array.isArray(data.uploads) ? data.uploads : [];
+      const n = uploads.length;
+      if (uploadActiveCount) {
+        uploadActiveCount.textContent = `${n} ảnh tạm trên đĩa`;
+        uploadActiveCount.classList.toggle("delta-warn", n > 0);
+      }
+      if (specsStorageSummary) {
+        const pol = data.policy || {};
+        specsStorageSummary.innerHTML =
+          `<strong>Nơi lưu ảnh người dùng:</strong> <code>${escapeHtml(pol.storage_dir || "data/user_uploads/<upload_id>/")}</code> ` +
+          `(chống ghi đè UUID4, tách biệt khỏi ảnh mẫu đọc-chỉ <code>data/uploads/</code>) · ` +
+          `Đang lưu tạm trên đĩa: <strong>${n} phiên</strong> · Mặc định xóa ngay (0s) hoặc TTL ${Math.round((pol.ttl_seconds || 900) / 60)} phút.`;
+      }
+      renderUploadListInto(uploadManagerList, uploads);
+      renderUploadListInto(specsUploadsList, uploads);
+    } catch (_) {
+      // Silent retry next open
+    }
+  }
+
+  async function deleteSingleUpload(uploadId) {
+    if (!uploadId) return;
+    try {
+      const res = await fetchJson(`/api/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE" }, 20000);
+      if (uploadDeleteStatus) {
+        uploadDeleteStatus.hidden = false;
+        uploadDeleteStatus.classList.remove("is-warn");
+        const filesTxt = Array.isArray(res.deleted_files) && res.deleted_files.length
+          ? res.deleted_files.join(", ")
+          : "thư mục tạm";
+        uploadDeleteStatus.innerHTML =
+          `<strong>Đã xóa vĩnh viễn phiên <code>${escapeHtml(uploadId)}</code>:</strong> ${escapeHtml(filesTxt)} · ` +
+          `Xác minh đĩa: <strong>${res.verified_gone ? "KHÔNG CÒN TỆP" : "Chưa xác nhận"}</strong>.`;
+      }
+      if (statusEl) {
+        statusEl.className = "status-banner success";
+        statusEl.innerHTML = `<strong>Đã xóa dữ liệu ảnh người dùng (${escapeHtml(uploadId)}):</strong> Xác minh không còn tệp trên đĩa.`;
+      }
+      await loadActiveUploads();
+      await loadExecutionLog();
+    } catch (err) {
+      if (uploadDeleteStatus) {
+        uploadDeleteStatus.hidden = false;
+        uploadDeleteStatus.classList.add("is-warn");
+        uploadDeleteStatus.textContent = `Không thể xóa phiên ${uploadId}: ${err.message || err}`;
+      }
+    }
+  }
+
+  async function deleteAllTemporaryUploads() {
+    try {
+      const res = await fetchJson("/api/uploads", { method: "DELETE" }, 20000);
+      if (uploadDeleteStatus) {
+        uploadDeleteStatus.hidden = false;
+        uploadDeleteStatus.classList.remove("is-warn");
+        uploadDeleteStatus.innerHTML =
+          `<strong>Đã xóa toàn bộ ảnh tạm (${res.deleted_count ?? 0} phiên):</strong> ` +
+          `Xác minh thư mục <code>data/user_uploads/</code>: <strong>${res.verified_empty ? "TRỐNG HOÀN TOÀN" : "Đang kiểm tra"}</strong>.`;
+      }
+      if (statusEl) {
+        statusEl.className = "status-banner success";
+        statusEl.innerHTML = `<strong>Đã dọn sạch toàn bộ ảnh người dùng tạm thời:</strong> ${res.deleted_count ?? 0} phiên đã xóa, thư mục lưu tạm trống hoàn toàn.`;
+      }
+      await loadActiveUploads();
+      await loadExecutionLog();
+    } catch (err) {
+      if (uploadDeleteStatus) {
+        uploadDeleteStatus.hidden = false;
+        uploadDeleteStatus.classList.add("is-warn");
+        uploadDeleteStatus.textContent = `Lỗi khi xóa toàn bộ ảnh tạm: ${err.message || err}`;
+      }
+    }
+  }
+
+  function handleUploadListClick(ev) {
+    const btn = ev.target && ev.target.closest ? ev.target.closest(".btn-upload-del") : null;
+    if (!btn) return;
+    const uid = btn.getAttribute("data-upload-id");
+    if (uid) deleteSingleUpload(uid);
+  }
+
+  if (uploadManagerList) uploadManagerList.addEventListener("click", handleUploadListClick);
+  if (specsUploadsList) specsUploadsList.addEventListener("click", handleUploadListClick);
+  if (btnUploadsRefresh) btnUploadsRefresh.addEventListener("click", () => loadActiveUploads());
+  if (btnUploadsClearAll) btnUploadsClearAll.addEventListener("click", () => deleteAllTemporaryUploads());
+  if (btnSpecsClearUploads) btnSpecsClearUploads.addEventListener("click", () => deleteAllTemporaryUploads());
+  if (btnOpenDrawer) btnOpenDrawer.addEventListener("click", () => loadActiveUploads());
+
+  async function loadReproStatus() {
+    if (!reproBundleTbody) return;
+    try {
+      const data = await fetchJson("/api/repro-status", { method: "GET" }, 30000);
+      const b = data.bundle || {};
+      if (reproStatusChip) {
+        reproStatusChip.textContent = b.ok
+          ? `Hợp lệ ${b.n_verified}/${b.n_total} tệp · ${b.total_bundle_mb} MB · Checkpoint: ${b.checkpoint_status}`
+          : `Thiếu/lệch checksum (${b.n_verified || 0}/${b.n_total || 0})`;
+      }
+      const catNames = {
+        checkpoint: "Checkpoint CNN",
+        sample_real_sky: "Ảnh trời thực",
+        calibration: "Hiệu chuẩn / Config",
+        catalog: "Danh mục sao"
+      };
+      const entries = Array.isArray(b.entries) ? b.entries : [];
+      if (!entries.length) {
+        reproBundleTbody.innerHTML = `<tr><td colspan="5" class="empty">Không tìm thấy danh sách tệp trong CHECKSUMS.sha256.</td></tr>`;
+        return;
+      }
+      reproBundleTbody.innerHTML = entries
+        .map((e) => {
+          const ok = e.status === "verified";
+          const pillCls = ok ? "is-ok" : "is-err";
+          const shaShort = e.actual_sha256 ? `${escapeHtml(e.actual_sha256.slice(0, 16))}…` : "—";
+          return (
+            `<tr>` +
+              `<td>${escapeHtml(catNames[e.category] || e.category)}</td>` +
+              `<td><code>${escapeHtml(e.path)}</code></td>` +
+              `<td>${fmtBytes(e.size_bytes)}</td>` +
+              `<td title="${escapeHtml(e.actual_sha256 || "")}"><code>${shaShort}</code></td>` +
+              `<td><span class="audit-pill ${pillCls}">${escapeHtml(e.status)}</span></td>` +
+            `</tr>`
+          );
+        })
+        .join("");
+    } catch (err) {
+      if (reproStatusChip) reproStatusChip.textContent = "Lỗi kiểm tra SHA-256";
+      reproBundleTbody.innerHTML = `<tr><td colspan="5" class="empty">Không thể tải trạng thái tái lập: ${escapeHtml(err.message || err)}</td></tr>`;
+    }
+  }
+
+  async function loadExecutionLog() {
+    if (!execLogTbody) return;
+    try {
+      const data = await fetchJson("/api/execution-log?limit=35", { method: "GET" }, 20000);
+      auditLogLoaded = true;
+      const entries = Array.isArray(data.entries) ? data.entries : [];
+      if (!entries.length) {
+        execLogTbody.innerHTML = `<tr><td colspan="6" class="empty">Chưa có bản ghi thực thi nào. Hãy chạy một kịch bản hoặc bấm Thử nghiệm Fallback CNN → CoG.</td></tr>`;
+        return;
+      }
+      execLogTbody.innerHTML = entries
+        .map((r) => {
+          const ts = escapeHtml(r.timestamp_utc || "—");
+          if (r.event_type === "DATA_DELETION") {
+            const filesStr = Array.isArray(r.deleted_files) && r.deleted_files.length
+              ? r.deleted_files.join(", ")
+              : "(0 tệp)";
+            const okDel = Boolean(r.verified_gone);
+            return (
+              `<tr>` +
+                `<td><code>${ts}</code></td>` +
+                `<td><span class="audit-pill is-info">DATA_DELETION</span><br /><small>${escapeHtml(r.endpoint || "")}</small></td>` +
+                `<td><code>${escapeHtml(r.upload_id || "ALL")}</code></td>` +
+                `<td><code>${escapeHtml(r.action || "DELETE")}</code></td>` +
+                `<td><span class="audit-pill ${okDel ? "is-ok" : "is-warn"}">${okDel ? "ĐÃ XÓA SẠCH" : "KIỂM TRA"}</span></td>` +
+                `<td>${escapeHtml(filesStr)}</td>` +
+              `</tr>`
+            );
+          }
+          const isFb = Boolean(r.fallback_triggered);
+          const modeCls = isFb ? "is-warn" : (String(r.executed_backend || "").includes("cnn") ? "is-info" : "is-ok");
+          const stCls = r.status === "SOLVED" ? "is-ok" : "is-err";
+          const latTxt = r.latency_ms != null ? `${Number(r.latency_ms).toFixed(1)} ms` : "";
+          const noteParts = [];
+          if (r.fallback_reason) noteParts.push(`Fallback: ${r.fallback_reason}`);
+          if (r.auto_router_reason) noteParts.push(`Auto: ${r.auto_router_reason}`);
+          if (r.retention_mode) {
+            noteParts.push(r.deleted_immediately ? `Upload [${r.upload_id}]: xóa ngay 0s` : `Upload [${r.upload_id}]: TTL`);
+          }
+          if (!noteParts.length) noteParts.push(`${r.n_valid_pairs ?? 0}/${r.n_detected ?? 0} cặp sao · ${latTxt}`);
+          return (
+            `<tr>` +
+              `<td><code>${ts}</code></td>` +
+              `<td><code>${escapeHtml(r.endpoint || "")}</code></td>` +
+              `<td>${escapeHtml(r.source_name || r.source_type || "—")}</td>` +
+              `<td><span class="audit-pill ${modeCls}">${escapeHtml(r.mode_summary || `${r.requested_backend} -> ${r.executed_backend}`)}</span></td>` +
+              `<td><span class="audit-pill ${stCls}">${escapeHtml(r.status || "—")}</span> ${escapeHtml(latTxt)}</td>` +
+              `<td>${escapeHtml(noteParts.join(" · "))}</td>` +
+            `</tr>`
+          );
+        })
+        .join("");
+    } catch (err) {
+      execLogTbody.innerHTML = `<tr><td colspan="6" class="empty">Không thể đọc nhật ký thực thi: ${escapeHtml(err.message || err)}</td></tr>`;
+    }
+  }
+
+  if (btnReproRefresh) btnReproRefresh.addEventListener("click", () => loadReproStatus());
+  if (btnExecLogRefresh) {
+    btnExecLogRefresh.addEventListener("click", () => {
+      loadExecutionLog();
+      loadActiveUploads();
+    });
+  }
+
+  if (btnTestFallback) {
+    btnTestFallback.addEventListener("click", async () => {
+      setBusy(true, "Đang chạy thử nghiệm giả lập thiếu checkpoint MobileUNet để xác minh cảnh báo Fallback → CoG...");
+      try {
+        const data = await fetchJson(
+          "/api/run",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mode: "fast",
+              seed: 42,
+              centroid_backend: "cnn",
+              simulate_missing_weights: true,
+              catalog: "bsc5",
+              solver: "svd"
+            })
+          },
+          60000
+        );
+        renderPayload(data);
+        await loadExecutionLog();
+        const card = document.getElementById("audit-log-card");
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (err) {
+        if (statusEl) {
+          statusEl.className = "status-banner err";
+          statusEl.innerHTML = `<strong>Lỗi thử nghiệm fallback:</strong> ${escapeHtml(err.message || err)}`;
+        }
+      } finally {
+        setBusy(false);
+      }
+    });
   }
 
   // Initialize full-screen 3D Earth-orbit & real 5,023-star J2000 sky immediately

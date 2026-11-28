@@ -18,19 +18,24 @@ ENV/
 .idea/
 ~$*
 
-# Large ML Models
+# Large ML Models (allow canonical MobileUNet_B10_50.pt checkpoint for clean-clone reproducibility)
 *.pt
 *.pth
-third_party/cnn_star_centroid/saved_models/
+!third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt
 
-# Large Datasets, Catalogs & Images
+# Large Datasets, Catalogs & Images (allow canonical calibrated sample frames for clean-clone reproducibility)
 third_party/tetra3_ref/
 data/catalogs/*.tsv
 data/catalogs/*.npz
 data/catalogs/starcat.tsv
 data/sim_dataset/
-data/tetra3/
+data/user_uploads/
+data/tetra3/*
+!data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff
+!data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff
 data/real_calibrated/**/*.npy
+!data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy
+!data/real_calibrated/zhao_mt9v022/verification_img.npy
 data/real_calibrated/**/*.png
 data/uploads/**/*.tif
 data/uploads/**/*.tiff
@@ -38,9 +43,13 @@ data/uploads/**/*.png
 data/uploads/**/*.jpeg
 data/uploads/**/*.jpg
 data/uploads/**/*.tar.gz
+!data/uploads/mount_st_helens_1.png
+!data/uploads/real_sky/images/0006.png
 AI2026_Mẫu-hồ-sơ*.docx
 *.tif
 *.tiff
+!data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff
+!data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff
 *.tar.gz
 
 # Note: We intentionally DO NOT ignore .docx, .pptx, .md files 
