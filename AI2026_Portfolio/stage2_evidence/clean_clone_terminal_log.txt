@@ -1,7 +1,9 @@
-=== Clean Git Clone Verification (Stage 2 Final 100/100 Hardened) ===
+=== Cross-Platform Clean Git Clone Verification (Stage 2 Final Hardened) ===
+Timestamp (UTC): 2026-11-28T03:12:48Z
 
-$ git clone . C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final
-Cloning into 'C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final'...
+=== [A] Linux/macOS LF Clone (git clone -c core.autocrlf=false) ===
+$ git clone -c core.autocrlf=false https://github.com/hoangtranduchai/star-tracker.git <CLEAN_CLONE_LF>
+Cloning into '<CLEAN_CLONE_LF>'...
 done.
 
 $ python scripts/verify_repro_bundle.py
@@ -12,82 +14,53 @@ $ python scripts/verify_repro_bundle.py
   [PASS] sample_real_sky data/real_calibrated/zhao_mt9v022/verification_img.npy         (  2400.1 KB) sha256=b9a413dc087ccea0...
   [PASS] sample_real_sky data/uploads/mount_st_helens_1.png                             (  1070.3 KB) sha256=f29437dbb96e70cb...
   [PASS] sample_real_sky data/uploads/real_sky/images/0006.png                          (  9337.9 KB) sha256=9a699a274af866bd...
-  [PASS] calibration     data/real_calibrated/manifest_real_calibrated.json             (   132.7 KB) sha256=07f8ecfc87adc1dc...
-  [PASS] calibration     data/uploads/real_sky/metadata.yaml                            (     3.2 KB) sha256=25aafd40039ddbcd...
-  [PASS] calibration     config/camera_specs.json                                       (     1.5 KB) sha256=205e15f2b3e0a75e...
-  [PASS] calibration     config/pipeline_default.json                                   (     1.4 KB) sha256=a91838711f4bb881...
+  [PASS] calibration     data/real_calibrated/manifest_real_calibrated.json             (   128.4 KB) sha256=2e2d0cd1f176f651...
+  [PASS] calibration     data/uploads/real_sky/metadata.yaml                            (     3.1 KB) sha256=5283e3ccd81c5411...
+  [PASS] calibration     config/camera_specs.json                                       (     1.5 KB) sha256=68b60198232c9bc0...
+  [PASS] calibration     config/pipeline_default.json                                   (     1.3 KB) sha256=8c178d068798f3ea...
   [PASS] catalog         data/catalogs/BSC5                                             (   284.7 KB) sha256=e471d02eaf4eecb6...
-  [PASS] catalog         data/catalogs/IAU-CSN.txt                                      (    50.8 KB) sha256=8b99bae659fbfe8d...
+  [PASS] catalog         data/catalogs/IAU-CSN.txt                                      (    50.3 KB) sha256=910dd0d14f1c3f08...
 
-[SUMMARY] verified=13/13 (36.03 MB) | checkpoint=verified | ok=True
+[SUMMARY] verified=13/13 (36.02 MB) | checkpoint=verified | ok=True
+
+$ sha256sum -c CHECKSUMS.sha256
+third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt: OK
+data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff: OK
+data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff: OK
+data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy: OK
+data/real_calibrated/zhao_mt9v022/verification_img.npy: OK
+data/uploads/mount_st_helens_1.png: OK
+data/uploads/real_sky/images/0006.png: OK
+data/real_calibrated/manifest_real_calibrated.json: OK
+data/uploads/real_sky/metadata.yaml: OK
+config/camera_specs.json: OK
+config/pipeline_default.json: OK
+data/catalogs/BSC5: OK
+data/catalogs/IAU-CSN.txt: OK
 
 $ python scripts/run_clean_repro.py
 === [1/4] Verifying SHA-256 Checksums (CHECKSUMS.sha256) ===
-  Verified: 13/13 (36.03 MB) | ok=True
+  Verified: 13/13 (36.02 MB) | ok=True
   Checkpoint SHA-256: e02d7723b832d12cf2535a8a9794eaedc822023722f07da3126dcd8473cbe062
 
 === [2/4] Clean-Clone Pipeline Runs (Seed 42 + Calibrated Real-Sky) ===
 Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
-  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.45" | gt=simulator_ground_truth | t=93.7ms
-  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=2.26" | gt=esa_tetra3_hipparcos_plus_scipy_f_k1 | t=61.9ms
-  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=48.26" | gt=zhao_heikkila_undistort_plus_hipparcos_3dof | t=6010.9ms
+  [seed42_auto           ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=36 | dTh=0.45" | gt=simulator_ground_truth | t=93.6ms
+  [esa_alt60_auto        ] req=auto -> exe=classical | fallback=False | SOLVED | pairs=9 | dTh=2.26" | gt=esa_tetra3_hipparcos_plus_scipy_f_k1 | t=72.4ms
+  [zhao_nightsky_auto    ] req=auto -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=8 | dTh=48.26" | gt=zhao_heikkila_undistort_plus_hipparcos_3dof | t=5486.3ms
 Building angle table 0.02-71.5 deg for BSC5+filt (first time, then cached).
-  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=71.13" | gt=startracker_hipparcos_sky_only_scipy_f_k1_k2 | t=639.0ms
+CNN centroid backend unavailable (FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
+CNN centroid backend unavailable (FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
+  [mount_st_helens_cnn   ] req=cnn -> exe=cnn_hybrid | fallback=False | SOLVED | pairs=72 | dTh=71.13" | gt=startracker_hipparcos_sky_only_scipy_f_k1_k2 | t=619.5ms
 
 === [3/4] Explicit CNN -> CoG Fallback Proof (Direct CNN & Auto-Router) ===
   [FALLBACK DIRECT] req=cnn  -> exe=classical | fallback=True | summary=cnn -> classical [FALLBACK_TO_COG] | status=SOLVED
   [FALLBACK AUTO  ] req=auto -> exe=classical | fallback=True | summary=auto -> classical [FALLBACK_TO_COG] | status=LOST (INSUFFICIENT_INLIER_PAIRS)
 
 === [4/4] Upload Isolation (Zero-Overwrite) & Verified Deletion Proof ===
-  [DATA CONTROL] Same filename -> isolated UUIDs (43f00363df42484d, f97d0607da02485c); deleted & verified_gone=True; remaining=0
+  [DATA CONTROL] Same filename -> isolated UUIDs (4250b57c19d148b3, a1cdf81ea56445e7); deleted & verified_gone=True; remaining=0
 
-[PASS] Clean-clone reproducibility & data-control audit completed in 12.11s -> C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\data\outputs\clean_repro_log.json
-
-CNN centroid backend unavailable (FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
-CNN centroid backend unavailable (FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
-
-$ python scripts/benchmark_3way_centroid_e2e.py --real-only --clutter-frames 5
-[*] CNN warmed: torch=2.11.0+cu128 cuda=True device=NVIDIA GeForce RTX 5070 Laptop GPU
-
-=== Suite: real_calibrated (6 frames x 4 backends) ===
-  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not bundled on clean clone — running full primary BSC5 V<=6.0 suite and skipping supplementary Alt40 Hipparcos V<=7.0.
-Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
-  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff classical: LOST   dTh=n/a      valid=1/8 RMSE5=0.164px t=262.9ms
-  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff tetra3   : SOLVED dTh=27.08"   valid=4/23 RMSE5=0.142px t=220.6ms
-  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn_raw  : LOST   dTh=n/a      valid=4/38 RMSE5=0.167px t=498.2ms
-  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn      : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=351.1ms
-  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff auto     : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=546.9ms
-  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff classical: SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=102.4ms
-  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff tetra3   : SOLVED dTh=8.68"    valid=9/29 RMSE5=0.119px t=161.0ms
-  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn_raw  : SOLVED dTh=4.65"    valid=9/45 RMSE5=0.114px t=144.0ms
-  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn      : SOLVED dTh=6.77"    valid=9/45 RMSE5=0.102px t=165.6ms
-  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff auto     : SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=102.2ms
-  [Cal/BSC5] nightsky_june16_2021.npy             classical: LOST   dTh=n/a      valid=3/4 RMSE5=0.627px t=229.7ms
-  [Cal/BSC5] nightsky_june16_2021.npy             tetra3   : LOST   dTh=n/a      valid=5/5 RMSE5=0.486px t=251.4ms
-  [Cal/BSC5] nightsky_june16_2021.npy             cnn_raw  : SOLVED dTh=54.70"   valid=8/8 RMSE5=0.380px t=119.5ms
-  [Cal/BSC5] nightsky_june16_2021.npy             cnn      : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=107.2ms
-  [Cal/BSC5] nightsky_june16_2021.npy             auto     : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=317.7ms
-  [Cal/BSC5] verification_img.npy                 classical: LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=288.4ms
-  [Cal/BSC5] verification_img.npy                 tetra3   : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=290.3ms
-  [Cal/BSC5] verification_img.npy                 cnn_raw  : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=270.5ms
-  [Cal/BSC5] verification_img.npy                 cnn      : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=285.7ms
-  [Cal/BSC5] verification_img.npy                 auto     : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=544.8ms
-  [Cal/BSC5] mount_st_helens_1.png                classical: SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=139.8ms
-  [Cal/BSC5] mount_st_helens_1.png                tetra3   : LOST   dTh=n/a      valid=4/80 RMSE5=0.535px t=758.4ms
-  [Cal/BSC5] mount_st_helens_1.png                cnn_raw  : SOLVED dTh=120.26"  valid=66/79 RMSE5=1.306px t=206.6ms
-  [Cal/BSC5] mount_st_helens_1.png                cnn      : SOLVED dTh=71.13"   valid=72/77 RMSE5=0.976px t=294.8ms
-  [Cal/BSC5] mount_st_helens_1.png                auto     : SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=168.8ms
-Building angle table 0.02-78.5 deg for BSC5+filt (first time, then cached).
-  [Uncal Stress] 0006.png: detected counts = {'classical': 2729, 'tetra3': 80, 'cnn_raw': 80, 'cnn': 80, 'auto': 2729}
-
-=== Suite: sim_earth_clutter (5 frames x 4 backends) ===
-  classical : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
-  tetra3    : solved= 5/ 5 correct= 5 FL=0 med_dTh=3.14" Prec= 91.5% Rec= 73.2% FP= 17 RMSE5=0.0845px
-  cnn_raw   : solved= 5/ 5 correct= 5 FL=0 med_dTh=15.74" Prec= 88.8% Rec= 70.0% FP= 22 RMSE5=0.3009px
-  cnn       : solved= 5/ 5 correct= 5 FL=0 med_dTh=1.18" Prec= 91.7% Rec= 70.4% FP= 16 RMSE5=0.0536px
-  auto      : solved= 5/ 5 correct= 5 FL=0 med_dTh=2.36" Prec= 91.7% Rec= 70.8% FP= 16 RMSE5=0.0563px
-
-[DONE] Saved 4-way audited benchmark to C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\data\outputs\benchmark_3way_clean_clone.json in 67.68s
+[PASS] Clean-clone reproducibility & data-control audit completed in 11.7s -> <CLEAN_CLONE_LF>\data\outputs\clean_repro_log.json
 
 $ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 --no-show
 ======================================================================
@@ -98,6 +71,8 @@ $ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 -
 [*] Radiometry parameters are simulation assumptions, not a camera datasheet.
 [1/5] Loading catalog + K-vector...
 [2/5] Rendering or loading frame...
+Building angle table 0.02-30.5 deg for BSC5+filt (first time, then cached).
+CNN centroid backend unavailable (FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
 [1/5] Catalog BSC5+filt: 5023 stars  V<=6.0
 [*] Mode=fast  1500x1000  FOV=25.16x16.93 deg  IFOV=61.38 arcsec/px
       q_GT = [0.18817, -0.64223, 0.46343, 0.58083]
@@ -107,13 +82,13 @@ $ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 -
 [3/5] Running deterministic pipeline...
 [4/5] Results
 -------------------------------------------------------
-  Centroiding : 35.05 ms
-  Star ID     : 12.63 ms
-  Wahba       : 0.99 ms
-  Total       : 92.06 ms
+  Centroiding : 35.34 ms
+  Star ID     : 12.05 ms
+  Wahba       : 1.22 ms
+  Total       : 92.46 ms
 -------------------------------------------------------
   Exec mode   : cnn -> classical [FALLBACK_TO_COG] (checkpoint=simulated_missing)
-  [WARNING] FALLBACK TO CoG TRIGGERED! Reason: FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt
+  [WARNING] FALLBACK TO CoG TRIGGERED! Reason: FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt
   Status      : SOLVED
   Valid pairs : 36 (initial=12, min_req=4)
   Rejected outliers          : 0
@@ -126,7 +101,94 @@ $ python demo_star_tracker.py --centroid cnn --simulate-cnn-fallback --seed 42 -
   downlink    : a4b0403e036924bfb046ed3e7eb1143f  (16 bytes)
   verdict     : PASS
   matched HR  : 4232, 4382, 3994, 4094, 4405, 4287, 4343, 3970, 4163, 4402, 4171, 4314, 3977, 3989, 3991, 3996, 4042, 4055, 4082, 4092, 4116, 4123, 4158, 4214, 4233, 4237, 4251, 4255, 4284, 4289, 4305, 4317, 4334, 4395, 4416, 4488
-[5/5] Wrote C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\data\outputs\demo_result.png and C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\data\outputs\demo_result.json
+[5/5] Wrote <CLEAN_CLONE_LF>\data\outputs\demo_result.png and <CLEAN_CLONE_LF>\data\outputs\demo_result.json
 ======================================================================
 
-CNN centroid backend unavailable (FileNotFoundError: missing public weights: C:\Users\ADMIN\AppData\Local\Temp\star_tracker_clean_clone_stage2_final\third_party\cnn_star_centroid\saved_models\__simulated_missing_checkpoint__.pt); falling back explicitly to classical CoG.
+$ python -c "<tampered-checkpoint CHECKPOINT_SHA256_MISMATCH guard verification>"
+CNN centroid backend unavailable (ValueError: CHECKPOINT_SHA256_MISMATCH: expected e02d7723b832d12c..., got a7899cd3d20fc86d... (third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt)); falling back explicitly to classical CoG.
+[GUARD] inspect_checkpoint_status -> status=checksum_mismatch sha256=a7899cd3d20fc86d...
+[GUARD] verify_checkpoint_integrity blocked torch.load -> CHECKPOINT_SHA256_MISMATCH: expected e02d7723b832d12c..., got a7899cd3d20fc86d... (third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt)
+[PIPELINE] req=cnn -> exe=classical | fallback=True | checkpoint_status=checksum_mismatch | status=SOLVED | pairs=36 | dTh=0.45"
+[PIPELINE] fallback_reason=ValueError: CHECKPOINT_SHA256_MISMATCH: expected e02d7723b832d12c..., got a7899cd3d20fc86d... (third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt)
+[COMPARE/AUTO] summary=auto -> classical [FAST_COG] | checkpoint_status=checksum_mismatch | status=SOLVED
+[RESTORED] inspect_checkpoint_status -> status=verified sha256=e02d7723b832d12c...
+
+$ python scripts/benchmark_3way_centroid_e2e.py --real-only
+[*] CNN warmed: torch=2.11.0+cu128 cuda=True device=NVIDIA GeForce RTX 5070 Laptop GPU
+
+=== Suite: real_calibrated (6 frames x 5 backends) ===
+  [INFO] Optional Hipparcos TSV (data/catalogs/starcat.tsv) not bundled on clean clone — running full primary BSC5 V<=6.0 suite and skipping supplementary Alt40 Hipparcos V<=7.0.
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff classical: LOST   dTh=n/a      valid=1/8 RMSE5=0.164px t=280.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff tetra3   : SOLVED dTh=27.08"   valid=4/23 RMSE5=0.142px t=232.5ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn_raw  : LOST   dTh=n/a      valid=4/38 RMSE5=0.167px t=512.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff cnn      : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=346.5ms
+  [Cal/BSC5] 2019-07-29T204726_Alt40_Azi-135_Try1.tiff auto     : LOST   dTh=n/a      valid=1/38 RMSE5=0.109px t=556.5ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff classical: SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=106.0ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff tetra3   : SOLVED dTh=8.68"    valid=9/29 RMSE5=0.119px t=159.3ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn_raw  : SOLVED dTh=4.65"    valid=9/45 RMSE5=0.114px t=149.9ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff cnn      : SOLVED dTh=6.77"    valid=9/45 RMSE5=0.102px t=188.7ms
+  [Cal/BSC5] 2019-07-29T204726_Alt60_Azi-135_Try1.tiff auto     : SOLVED dTh=2.26"    valid=9/14 RMSE5=0.162px t=108.7ms
+  [Cal/BSC5] nightsky_june16_2021.npy             classical: LOST   dTh=n/a      valid=3/4 RMSE5=0.627px t=249.8ms
+  [Cal/BSC5] nightsky_june16_2021.npy             tetra3   : LOST   dTh=n/a      valid=5/5 RMSE5=0.486px t=273.9ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn_raw  : SOLVED dTh=54.70"   valid=8/8 RMSE5=0.380px t=117.2ms
+  [Cal/BSC5] nightsky_june16_2021.npy             cnn      : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=109.1ms
+  [Cal/BSC5] nightsky_june16_2021.npy             auto     : SOLVED dTh=48.26"   valid=8/8 RMSE5=0.429px t=356.8ms
+  [Cal/BSC5] verification_img.npy                 classical: LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=453.3ms
+  [Cal/BSC5] verification_img.npy                 tetra3   : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=495.1ms
+  [Cal/BSC5] verification_img.npy                 cnn_raw  : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=491.0ms
+  [Cal/BSC5] verification_img.npy                 cnn      : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=430.8ms
+  [Cal/BSC5] verification_img.npy                 auto     : LOST   dTh=n/a      valid=0/4 RMSE5=n/a t=866.3ms
+  [Cal/BSC5] mount_st_helens_1.png                classical: SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=293.2ms
+  [Cal/BSC5] mount_st_helens_1.png                tetra3   : LOST   dTh=n/a      valid=4/80 RMSE5=0.535px t=1421.6ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn_raw  : SOLVED dTh=120.26"  valid=66/79 RMSE5=1.306px t=428.8ms
+  [Cal/BSC5] mount_st_helens_1.png                cnn      : SOLVED dTh=71.13"   valid=72/77 RMSE5=0.976px t=592.4ms
+  [Cal/BSC5] mount_st_helens_1.png                auto     : SOLVED dTh=49.51"   valid=83/106 RMSE5=0.561px t=357.1ms
+Building angle table 0.02-78.5 deg for BSC5+filt (first time, then cached).
+  [Uncal Stress] 0006.png: detected counts = {'classical': 2729, 'tetra3': 80, 'cnn_raw': 80, 'cnn': 80, 'auto': 2729}
+
+=== Suite: sim_earth_clutter (20 frames x 5 backends) ===
+  classical : solved=20/20 correct=20 FL=0 med_dTh=2.46" Prec= 90.2% Rec= 62.2% FP= 76 RMSE5=0.1619px
+  tetra3    : solved=20/20 correct=20 FL=0 med_dTh=2.90" Prec= 90.2% Rec= 63.9% FP= 78 RMSE5=0.1886px
+  cnn_raw   : solved=20/20 correct=20 FL=0 med_dTh=14.58" Prec= 86.5% Rec= 61.4% FP=108 RMSE5=0.3521px
+  cnn       : solved=20/20 correct=20 FL=0 med_dTh=3.17" Prec= 90.3% Rec= 61.9% FP= 75 RMSE5=0.1672px
+  auto      : solved=20/20 correct=20 FL=0 med_dTh=2.46" Prec= 90.2% Rec= 62.2% FP= 76 RMSE5=0.1619px
+
+[DONE] Saved 4-way audited benchmark to <CLEAN_CLONE_LF>\data\outputs\benchmark_3way_clean_clone.json in 86.46s
+
+=== [B] Windows CRLF-Config Clone (git clone -c core.autocrlf=true) ===
+$ git clone -c core.autocrlf=true https://github.com/hoangtranduchai/star-tracker.git <CLEAN_CLONE_WIN>
+Cloning into '<CLEAN_CLONE_WIN>'...
+done.
+
+$ python scripts/verify_repro_bundle.py
+[PASS] checkpoint      third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt ( 18137.5 KB) sha256=e02d7723b832d12c...
+  [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f5d6c27ac7e8e211...
+  [PASS] sample_real_sky data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff          (  1536.3 KB) sha256=f288f6e1fb3a1299...
+  [PASS] sample_real_sky data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy     (  2400.1 KB) sha256=57ec7838e430900b...
+  [PASS] sample_real_sky data/real_calibrated/zhao_mt9v022/verification_img.npy         (  2400.1 KB) sha256=b9a413dc087ccea0...
+  [PASS] sample_real_sky data/uploads/mount_st_helens_1.png                             (  1070.3 KB) sha256=f29437dbb96e70cb...
+  [PASS] sample_real_sky data/uploads/real_sky/images/0006.png                          (  9337.9 KB) sha256=9a699a274af866bd...
+  [PASS] calibration     data/real_calibrated/manifest_real_calibrated.json             (   128.4 KB) sha256=2e2d0cd1f176f651...
+  [PASS] calibration     data/uploads/real_sky/metadata.yaml                            (     3.1 KB) sha256=5283e3ccd81c5411...
+  [PASS] calibration     config/camera_specs.json                                       (     1.5 KB) sha256=68b60198232c9bc0...
+  [PASS] calibration     config/pipeline_default.json                                   (     1.3 KB) sha256=8c178d068798f3ea...
+  [PASS] catalog         data/catalogs/BSC5                                             (   284.7 KB) sha256=e471d02eaf4eecb6...
+  [PASS] catalog         data/catalogs/IAU-CSN.txt                                      (    50.3 KB) sha256=910dd0d14f1c3f08...
+
+[SUMMARY] verified=13/13 (36.02 MB) | checkpoint=verified | ok=True
+
+$ sha256sum -c CHECKSUMS.sha256
+third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt: OK
+data/tetra3/2019-07-29T204726_Alt40_Azi-135_Try1.tiff: OK
+data/tetra3/2019-07-29T204726_Alt60_Azi-135_Try1.tiff: OK
+data/real_calibrated/zhao_mt9v022/nightsky_june16_2021.npy: OK
+data/real_calibrated/zhao_mt9v022/verification_img.npy: OK
+data/uploads/mount_st_helens_1.png: OK
+data/uploads/real_sky/images/0006.png: OK
+data/real_calibrated/manifest_real_calibrated.json: OK
+data/uploads/real_sky/metadata.yaml: OK
+config/camera_specs.json: OK
+config/pipeline_default.json: OK
+data/catalogs/BSC5: OK
+data/catalogs/IAU-CSN.txt: OK
+

@@ -922,95 +922,13 @@
     }
   },
   "portfolio_discrepancies_audit": {
-    "pptx_discrepancies": [
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 7 table",
-        "old_claim": "CoG: 25206/27017 (100%); CNN: 25050/27017 (98,4%)",
-        "audited_truth": "CoG Recall = 93.30% (25,206/27,017), Precision = 100.00% (25,206/25,206); CNN Recall = 92.72% (25,050/27,017), Precision = 75.36% (25,050/33,241) with 8,191 false detections omitted from the slide.",
-        "severity": "HIGH_MATHEMATICAL_ERROR"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 12 FAQ 2",
-        "old_claim": "Tỷ lệ khớp sao CoG đạt tuyệt đối 100% (12.592/12.592 sao).",
-        "audited_truth": "Stale/contradictory count: authoritative thr2 JSON has 27,017 GT stars across 500 frames and CoG matched 25,206/27,017 (93.30% Recall, 100.00% Precision), NOT 12,592/12,592.",
-        "severity": "HIGH_CONTRADICTION"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 3",
-        "old_claim": "Xác định hướng vệ tinh thời gian thực",
-        "audited_truth": "Laptop software demo only; not spacecraft flight hardware or ADCS-qualified.",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 3",
-        "old_claim": "chuẩn hóa cho ADCS",
-        "audited_truth": "Downlink quaternion format follows 4xfloat32 J2000 convention for demo, not flight-qualified ADCS hardware.",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 4",
-        "old_claim": "độ tin cậy tuyệt đối",
-        "audited_truth": "Pre-fix pipeline even had a break bug admitting <3 valid inliers; post-fix achieves 0% false lock on 100 stress trials and 500 sim frames, but real uncalibrated wide-angle frames cleanly return LOST.",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 4",
-        "old_claim": "Sai số góc đạt dưới 1 giây cung trên ảnh sạch",
-        "audited_truth": "Only true on single FAST Seed 42 CoG (0.4463\"); across 500 hd1024 frames median is 2.00\" and P90 is 6.26\".",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 10",
-        "old_claim": "chuẩn hóa cho vệ tinh",
-        "audited_truth": "Laptop demo output; not flight hardware.",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 11",
-        "old_claim": "được kiểm chứng trên một khung hình sạch tĩnh mẫu",
-        "audited_truth": "Now resolved: full 500-frame hd1024 + 40-frame glare + real calibrated sky E2E benchmarks completed.",
-        "severity": "OVERCLAIM_OR_STALE"
-      },
-      {
-        "file": "AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx",
-        "location": "Slide 12",
-        "old_claim": "đảm bảo luôn chứa 10–30 sao định vị tại mọi vị trí bầu trời",
-        "audited_truth": "Overclaim: BSC5 V<=6 star density varies across the celestial sphere (e.g., Alt40 11.4 deg FOV only has 3 BSC5 stars inside edge margin).",
-        "severity": "OVERCLAIM_OR_STALE"
-      }
-    ],
+    "pptx_discrepancies": [],
     "markdown_portfolio_discrepancies": [
       {
         "file": "AI2026_Ho-so-du-an_StarTracker.md",
-        "issue": "unlogged_seed42_1_65_arcsec",
-        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
-        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
-      },
-      {
-        "file": "AI2026_Ho-so-du-an_StarTracker.md",
         "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
         "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
         "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
-      },
-      {
-        "file": "AI2026_Ho-so-du-an_StarTracker.md",
-        "issue": "stale_untested_large_sim_e2e",
-        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
-        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
-      },
-      {
-        "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
-        "issue": "unlogged_seed42_1_65_arcsec",
-        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
-        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
       },
       {
         "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
@@ -1019,22 +937,16 @@
         "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
       },
       {
-        "file": "AI2026_Portfolio/CAU_HOI_BGK.md",
-        "issue": "stale_untested_large_sim_e2e",
-        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
-        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH.md",
+        "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
+        "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
+        "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
       },
       {
-        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH.md",
-        "issue": "unlogged_seed42_1_65_arcsec",
-        "old_claim": "Cited ~0.446\" CoG vs ~1.65\" CNN on clean sim without an archived JSON log.",
-        "reconciled_to": "Now logged in data/outputs/seed42_cog_vs_cnn.json: FAST Seed 42 CoG = 0.4463\" vs CNN = 1.6485\" (valid pairs 36 vs 30)."
-      },
-      {
-        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH.md",
-        "issue": "stale_untested_large_sim_e2e",
-        "old_claim": "Stated end-to-end attitude (Δθ) on large sim set was not yet verified.",
-        "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
+        "file": "AI2026_Portfolio/KICH_BAN_THUYET_TRINH 2.md",
+        "issue": "unexplained_msh_111_vs_106_and_legacy_cog_solve",
+        "old_claim": "Cited CoG 111 points (centroid compare) vs 64/106 ~16.2s (web pipeline) without explaining the discrepancy.",
+        "reconciled_to": "Reconciled in mount_st_helens_centroid_compare.json & mount_st_helens_lost_compare.json: standalone CentroidDetector(bg_block=31, no mask)=111 pts (40.3 ms) vs StarTrackerPipeline(GlareMasker + bg_block=32->33)=106 pts; and post-Wave-2 strict outlier gate cleanly rejects uncalibrated CoG as LOST [INSUFFICIENT_INLIER_PAIRS] while CNN solves (sep=0.0337 deg vs UW LOST)."
       },
       {
         "file": "AI2026_Portfolio/KICH_BAN_QUAY_DEMO.md",
@@ -1061,6 +973,6 @@
         "reconciled_to": "Now audited across 500 hd1024 frames (benchmark_sim_hd1024_e2e.json: CoG 100.0%, CNN 99.6%), 40 glare frames, and 6 real frames."
       }
     ],
-    "total_discrepancies_logged": 21
+    "total_discrepancies_logged": 8
   }
 }

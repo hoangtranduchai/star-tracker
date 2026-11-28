@@ -1,1 +1,1 @@
-﻿144 passed, 2 skipped in 73.98s (0:01:13)
+151 passed, 1 skipped in 80.62s (0:01:20)

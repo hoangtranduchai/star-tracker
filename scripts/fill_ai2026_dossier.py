@@ -27,7 +27,7 @@ MOUNT_LOST = OUT_DIR / 'mount_st_helens_lost_compare.json'
 GITHUB_TXT = ROOT / 'AI2026_Portfolio' / '00_LINK_MA_NGUON_GITHUB.txt'
 
 MOUNT_OVERLAY = OUT_DIR / 'mount_st_helens_cog_vs_cnn.png'
-DEMO_FIELD = ROOT / 'data' / 'sim_dataset' / 'hd1024' / '0001_preview.png'
+STAGE2_ARCH = ROOT / 'AI2026_Portfolio' / 'stage2_evidence' / 'stage2_pipeline_architecture.png'
 ZHAO_FLOW = OUT_DIR / 'zhao_paper_figures' / 'project_00.png'
 ZHAO_STRAY = OUT_DIR / 'zhao_paper_figures' / 'project_03.png'
 ZHAO_ATT = OUT_DIR / 'zhao_paper_figures' / 'project_05.png'
@@ -87,10 +87,11 @@ def _lost_attitude_sentence(lost: dict | None) -> str:
         f"khớp {cnn_m.get('n_matched')}/{cnn_m.get('n_detected')} · ~{float(cnn_m.get('pipeline_ms') or 0)/1000.0:.2f} s"
     )
     cog_str = (
-        f"CoG hậu kiểm (sau siết chốt chặn ngoại lai): {cog_m.get('status')} [{cog_m.get('reject_code')}] "
+        f"CoG hậu kiểm quang học danh nghĩa (Chặng 1, sau siết chốt chặn ngoại lai): {cog_m.get('status')} [{cog_m.get('reject_code')}] "
         f"(tách {cog_m.get('n_detected')} điểm với GlareMasker + bg_block={diff.get('pipeline_cfg_bg_block')}→{diff.get('pipeline_effective_odd_bg_block')}, "
         f"chỉ còn {cog_m.get('n_valid_pairs')} inlier < 3 nên từ chối an toàn, 0% khóa sai; "
-        f"trước sửa giải {leg.get('n_matched')}/{leg.get('n_detected')} ~{float(leg.get('pipeline_ms') or 0)/1000.0:.1f} s lệch {leg.get('sep_deg_from_LOST', 0):.3f}°)"
+        f"trước sửa giải {leg.get('n_matched')}/{leg.get('n_detected')} ~{float(leg.get('pipeline_ms') or 0)/1000.0:.1f} s lệch {leg.get('sep_deg_from_LOST', 0):.3f}°; "
+        f"ghi chú: khi bật tham số hiệu chuẩn góc rộng k1/k2 & tìm rộng nâng cấp ở Chặng 1–2, CoG giải SOLVED 83/106, Δθ 49,51″ và CNN-Hybrid giải 72/77, Δθ 71,13″)"
     )
     return (
         f"Attitude sau cải tiến vs UW LOST (RA {float(ref.get('ra_deg', 310.446)):.3f}° · Dec {float(ref.get('dec_deg', 36.0229)):+.4f}°): "
@@ -253,26 +254,26 @@ def sections(
         f"Đóng góp cải tiến Chặng 1: (1) chốt chặn 0% False Lock trước & sau `_associate_remaining` + SVD rank check; (2) mở rộng CNN cho ảnh 16-bit camera thật + giải 3-DOF trên tập ảnh hiệu chuẩn ESA tetra3 & Zhao; (3) đối soát triệt để log–tài liệu–slide."
     )
     s10 = (
-        'Kiến trúc: camera model (có tâm cx, cy & Brown-Conrady) → GlareMasker → centroid (CoG | CNN 8/12/16-bit) → Pyramid/K-vector → _refine_inliers (tiền/hậu _associate_remaining + SVD rank) → FOV consistency → quaternion 16 byte (0x00 khi LOST). '
-        'Chạy kiểm thử & benchmark: `pytest -v`; `python scripts/benchmark_end_to_end.py --suites all`; `python scripts/reconcile_logs.py`; `python demo_star_tracker.py --mode fast --seed 42 --lookup`; `python app.py` (giao diện Web tối giản kèm API `GET /api/sky-catalog` dựng không gian 3D quỹ đạo Trái Đất & thiên cầu thực J2000 5.023 sao Yale BSC5 để đối chiếu trực quan tư thế vệ tinh 3D với khung ảnh gốc, có kịch bản nhanh `Mẫu chuẩn Seed 42`, `Bầu trời thật ESA`, `Núi St. Helens`, `Ngược nắng lóa mạnh` — mô phỏng trực quan trên PC, chưa kiểm chứng phần cứng bay/ADCS).'
+        'Kiến trúc: camera model (có tâm cx, cy & Brown-Conrady) → GlareMasker → Auto-Router (CoG | CNN-Hybrid 8/12/16-bit kèm kiểm tra SHA-256 trước torch.load & báo rõ Fallback CoG) → Pyramid/K-vector → _refine_inliers (tiền/hậu _associate_remaining + SVD rank) → FOV consistency → quaternion 16 byte (0x00 khi LOST) & Telemetry 32 byte CRC-16 (cờ FLAG_FALLBACK_USED). '
+        'Chạy tái lập & benchmark từ bản tải sạch (13/13 SHA-256 chuẩn LF qua .gitattributes, 36,02 MiB / 37,77 MB): `python scripts/verify_repro_bundle.py`; `python scripts/run_clean_repro.py`; `pytest -q` (151 passed, 1 skipped — gồm 17 kiểm thử Chặng 2); `python scripts/benchmark_3way_centroid_e2e.py --real-only`; `python scripts/benchmark_end_to_end.py --suites real seed42 stress`; `python benchmarks/monte_carlo.py --trials 100 --mode fast --catalog bsc5`; `python scripts/reconcile_logs.py`; `python demo_star_tracker.py --mode fast --seed 42 --lookup`; `python app.py` (cục bộ http://127.0.0.1:8765/ và bản trực tuyến 24/7 https://startracker.agentlens.dpdns.org — giao diện 3D J2000 5.023 sao Yale BSC5 mô phỏng trên PC, chưa kiểm chứng phần cứng bay/ADCS).'
     )
     s11 = (
         'Rủi ro & kiểm soát: (1) Khớp sai hoặc hình học thẳng hàng → đã chặn bằng `_refine_inliers`, SVD `s_min >= 1e-6` và `LOW_FOV_CONSISTENCY` (0% False Lock trên 100 ca đối kháng & 540 khung sim); '
         '(2) Ảnh thiếu sao sáng BSC5 (Alt40) hoặc méo ống kính rộng chưa hiệu chuẩn (NTNU 0006.png) → hệ thống trả LOST an toàn; '
-        '(3) CNN lệch miền 12-bit trên ảnh mô phỏng → mặc định Auto-Router chạy CoG trước, xác thực SHA-256 trước `torch.load` và báo tường minh khi xảy ra Fallback CNN → CoG trong nhật ký nguyên tử `data/outputs/execution_log.jsonl` + dải cảnh báo Web UI; '
-        '(4) Kiểm soát dữ liệu ảnh tải lên (`src/upload_store.py`): giao diện không có tài khoản người dùng; ảnh tải lên, nhãn JSON sidecar và 4 ảnh xem trước được cách ly vào thư mục UUID4 riêng `data/user_uploads/<upload_id>/` gắn cookie phiên `st_sid` (`HttpOnly`, `SameSite=Lax`, 0% ghi đè tệp trùng tên hay ảnh mẫu `data/uploads/`, rollback xóa sạch khi lỗi HTTP 400/409), chế độ mặc định `ephemeral` xóa vĩnh viễn 0 giây trong khối `finally:` (preview trả inline base64), chế độ tùy chọn `ttl` lưu tối đa 15 phút (900s, luồng nền tự dọn mỗi 60s) và hỗ trợ xóa tức thì qua `DELETE /api/uploads[/<id>]` (ghi dấu `DATA_DELETION`); '
+        '(3) CNN lệch miền 12-bit & bảo vệ trọng số → mặc định Auto-Router chạy CoG trước, kiểm tra `inspect_checkpoint_status()` / `verify_checkpoint_integrity()` (chặn `CHECKPOINT_SHA256_MISMATCH` & `CHECKPOINT_TRUNCATED` trước `torch.load`) và báo tường minh 0% fallback ngầm trên cả `cnn`, `auto` & `/api/compare` trong nhật ký nguyên tử `data/outputs/execution_log.jsonl` (truy cập theo phiên `GET /api/execution-log`, chặn `GET /output/*.jsonl` trả 404) + dải cảnh báo Web UI; '
+        '(4) Kiểm soát dữ liệu ảnh tải lên (`src/upload_store.py`): giao diện không có tài khoản người dùng; ảnh tải lên, nhãn JSON sidecar, `meta.json` và 4 ảnh xem trước được cách ly vào thư mục UUID4 riêng `data/user_uploads/<upload_id>/` gắn cookie phiên `st_sid` (`HttpOnly`, `SameSite=Lax`, `Secure` trên HTTPS, chống IDOR & 0% ghi đè tệp trùng tên hay ảnh mẫu `data/uploads/`, rollback xóa sạch khi lỗi HTTP 400/409), chế độ mặc định `ephemeral` xóa vĩnh viễn ngay trong khối `finally:` (0s sau xử lý, preview trả inline base64), chế độ tùy chọn `ttl` lưu tối đa 15 phút (900s, quét dọn tức thì khi khởi động + luồng nền mỗi 60s) và hỗ trợ xóa tức thì qua `DELETE /api/uploads[/<id>]` (preview trả 404, ghi dấu `DATA_DELETION`); '
         '(5) Phạm vi: toàn bộ số liệu đo trên PC Laptop (RTX 5070 / CPU / ARM64 TRL 3–4) — KHÔNG chứng minh khả năng chịu bức xạ hay sẵn sàng phần cứng vệ tinh/ADCS.'
     )
     s12 = (
-        'Phân định rõ phạm vi: hiện tại đã hoàn thành kiểm thử chốt chặn False Lock, đánh giá E2E trên 540 khung mô phỏng và 6 khung ảnh thật hiệu chuẩn/stress trên PC. '
+        'Phân định rõ phạm vi: hiện tại đã hoàn thành kiểm thử chốt chặn False Lock, đánh giá E2E trên 540 khung mô phỏng & 6 khung ảnh thật hiệu chuẩn/stress trên PC, gói tái lập độc lập 13/13 SHA-256 LF (36,02 MiB / 37,77 MB) và kiểm soát dữ liệu ảnh (151 passed, 1 skipped). '
         'Kỳ vọng phát triển tương lai (chưa kiểm chứng bay): (1) tinh chỉnh có kiểm soát MobileUNet cho miền 12-bit; (2) mở rộng tập ảnh bầu trời thật đa quang học; (3) tối ưu C++/nhúng và thử nghiệm phần cứng/HIL hướng tới ứng dụng học thuật hoặc payload vệ tinh cỡ nhỏ sau này.'
     )
     s13 = (
-        f"Minh chứng đã khóa: `data/outputs/log_reconciliation_audit.json`, `data/outputs/benchmark_real_calibrated_e2e.json`, `data/outputs/benchmark_sim_hd1024_e2e.json`, "
+        f"Minh chứng đã khóa: `CHECKSUMS.sha256` (13/13 LF, 36,02 MiB / 37,77 MB), `REPRODUCIBILITY.md`, `data/outputs/log_reconciliation_audit.json`, `data/outputs/benchmark_real_calibrated_e2e.json`, `data/outputs/benchmark_sim_hd1024_e2e.json`, "
         f"`data/outputs/benchmark_sim_glare_e2e.json`, `data/outputs/benchmark_rejection_stress.json`, `data/outputs/seed42_cog_vs_cnn.json`, "
         f"`data/outputs/centroid_benchmark_hd1024_thr2.json`, `data/outputs/mount_st_helens_{{centroid,lost}}_compare.json`, `data/outputs/e2e_figures/*.png`, `data/outputs/failure_cases/*.png`, "
-        f"`AI2026_Portfolio/BAO_CAO_CAI_TIEN_VONG_CHUNG_KET_CHANG_1.{{md,docx,pdf}}`, `AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx`. "
-        f"Mã nguồn GitHub: {_github_url()} (nhánh `feat/national-round-stage1`). Video minh chứng: cập nhật khi quay bản hoàn thiện."
+        f"`AI2026_Portfolio/BAO_CAO_CAI_TIEN_VONG_CHUNG_KET_CHANG_1.{{md,docx,pdf}}`, `AI2026_Portfolio/BAO_CAO_CAI_TIEN_VONG_CHUNG_KET_CHANG_2.{{md,docx,pdf}}`, `AI2026_Portfolio/MINH_CHUNG_CAI_TIEN_CHANG_2.md`, `AI2026_Portfolio/AI2026_SLIDE_THUYET_TRINH.pptx` (22 slide, 151 pytest PASS). "
+        f"Mã nguồn GitHub: {_github_url()} (nhánh `main`, nhãn `v1.2.0-stage2`). Demo trực tuyến 24/7: https://startracker.agentlens.dpdns.org."
     )
     return {19: s1, 22: s2, 26: s3, 30: s4, 34: s5, 38: s6, 42: s7, 46: s8, 50: s9, 54: s10, 58: s11, 62: s12, 66: s13}
 
@@ -312,7 +313,8 @@ def write_md(bench: dict, bodies: dict[int, str], identity: dict[int, str], m: d
         f"  - Địa chỉ: {g(19, '')}",
         '- Trường: Trường Đại học Bách khoa, Đại học Đà Nẵng',
         '- Khoa: Khoa Công nghệ thông tin',
-        f'- Mã nguồn: {_github_url()} (nhánh `feat/national-round-stage1`)',
+        f'- Mã nguồn: {_github_url()} (nhánh `main`, nhãn `v1.2.0-stage2`)',
+        '- Demo Web trực tuyến 24/7: https://startracker.agentlens.dpdns.org',
         '',
         '## NỘI DUNG HỒ SƠ DỰ ÁN',
         '',
@@ -333,13 +335,13 @@ def write_md(bench: dict, bodies: dict[int, str], identity: dict[int, str], m: d
         f"- {_lost_attitude_sentence(lost)}",
         '',
     ]
-    if DEMO_FIELD.is_file():
+    if STAGE2_ARCH.is_file():
         lines += [
-            '### Demo nhóm — khung sim hd1024 (1024×683)',
+            '### Kiến trúc Pipeline J2000 & Kiểm soát Dữ liệu Ảnh (Chặng 2)',
             '',
-            '![Khung sao giả lập hd1024](data/sim_dataset/hd1024/0001_preview.png)',
+            '![Kiến trúc Pipeline J2000 & Kiểm soát Dữ liệu Ảnh Chặng 2](AI2026_Portfolio/stage2_evidence/stage2_pipeline_architecture.png)',
             '',
-            '*Chú thích: demo của nhóm, 1024×683 — không phải số liệu bài báo.*',
+            '*Chú thích: Kiến trúc khép kín 3 tầng (Chặng 2): gói tái lập 13/13 SHA-256 LF (36,02 MiB / 37,77 MB), chặn tệp hỏng trước torch.load, 0% fallback ngầm, cách ly upload UUID4/st_sid & quyền xóa tức thì.*',
             '',
         ]
     lines += ['### Minh chứng cải tiến Vòng Chung kết · Chặng 1', '']
@@ -371,10 +373,10 @@ def _append_figures(doc: Document) -> None:
         doc.add_paragraph('Ảnh núi thật LOST — overlay CoG (cam) vs CNN (xanh)')
         doc.add_picture(str(MOUNT_OVERLAY), width=Inches(5.8))
         _add_caption(doc, 'Chú thích: ảnh thật công bố kèm LOST, không phải ảnh của nhóm chụp; thông số 4,2 mm và 4,1 µm. File: data/outputs/mount_st_helens_cog_vs_cnn.png')
-    if DEMO_FIELD.is_file():
-        doc.add_paragraph('Khung sao giả lập hd1024 (demo của nhóm, 1024×683)')
-        doc.add_picture(str(DEMO_FIELD), width=Inches(5.2))
-        _add_caption(doc, 'Chú thích: demo của nhóm, 1024×683 — không phải số liệu bài báo.')
+    if STAGE2_ARCH.is_file():
+        doc.add_paragraph('Kiến trúc Pipeline J2000 & Kiểm soát Dữ liệu Ảnh (Chặng 2)')
+        doc.add_picture(str(STAGE2_ARCH), width=Inches(6.0))
+        _add_caption(doc, 'Chú thích: Kiến trúc khép kín 3 tầng Chặng 2 (13/13 SHA-256 LF, chặn checkpoint trước torch.load, 0% fallback ngầm, UUID4/st_sid & xóa tức thì). File: AI2026_Portfolio/stage2_evidence/stage2_pipeline_architecture.png')
     doc.add_paragraph('Minh chứng cải tiến Vòng Chung kết · Chặng 1 (E2E & Chốt chặn False Lock)')
     for rel, cap in STAGE1_FIGS:
         p = ROOT / rel

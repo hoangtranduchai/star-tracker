@@ -21,6 +21,8 @@ def main() -> int:
 
     if args.generate:
         out_p = generate_checksums_file(ROOT)
+        # Ensure pure LF line endings for GNU sha256sum compatibility across Linux, macOS, and Windows
+        out_p.write_bytes(out_p.read_bytes().replace(b'\r\n', b'\n'))
         print(f'[OK] Generated {out_p}')
 
     report = verify_repro_bundle(ROOT)

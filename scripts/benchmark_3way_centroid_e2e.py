@@ -175,7 +175,7 @@ def _run_clutter_stress_suite(
     cnn_tmpl: CNNCentroidDetector | None,
     n_frames: int = 20,
 ) -> dict[str, Any]:
-    print(f'\n=== Suite: sim_earth_clutter ({n_frames} frames x 4 backends) ===', flush=True)
+    print(f'\n=== Suite: sim_earth_clutter ({n_frames} frames x {len(BACKENDS)} backends) ===', flush=True)
     cam = demo_camera_long_side(1024)
     cat, _, kv = engine.stack('bsc5', 6.0, 30.5)
     tol_arc = 40.0
@@ -224,7 +224,7 @@ def _run_clutter_stress_suite(
 
 
 def _run_real_4way_suite(engine: DemoEngine, cnn_tmpl: CNNCentroidDetector | None) -> dict[str, Any]:
-    print('\n=== Suite: real_calibrated (6 frames x 4 backends) ===', flush=True)
+    print(f'\n=== Suite: real_calibrated (6 frames x {len(BACKENDS)} backends) ===', flush=True)
     manifest = json.loads(MANIFEST_PATH.read_text(encoding='utf-8'))
     frames = manifest['frames']
 

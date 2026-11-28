@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-11-28T02:24:44Z",
-  "elapsed_s": 12.11,
+  "generated_at_utc": "2026-11-28T03:13:02Z",
+  "elapsed_s": 11.7,
   "repro_bundle": {
     "ok": true,
     "n_verified": 13,
     "n_total": 13,
-    "total_bundle_mb": 36.03,
+    "total_bundle_mb": 36.02,
     "checkpoint_status": "verified",
     "checkpoint_sha256": "e02d7723b832d12cf2535a8a9794eaedc822023722f07da3126dcd8473cbe062"
   },
@@ -22,7 +22,7 @@
       "n_valid_pairs": 36,
       "attitude_error_arcsec": 0.4463370537767079,
       "gt_source": "simulator_ground_truth",
-      "total_ms": 93.650499999967
+      "total_ms": 93.62980000150856
     },
     {
       "case": "esa_alt60_auto",
@@ -36,7 +36,7 @@
       "n_valid_pairs": 9,
       "attitude_error_arcsec": 2.2632107772614365,
       "gt_source": "esa_tetra3_hipparcos_plus_scipy_f_k1",
-      "total_ms": 61.877999999524036
+      "total_ms": 72.35970000147063
     },
     {
       "case": "zhao_nightsky_auto",
@@ -50,7 +50,7 @@
       "n_valid_pairs": 8,
       "attitude_error_arcsec": 48.25534172069045,
       "gt_source": "zhao_heikkila_undistort_plus_hipparcos_3dof",
-      "total_ms": 6010.930000001281
+      "total_ms": 5486.256799997136
     },
     {
       "case": "mount_st_helens_cnn",
@@ -64,7 +64,7 @@
       "n_valid_pairs": 72,
       "attitude_error_arcsec": 71.13119703047542,
       "gt_source": "startracker_hipparcos_sky_only_scipy_f_k1_k2",
-      "total_ms": 638.9866000008624
+      "total_ms": 619.5220999998128
     }
   ],
   "fallback_proof": {
@@ -72,7 +72,7 @@
     "executed_backend": "classical",
     "execution_mode_summary": "cnn -> classical [FALLBACK_TO_COG]",
     "fallback_triggered": true,
-    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_final\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "fallback_reason": "FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt",
     "status": "SOLVED",
     "n_valid_pairs": 36,
     "attitude_error_arcsec": 0.4463370537767079
@@ -83,39 +83,39 @@
     "executed_backend": "classical",
     "execution_mode_summary": "auto -> classical [FALLBACK_TO_COG]",
     "fallback_triggered": true,
-    "fallback_reason": "FileNotFoundError: missing public weights: C:\\Users\\ADMIN\\AppData\\Local\\Temp\\star_tracker_clean_clone_stage2_final\\third_party\\cnn_star_centroid\\saved_models\\__simulated_missing_checkpoint__.pt",
+    "fallback_reason": "FileNotFoundError: missing public weights: third_party/cnn_star_centroid/saved_models/__simulated_missing_checkpoint__.pt",
     "status": "LOST",
     "reject_code": "INSUFFICIENT_INLIER_PAIRS"
   },
   "data_control_proof": {
     "same_filename_tested": "mount_st_helens_1.png",
-    "upload_id_1": "43f00363df42484d",
-    "upload_id_2": "f97d0607da02485c",
+    "upload_id_1": "4250b57c19d148b3",
+    "upload_id_2": "a1cdf81ea56445e7",
     "distinct_isolated_dirs": true,
     "bundled_sample_untouched": true,
     "delete_1": {
       "deleted": true,
-      "upload_id": "43f00363df42484d",
-      "storage_rel_dir": "data/user_uploads/43f00363df42484d/",
+      "upload_id": "4250b57c19d148b3",
+      "storage_rel_dir": "data/user_uploads/4250b57c19d148b3/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T02:24:44Z"
+      "deleted_at_utc": "2026-11-28T03:13:02Z"
     },
     "delete_2": {
       "deleted": true,
-      "upload_id": "f97d0607da02485c",
-      "storage_rel_dir": "data/user_uploads/f97d0607da02485c/",
+      "upload_id": "a1cdf81ea56445e7",
+      "storage_rel_dir": "data/user_uploads/a1cdf81ea56445e7/",
       "deleted_files": [
         "img_mount_st_helens_1.png",
         "meta.json",
         "sidecar_meta.json"
       ],
       "verified_gone": true,
-      "deleted_at_utc": "2026-11-28T02:24:44Z"
+      "deleted_at_utc": "2026-11-28T03:13:02Z"
     },
     "remaining_user_uploads": 0
   }

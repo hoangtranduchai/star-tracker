@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=36" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=37" />
   <link rel="stylesheet" href="{{ url_for('static', filename='orbit3d.css') }}?v=34" />
 </head>
 <body>
@@ -379,12 +379,12 @@
             </div>
           </div>
           <div class="cmp-upload-strip">
-            <span class="cmp-upload-label">Hoặc tải ảnh bầu trời riêng để so sánh trực tiếp:</span>
-            <input type="file" id="cmp-upload-file" class="cmp-upload-input" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,.npy" />
-            <input type="number" id="cmp-upload-focal" class="cmp-num-input" step="any" min="0.1" placeholder="Tiêu cự mm (tùy chọn)" />
-            <input type="number" id="cmp-upload-pixel" class="cmp-num-input" step="any" min="0.1" placeholder="Pixel µm (tùy chọn)" />
-            <select id="cmp-upload-retention" class="cmp-select-input" title="Chính sách lưu ảnh tạm thời trong thư mục UUID riêng data/user_uploads/<id>/">
-              <option value="ephemeral" selected>Xóa ngay sau xử lý (0s)</option>
+            <label for="cmp-upload-file" class="cmp-upload-label">Hoặc tải ảnh bầu trời riêng để so sánh trực tiếp:</label>
+            <input type="file" id="cmp-upload-file" class="cmp-upload-input" aria-label="Chọn tệp ảnh bầu trời để so sánh" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,.bmp,.npy" />
+            <input type="number" id="cmp-upload-focal" class="cmp-num-input" aria-label="Tiêu cự (mm, tùy chọn)" step="any" min="0.1" placeholder="Tiêu cự mm (tùy chọn)" />
+            <input type="number" id="cmp-upload-pixel" class="cmp-num-input" aria-label="Cỡ điểm ảnh (µm, tùy chọn)" step="any" min="0.1" placeholder="Pixel µm (tùy chọn)" />
+            <select id="cmp-upload-retention" class="cmp-select-input" aria-label="Chính sách lưu ảnh tạm cho chế độ so sánh" title="Chính sách lưu ảnh tạm thời trong thư mục UUID riêng data/user_uploads/<id>/">
+              <option value="ephemeral" selected>Xóa ngay trong finally: (0s sau xử lý)</option>
               <option value="ttl">Lưu tạm 15 phút (TTL · Xóa tay)</option>
             </select>
             <button type="button" id="btn-cmp-upload" class="exp-pill" title="Tải tệp ảnh lên và chạy đồng thời CoG, tetra3, CNN-Hybrid">Tải ảnh &amp; So sánh 3pp</button>
@@ -674,7 +674,7 @@
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <input type="text" id="star-search-input" placeholder="Tìm theo tên sao IAU hoặc mã HR..." />
+              <input type="text" id="star-search-input" aria-label="Tìm theo tên sao IAU hoặc mã HR" placeholder="Tìm theo tên sao IAU hoặc mã HR..." />
             </div>
           </div>
 
@@ -954,7 +954,7 @@
 
           <div id="target-seed" class="sub-tab-pane active">
             <div class="field-group">
-              <label>Mã hướng ngẫu nhiên (Seed)</label>
+              <label for="seed-input">Mã hướng ngẫu nhiên (Seed)</label>
               <div class="seed-input-wrap">
                 <input name="seed" id="seed-input" type="number" value="42" min="0" />
                 <button type="button" id="btn-rnd-seed" class="icon-btn" title="Quay sang một hướng ngẫu nhiên mới trên thiên cầu">
@@ -1004,16 +1004,15 @@
 
           <div id="target-radec" class="sub-tab-pane">
             <div class="field-group">
-              <label>Dán nhanh tọa độ (Stellarium hoặc độ thập phân)
-                <div class="input-with-clear">
-                  <input name="radec_paste" id="radec-paste" type="text" autocomplete="off" spellcheck="false" placeholder="VD: 18h 37m 51.2s  +38° 48' 46.2&quot;" />
-                  <button type="button" id="btn-clear-radec" class="clear-btn" title="Xóa tọa độ" aria-label="Xóa tọa độ">
-                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </label>
+              <label for="radec-paste">Dán nhanh tọa độ (Stellarium hoặc độ thập phân)</label>
+              <div class="input-with-clear">
+                <input name="radec_paste" id="radec-paste" type="text" autocomplete="off" spellcheck="false" placeholder="VD: 18h 37m 51.2s  +38° 48' 46.2&quot;" />
+                <button type="button" id="btn-clear-radec" class="clear-btn" title="Xóa tọa độ" aria-label="Xóa tọa độ">
+                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="input-row-2">
               <div class="field-group">
@@ -1073,17 +1072,17 @@
 
             <div class="upload-row">
               <label class="file-btn">Tệp ảnh bầu trời
-                <input type="file" id="local-image" accept=".tif,.tiff,.png,.jpg,.jpeg,.webp,image/tiff,image/png,image/jpeg,image/webp" />
+                <input type="file" id="local-image" accept=".png,.jpg,.jpeg,.tif,.tiff,.webp,.bmp,.npy,image/png,image/jpeg,image/tiff,image/webp" />
               </label>
               <label class="file-btn">Nhãn JSON (tùy chọn)
                 <input type="file" id="local-sidecar" accept=".json,application/json" />
               </label>
             </div>
-            <p id="local-file-hint" class="field-hint">Ưu tiên ảnh TIFF/PNG không nén. Với ảnh chụp từ máy ảnh riêng, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Quang học bên dưới.</p>
+            <p id="local-file-hint" class="field-hint">Ưu tiên ảnh TIFF/PNG/NPY không nén. Với ảnh chụp từ máy ảnh riêng, hãy nhập tiêu cự và cỡ điểm ảnh ở mục Quang học bên dưới.</p>
             <div class="field-group" style="margin-top: 0.45rem;">
               <label>Chính sách lưu ảnh tải lên
                 <select id="upload-retention-mode">
-                  <option value="ephemeral" selected>Xóa vĩnh viễn ngay sau xử lý (0s lưu đĩa — mặc định)</option>
+                  <option value="ephemeral" selected>Xóa ngay trong finally: (0s sau xử lý — mặc định)</option>
                   <option value="ttl">Lưu tạm 15 phút (TTL 900s, tự dọn / bấm Xóa tay)</option>
                 </select>
               </label>
@@ -1301,6 +1300,6 @@
 
   <script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
   <script src="{{ url_for('static', filename='orbit3d.js') }}?v=34"></script>
-  <script src="{{ url_for('static', filename='app.js') }}?v=38"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=39"></script>
 </body>
 </html>

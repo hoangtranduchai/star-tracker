@@ -206,6 +206,8 @@ class StarTrackerPipeline:
                     centroid_detector='classical',
                     centroid_fallback=True,
                     centroid_error=cnn_err,
+                    checkpoint_status=getattr(cnn_det, 'checkpoint_status', None),
+                    checkpoint_sha256=getattr(cnn_det, 'checkpoint_sha256', None),
                     auto_router_used=True,
                     auto_router_selected='classical',
                     auto_router_reason=f'CoG trả {res_cog.status} [{trigger_tag}] → thử nâng cấp CNN nhưng lỗi checkpoint ({cnn_err}) → FALLBACK về CoG',
@@ -251,7 +253,18 @@ class StarTrackerPipeline:
         def abort(reject_code: str, reason: str, *, n_initial_matched: int=0, n_rejected_outliers: int=0, n_valid_pairs: int=0, rms_res: object=None, max_res: object=None, fov_expected: int=0) -> TrackerResult:
             t_log['total_pipeline_ms'] = sum((val for key, val in t_log.items() if key != 'total_pipeline_ms'))
             stats = _build_match_stats(status='LOST', reject_code=reject_code, n_detected=n_det, n_initial_matched=n_initial_matched, n_rejected_outliers=n_rejected_outliers, n_valid_pairs=n_valid_pairs, min_pairs_required=req_stars, rms_residual_arcsec=rms_res, max_residual_arcsec=max_res, fov_expected_stars=fov_expected)
-            q_diag = dict(stats, n_matched=0, centroid_backend=cfg_be, centroid_detector=getattr(detector, 'last_backend', cfg_be), centroid_fallback=bool(getattr(detector, 'last_fallback', False)), low_recall=True, many_false=False)
+            q_diag = dict(
+                stats,
+                n_matched=0,
+                centroid_backend=cfg_be,
+                centroid_detector=getattr(detector, 'last_backend', cfg_be),
+                centroid_fallback=bool(getattr(detector, 'last_fallback', False)),
+                centroid_error=getattr(detector, 'last_error', None),
+                checkpoint_status=getattr(detector, 'checkpoint_status', None),
+                checkpoint_sha256=getattr(detector, 'checkpoint_sha256', None),
+                low_recall=True,
+                many_false=False,
+            )
             return TrackerResult(success=False, q=None, a=None, centroids=cents, ident=None, residuals_arcsec=None, cov_rad2=None, timing_ms=t_log, quality=q_diag, error=f'LOST [{reject_code}]: {reason}', glare_mask=g_mask, status='LOST', reject_code=reject_code, match_stats=stats)
 
         if n_det < 3:
@@ -352,7 +365,18 @@ class StarTrackerPipeline:
         n_id: object = int(len(ident.obs_idx))
         det_ref = self.centroid_detector if detector is None else detector
         be_str: object = str(cfg_be if cfg_be is not None else (self.cfg.centroid_backend or 'classical'))
-        q_info: object = dict(n_detected=n_det, n_matched=n_id, centroid_backend=be_str, centroid_detector=getattr(det_ref, 'last_backend', be_str), centroid_fallback=bool(getattr(det_ref, 'last_fallback', False)), low_recall=False, many_false=False)
+        q_info: object = dict(
+            n_detected=n_det,
+            n_matched=n_id,
+            centroid_backend=be_str,
+            centroid_detector=getattr(det_ref, 'last_backend', be_str),
+            centroid_fallback=bool(getattr(det_ref, 'last_fallback', False)),
+            centroid_error=getattr(det_ref, 'last_error', None),
+            checkpoint_status=getattr(det_ref, 'checkpoint_status', None),
+            checkpoint_sha256=getattr(det_ref, 'checkpoint_sha256', None),
+            low_recall=False,
+            many_false=False,
+        )
         if a is None:
             return q_info
         proj_uv, in_fov = self.camera.project(einsum('ij,kj->ik', self.catalog.vectors, a))

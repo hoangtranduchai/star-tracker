@@ -1,5 +1,6 @@
 """Flask web interface for the star tracker simulator and lost-in-space attitude solver."""
 from json import loads as json_loads
+import logging
 from math import isfinite
 import os
 from pathlib import Path
@@ -14,13 +15,28 @@ BASE = Path(__file__).resolve().parent
 if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 matplotlib.use('Agg')
-from src.centroid_cnn import weights_available as _weights_available
+from src import centroid_cnn as _centroid_cnn
 from src.demo_session import DemoEngine, RunRequest, SIM_METHOD
 from src.execution_log import read_execution_log, record_data_deletion, record_pipeline_run
 from src.quaternion import format_dec_both, format_dec_stellarium, format_ra_both, format_ra_hms, parse_dec_deg, parse_ra_deg, split_radec_text
 from src.repro_bundle import verify_repro_bundle
 from src.starnames import describe_index, n_iau_names, n_named_hr
-from src.upload_store import DEFAULT_SWEEP_INTERVAL_S, SESSION_COOKIE_NAME, cleanup_expired_uploads, delete_all_uploads, delete_upload, encode_png_data_uri, list_uploads, normalize_retention_mode, normalize_session_id, resolve_upload_preview, save_uploaded_files, storage_policy_summary
+from src.upload_store import (
+    DEFAULT_SWEEP_INTERVAL_S,
+    SESSION_COOKIE_NAME,
+    cleanup_expired_uploads,
+    delete_all_uploads,
+    delete_upload,
+    encode_png_data_uri,
+    list_uploads,
+    normalize_retention_mode,
+    normalize_session_id,
+    resolve_upload_preview,
+    sanitize_upload_filename,
+    save_uploaded_files,
+    storage_policy_summary,
+)
+_LOGGER = logging.getLogger(__name__)
 app = Flask(__name__, template_folder=str(BASE.joinpath('web', 'templates')), static_folder=str(BASE.joinpath('web', 'static')))
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0, TEMPLATES_AUTO_RELOAD=True, MAX_CONTENT_LENGTH=80 * 1024 * 1024)
 app.jinja_env.auto_reload = True
@@ -152,25 +168,86 @@ def _no_cache(resp: object) -> object:
 def _caller_session_id() -> str | None:
     return normalize_session_id(request.cookies.get(SESSION_COOKIE_NAME))
 
-def _checkpoint_status_now(simulate_missing: bool) -> str:
+def _attach_session_cookie(resp: Response, sid: str) -> Response:
+    is_https = bool(request.is_secure or request.headers.get('X-Forwarded-Proto', '').strip().lower() == 'https')
+    resp.set_cookie(
+        SESSION_COOKIE_NAME,
+        sid,
+        httponly=True,
+        samesite='Lax',
+        secure=is_https,
+        path='/',
+    )
+    return resp
+
+def _ensure_caller_session() -> tuple[str, bool]:
+    existing = _caller_session_id()
+    if existing is not None:
+        return (existing, False)
+    return (secrets.token_hex(16), True)
+
+def _checkpoint_info_now(simulate_missing: bool) -> tuple[str, str | None]:
+    """Return truthful `(checkpoint_status, checkpoint_sha256)` via `inspect_checkpoint_status` when available."""
     if simulate_missing:
-        return 'simulated_missing'
-    return 'available' if _weights_available() else 'missing'
+        return ('simulated_missing', None)
+    inspect_fn = getattr(_centroid_cnn, 'inspect_checkpoint_status', None)
+    if callable(inspect_fn):
+        try:
+            info = inspect_fn(getattr(_centroid_cnn, '_DEFAULT_WEIGHTS', None))
+            if isinstance(info, dict):
+                return (str(info.get('status') or 'missing'), info.get('sha256'))
+        except Exception:
+            pass
+    default_w = getattr(_centroid_cnn, '_DEFAULT_WEIGHTS', None)
+    if default_w is None:
+        return ('verified' if _centroid_cnn.weights_available() else 'missing', None)
+    p = Path(default_w)
+    if not p.is_file():
+        return ('missing', None)
+    try:
+        if p.stat().st_size <= 1_000_000:
+            return ('corrupted_truncated', None)
+        sha = _centroid_cnn.verify_checkpoint_integrity(p)
+        return ('verified', sha)
+    except ValueError as exc:
+        msg = str(exc)
+        if 'TRUNCATED' in msg.upper():
+            return ('corrupted_truncated', None)
+        return ('checksum_mismatch', None)
+    except Exception:
+        return ('missing', None)
+
+def _checkpoint_status_now(simulate_missing: bool) -> str:
+    return _checkpoint_info_now(simulate_missing)[0]
+
+def _safe_record_data_deletion(
+    *,
+    action: str,
+    upload_id: str | None,
+    deleted_files: list[str],
+    verified_gone: bool,
+    endpoint: str,
+    owner_sid: str | None = None,
+) -> None:
+    try:
+        record_data_deletion(
+            BASE,
+            action=action,
+            upload_id=upload_id,
+            deleted_files=deleted_files,
+            verified_gone=verified_gone,
+            endpoint=endpoint,
+            owner_sid=owner_sid,
+        )
+    except Exception as err:
+        _LOGGER.warning('Failed to record data deletion audit (%s, %s): %s', action, upload_id, err)
 
 @app.get('/')
 def index() -> object:
     ds_frames: object = ENGINE.list_dataset_frames()
     resp = make_response(render_template('index.html', hardware=ENGINE.specs, sim_method=SIM_METHOD, frames=ds_frames, n_frames=len(ds_frames), n_iau_names=n_iau_names(), n_named_hr=n_named_hr()))
     if _caller_session_id() is None:
-        is_https = bool(request.is_secure or request.headers.get('X-Forwarded-Proto', '').strip().lower() == 'https')
-        resp.set_cookie(
-            SESSION_COOKIE_NAME,
-            secrets.token_hex(16),
-            httponly=True,
-            samesite='Lax',
-            secure=is_https,
-            path='/',
-        )
+        _attach_session_cookie(resp, secrets.token_hex(16))
     return resp
 
 @app.get('/favicon.ico')
@@ -243,11 +320,27 @@ def _bool_flag(raw: object) -> bool:
         return raw
     return str(raw or '').strip().lower() in ('1', 'true', 'yes', 'on')
 
-def _log_run_payload(endpoint: str, res_dict: dict, *, source_name: str, upload_id: str | None = None, retention_mode: str | None = None, deleted_immediately: bool | None = None) -> None:
+def _log_run_payload(
+    endpoint: str,
+    res_dict: dict,
+    *,
+    source_name: str,
+    upload_id: str | None = None,
+    retention_mode: str | None = None,
+    deleted_immediately: bool | None = None,
+    owner_sid: str | None = None,
+) -> None:
     try:
         mstats = res_dict.get('match_stats') or {}
         met = res_dict.get('metrics') or {}
         timing = res_dict.get('timing_ms') or {}
+        ckpt_status = res_dict.get('checkpoint_status')
+        ckpt_sha = res_dict.get('checkpoint_sha256')
+        if not ckpt_status or ckpt_status == 'available':
+            live_st, live_sha = _checkpoint_info_now(ckpt_status == 'simulated_missing')
+            ckpt_status = live_st
+            if ckpt_sha is None:
+                ckpt_sha = live_sha
         record_pipeline_run(
             BASE,
             endpoint=endpoint,
@@ -265,13 +358,61 @@ def _log_run_payload(endpoint: str, res_dict: dict, *, source_name: str, upload_
             n_valid_pairs=int(mstats.get('n_valid_pairs') or met.get('n_matched') or 0),
             n_detected=int(met.get('n_detected') or 0),
             latency_ms=timing.get('total_pipeline_ms'),
-            checkpoint_status=res_dict.get('checkpoint_status'),
+            checkpoint_status=ckpt_status,
+            checkpoint_sha256=ckpt_sha,
             upload_id=upload_id,
             retention_mode=retention_mode,
             deleted_immediately=deleted_immediately,
+            owner_sid=owner_sid,
         )
-    except Exception:
-        pass
+    except Exception as err:
+        _LOGGER.warning('Failed to record pipeline run audit (%s): %s', endpoint, err)
+
+def _log_compare_entries(
+    endpoint: str,
+    comp_payload: dict,
+    *,
+    source_type: str,
+    source_name: str,
+    simulate_missing: bool,
+    upload_id: str | None = None,
+    retention_mode: str | None = None,
+    deleted_immediately: bool | None = None,
+    owner_sid: str | None = None,
+) -> None:
+    ckpt_st_fallback, ckpt_sha_fallback = _checkpoint_info_now(simulate_missing)
+    for bk, m_obj in (comp_payload.get('methods') or {}).items():
+        try:
+            m_ckpt_st = m_obj.get('checkpoint_status') or comp_payload.get('checkpoint_status')
+            if not m_ckpt_st or m_ckpt_st == 'available':
+                m_ckpt_st = ckpt_st_fallback
+            m_ckpt_sha = m_obj.get('checkpoint_sha256') or comp_payload.get('checkpoint_sha256') or ckpt_sha_fallback
+            record_pipeline_run(
+                BASE,
+                endpoint=endpoint,
+                source_type=source_type,
+                source_name=source_name,
+                requested_backend=str(m_obj.get('requested_backend') or bk),
+                executed_backend=str(m_obj.get('executed_backend') or m_obj.get('centroid_detector') or bk),
+                fallback_triggered=bool(m_obj.get('centroid_fallback')),
+                fallback_reason=m_obj.get('fallback_reason') or m_obj.get('centroid_error'),
+                auto_router_used=bool(m_obj.get('auto_router_used') or str(bk).lower() == 'auto'),
+                auto_router_selected=m_obj.get('auto_router_selected'),
+                auto_router_reason=m_obj.get('auto_router_reason'),
+                status=str(m_obj.get('status', 'LOST')),
+                reject_code=m_obj.get('reject_code'),
+                n_valid_pairs=int(m_obj.get('n_valid_pairs') or 0),
+                n_detected=int(m_obj.get('n_detected') or 0),
+                latency_ms=(m_obj.get('timing_ms') or {}).get('total_pipeline_ms'),
+                checkpoint_status=m_ckpt_st,
+                checkpoint_sha256=m_ckpt_sha,
+                upload_id=upload_id,
+                retention_mode=retention_mode,
+                deleted_immediately=deleted_immediately,
+                owner_sid=owner_sid,
+            )
+        except Exception as err:
+            _LOGGER.warning('Failed to record compare audit (%s, %s): %s', endpoint, bk, err)
 
 @app.post('/api/run')
 def api_run() -> object:
@@ -343,24 +484,13 @@ def api_compare() -> object:
         finally:
             LOCK.release()
         src_nm = Path(str(resolved_img)).name if resolved_img else f'seed={req.seed}'
-        ckpt_st_cmp = _checkpoint_status_now(sim_missing)
-        for bk, m_obj in (comp_payload.get('methods') or {}).items():
-            record_pipeline_run(
-                BASE,
-                endpoint='/api/compare',
-                source_type=str(comp_payload.get('source', 'simulator')),
-                source_name=src_nm,
-                requested_backend=str(bk),
-                executed_backend=str(m_obj.get('executed_backend', bk)),
-                fallback_triggered=bool(m_obj.get('centroid_fallback')),
-                fallback_reason=m_obj.get('fallback_reason'),
-                status=str(m_obj.get('status', 'LOST')),
-                reject_code=m_obj.get('reject_code'),
-                n_valid_pairs=int(m_obj.get('n_valid_pairs') or 0),
-                n_detected=int(m_obj.get('n_detected') or 0),
-                latency_ms=(m_obj.get('timing_ms') or {}).get('total_pipeline_ms'),
-                checkpoint_status=ckpt_st_cmp,
-            )
+        _log_compare_entries(
+            '/api/compare',
+            comp_payload,
+            source_type=str(comp_payload.get('source', 'simulator')),
+            source_name=src_nm,
+            simulate_missing=sim_missing,
+        )
         return jsonify(comp_payload)
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
@@ -369,26 +499,32 @@ def api_compare() -> object:
 
 @app.post('/api/compare-upload')
 def api_compare_upload() -> object:
+    caller_sid, minted_cookie = _ensure_caller_session()
+
+    def _finish(data: dict, code: int = 200) -> Response:
+        resp = make_response(jsonify(data), code)
+        if minted_cookie:
+            _attach_session_cookie(resp, caller_sid)
+        return resp
+
     uploaded: object = request.files.get('image')
     if uploaded is None or not uploaded.filename:
-        return (jsonify(dict(error='Chưa chọn file ảnh để so sánh')), 400)
-    from werkzeug.utils import secure_filename
-    safe_name: str = secure_filename(uploaded.filename)
+        return _finish(dict(error='Chưa chọn file ảnh để so sánh'), 400)
+    safe_name: str = sanitize_upload_filename(uploaded.filename, fallback_stem='upload')
     if Path(safe_name).suffix.lower() not in _UPLOAD_EXTS:
-        return (jsonify(dict(error='Nhận TIFF, PNG, JPEG, WebP hoặc NPY.')), 400)
+        return _finish(dict(error='Nhận TIFF, PNG, JPEG, WebP hoặc NPY.'), 400)
     sc_upload: object = request.files.get('sidecar')
     sc_safe: str | None = None
     if sc_upload is not None and sc_upload.filename:
-        sc_safe = secure_filename(sc_upload.filename)
+        sc_safe = sanitize_upload_filename(sc_upload.filename, fallback_stem='sidecar')
         if Path(sc_safe).suffix.lower() != '.json':
-            return (jsonify(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).')), 400)
+            return _finish(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).'), 400)
     form_get: object = request.form.get
     mode_val: str = str(form_get('mode') or 'fast')
     if mode_val not in ('fast', 'full'):
-        return (jsonify(dict(error='mode must be fast or full')), 400)
+        return _finish(dict(error='mode must be fast or full'), 400)
     sim_missing_up: bool = _bool_flag(form_get('simulate_missing_weights'))
     ret_mode: str = normalize_retention_mode(form_get('retention_mode'))
-    caller_sid: str | None = _caller_session_id()
     saved_slot = save_uploaded_files(
         BASE,
         uploaded,
@@ -440,17 +576,24 @@ def api_compare_upload() -> object:
             comp_payload['clean_url'] = f'/api/uploads/{upload_id}/preview/demo_compare_clean.png'
         succeeded = True
     except EngineBusy as busy_err:
-        return (jsonify(dict(error=str(busy_err), busy=True)), 409)
+        return _finish(dict(error=str(busy_err), busy=True), 409)
     except Exception as err:
-        return (jsonify(dict(error=str(err))), 400)
+        return _finish(dict(error=str(err)), 400)
     finally:
         if ret_mode == 'ephemeral' or not succeeded:
             d_res = delete_upload(BASE, upload_id, ignore_owner=True)
             deleted_now = bool(d_res.get('deleted'))
             verified_gone = bool(d_res.get('verified_gone'))
             if deleted_now:
-                del_action = 'EPHEMERAL_AUTO_DELETE' if ret_mode == 'ephemeral' else 'ERROR_ROLLBACK_DELETE'
-                record_data_deletion(BASE, action=del_action, upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/compare-upload')
+                del_action = 'ERROR_ROLLBACK_DELETE' if not succeeded else 'EPHEMERAL_AUTO_DELETE'
+                _safe_record_data_deletion(
+                    action=del_action,
+                    upload_id=upload_id,
+                    deleted_files=d_res.get('deleted_files') or [],
+                    verified_gone=verified_gone,
+                    endpoint='/api/compare-upload',
+                    owner_sid=caller_sid,
+                )
 
     comp_payload['source'] = 'upload'
     comp_payload['source_image'] = safe_name
@@ -463,35 +606,25 @@ def api_compare_upload() -> object:
         overwrite_protected=True,
         previews_isolated=True,
         previews_deleted_with_slot=True,
-        session_scoped=caller_sid is not None,
+        session_scoped=True,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
         expires_at_utc=meta['expires_at_utc'],
         delete_endpoint=f'/api/uploads/{upload_id}',
     )
-    ckpt_st_up = _checkpoint_status_now(sim_missing_up)
-    for bk, m_obj in (comp_payload.get('methods') or {}).items():
-        record_pipeline_run(
-            BASE,
-            endpoint='/api/compare-upload',
-            source_type='upload',
-            source_name=safe_name,
-            requested_backend=str(bk),
-            executed_backend=str(m_obj.get('executed_backend', bk)),
-            fallback_triggered=bool(m_obj.get('centroid_fallback')),
-            fallback_reason=m_obj.get('fallback_reason'),
-            status=str(m_obj.get('status', 'LOST')),
-            reject_code=m_obj.get('reject_code'),
-            n_valid_pairs=int(m_obj.get('n_valid_pairs') or 0),
-            n_detected=int(m_obj.get('n_detected') or 0),
-            latency_ms=(m_obj.get('timing_ms') or {}).get('total_pipeline_ms'),
-            checkpoint_status=ckpt_st_up,
-            upload_id=upload_id,
-            retention_mode=ret_mode,
-            deleted_immediately=deleted_now,
-        )
-    return jsonify(comp_payload)
+    _log_compare_entries(
+        '/api/compare-upload',
+        comp_payload,
+        source_type='upload',
+        source_name=safe_name,
+        simulate_missing=sim_missing_up,
+        upload_id=upload_id,
+        retention_mode=ret_mode,
+        deleted_immediately=deleted_now,
+        owner_sid=caller_sid,
+    )
+    return _finish(comp_payload, 200)
 
 @app.get('/api/benchmark-summary')
 def api_benchmark_summary() -> object:
@@ -523,28 +656,34 @@ def api_benchmark_summary() -> object:
 
 @app.post('/api/run-upload')
 def api_run_upload() -> object:
+    caller_sid, minted_cookie = _ensure_caller_session()
+
+    def _finish(data: dict, code: int = 200) -> Response:
+        resp = make_response(jsonify(data), code)
+        if minted_cookie:
+            _attach_session_cookie(resp, caller_sid)
+        return resp
+
     uploaded: object = request.files.get('image')
     if uploaded is None or not uploaded.filename:
-        return (jsonify(dict(error='Chưa chọn file ảnh')), 400)
-    from werkzeug.utils import secure_filename
-    safe_name: str = secure_filename(uploaded.filename)
+        return _finish(dict(error='Chưa chọn file ảnh'), 400)
+    safe_name: str = sanitize_upload_filename(uploaded.filename, fallback_stem='upload')
     if Path(safe_name).suffix.lower() not in _UPLOAD_EXTS:
-        return (jsonify(dict(error='Nhận TIFF, PNG, JPEG, WebP hoặc NPY. Ảnh nén sẽ kèm cảnh báo tâm sao.')), 400)
+        return _finish(dict(error='Nhận TIFF, PNG, JPEG, WebP hoặc NPY. Ảnh nén sẽ kèm cảnh báo tâm sao.'), 400)
     sc_upload: object = request.files.get('sidecar')
     sc_safe: str | None = None
     if sc_upload is not None and sc_upload.filename:
-        sc_safe = secure_filename(sc_upload.filename)
+        sc_safe = sanitize_upload_filename(sc_upload.filename, fallback_stem='sidecar')
         if Path(sc_safe).suffix.lower() != '.json':
-            return (jsonify(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).')), 400)
+            return _finish(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).'), 400)
     form_get: object = request.form.get
     mode_val: str = str(form_get('mode') or 'fast')
     be_val: str = str(form_get('centroid_backend') or 'auto').strip().lower()
     if mode_val not in ('fast', 'full'):
-        return (jsonify(dict(error='mode must be fast or full')), 400)
+        return _finish(dict(error='mode must be fast or full'), 400)
     if be_val not in _VALID_BACKENDS:
-        return (jsonify(dict(error='centroid_backend must be auto, classical, tetra3, or cnn')), 400)
+        return _finish(dict(error='centroid_backend must be auto, classical, tetra3, or cnn'), 400)
     ret_mode: str = normalize_retention_mode(form_get('retention_mode'))
-    caller_sid: str | None = _caller_session_id()
     saved_slot = save_uploaded_files(
         BASE,
         uploaded,
@@ -610,17 +749,24 @@ def api_run_upload() -> object:
             )
         succeeded = True
     except EngineBusy as busy_err:
-        return (jsonify(dict(error=str(busy_err), busy=True)), 409)
+        return _finish(dict(error=str(busy_err), busy=True), 409)
     except Exception as err:
-        return (jsonify(dict(error=str(err))), 400)
+        return _finish(dict(error=str(err)), 400)
     finally:
         if ret_mode == 'ephemeral' or not succeeded:
             d_res = delete_upload(BASE, upload_id, ignore_owner=True)
             deleted_now = bool(d_res.get('deleted'))
             verified_gone = bool(d_res.get('verified_gone'))
             if deleted_now:
-                del_action = 'EPHEMERAL_AUTO_DELETE' if ret_mode == 'ephemeral' else 'ERROR_ROLLBACK_DELETE'
-                record_data_deletion(BASE, action=del_action, upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/run-upload')
+                del_action = 'ERROR_ROLLBACK_DELETE' if not succeeded else 'EPHEMERAL_AUTO_DELETE'
+                _safe_record_data_deletion(
+                    action=del_action,
+                    upload_id=upload_id,
+                    deleted_files=d_res.get('deleted_files') or [],
+                    verified_gone=verified_gone,
+                    endpoint='/api/run-upload',
+                    owner_sid=caller_sid,
+                )
 
     res_dict['source'] = 'upload'
     res_dict['source_image'] = safe_name
@@ -633,19 +779,27 @@ def api_run_upload() -> object:
         overwrite_protected=True,
         previews_isolated=True,
         previews_deleted_with_slot=True,
-        session_scoped=caller_sid is not None,
+        session_scoped=True,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
         expires_at_utc=meta['expires_at_utc'],
         delete_endpoint=f'/api/uploads/{upload_id}',
     )
-    _log_run_payload('/api/run-upload', res_dict, source_name=safe_name, upload_id=upload_id, retention_mode=ret_mode, deleted_immediately=deleted_now)
-    return jsonify(res_dict)
+    _log_run_payload(
+        '/api/run-upload',
+        res_dict,
+        source_name=safe_name,
+        upload_id=upload_id,
+        retention_mode=ret_mode,
+        deleted_immediately=deleted_now,
+        owner_sid=caller_sid,
+    )
+    return _finish(res_dict, 200)
 
 @app.get('/api/uploads/<upload_id>/preview/<filename>')
 def api_upload_preview(upload_id: str, filename: str) -> object:
-    target = resolve_upload_preview(BASE, upload_id, filename, owner_sid=_caller_session_id())
+    target = resolve_upload_preview(BASE, upload_id, filename, owner_sid=_caller_session_id(), require_session=True)
     if target is None:
         return (jsonify(dict(error='Ảnh xem trước không tồn tại hoặc đã bị xóa/hết hạn TTL.')), 404)
     return send_from_directory(target.parent, target.name)
@@ -653,19 +807,25 @@ def api_upload_preview(upload_id: str, filename: str) -> object:
 @app.get('/api/uploads')
 def api_list_uploads() -> object:
     sid = _caller_session_id()
-    return jsonify(dict(policy=storage_policy_summary(BASE, owner_sid=sid), uploads=list_uploads(BASE, owner_sid=sid)))
+    return jsonify(
+        dict(
+            policy=storage_policy_summary(BASE, owner_sid=sid, require_session=True),
+            uploads=list_uploads(BASE, owner_sid=sid, require_session=True),
+        )
+    )
 
 @app.delete('/api/uploads/<upload_id>')
 def api_delete_upload(upload_id: str) -> object:
-    res = delete_upload(BASE, upload_id, owner_sid=_caller_session_id())
+    sid = _caller_session_id()
+    res = delete_upload(BASE, upload_id, owner_sid=sid, require_session=True)
     if res.get('deleted'):
-        record_data_deletion(
-            BASE,
+        _safe_record_data_deletion(
             action='USER_DELETE_SINGLE',
             upload_id=res['upload_id'],
             deleted_files=res.get('deleted_files') or [],
             verified_gone=bool(res.get('verified_gone')),
             endpoint=f'DELETE /api/uploads/{upload_id}',
+            owner_sid=sid,
         )
         return jsonify(res)
     status_code = 404 if (res.get('verified_gone') or res.get('not_found_or_denied')) else 400
@@ -673,14 +833,15 @@ def api_delete_upload(upload_id: str) -> object:
 
 @app.delete('/api/uploads')
 def api_delete_all_uploads() -> object:
-    res = delete_all_uploads(BASE, owner_sid=_caller_session_id())
-    record_data_deletion(
-        BASE,
+    sid = _caller_session_id()
+    res = delete_all_uploads(BASE, owner_sid=sid, require_session=True)
+    _safe_record_data_deletion(
         action='USER_DELETE_ALL',
         upload_id=None,
         deleted_files=res.get('deleted_files') or [],
         verified_gone=bool(res.get('verified_empty')),
         endpoint='DELETE /api/uploads',
+        owner_sid=sid,
     )
     return jsonify(res)
 
@@ -690,23 +851,42 @@ def api_execution_log() -> object:
         lim = int(request.args.get('limit') or 40)
     except Exception:
         lim = 40
-    return jsonify(dict(log_file='data/outputs/execution_log.jsonl', entries=read_execution_log(BASE, limit=lim)))
+    sid = _caller_session_id()
+    return jsonify(
+        dict(
+            log_file='data/outputs/execution_log.jsonl',
+            entries=read_execution_log(BASE, limit=lim, owner_sid=sid, scope_by_session=True),
+        )
+    )
 
 @app.get('/api/repro-status')
 def api_repro_status() -> object:
     bundle_root = BASE if BASE.joinpath('CHECKSUMS.sha256').is_file() else Path(__file__).resolve().parent
-    return jsonify(dict(bundle=verify_repro_bundle(bundle_root), storage_policy=storage_policy_summary(BASE, owner_sid=_caller_session_id())))
+    return jsonify(
+        dict(
+            bundle=verify_repro_bundle(bundle_root),
+            storage_policy=storage_policy_summary(BASE, owner_sid=_caller_session_id(), require_session=True),
+        )
+    )
 
 @app.get('/output/<path:name>')
 def output_file(name: object) -> object:
-    if str(name) in _STATIC_PLOT_NAMES:
+    name_str = str(name or '')
+    if name_str.lower().endswith('.jsonl') or Path(name_str).name.lower() == 'execution_log.jsonl':
+        return (jsonify(dict(error='Audit log files are not served via /output/; use /api/execution-log.')), 404)
+    if name_str in _STATIC_PLOT_NAMES:
         _PLOT_READY.wait(timeout=15.0)
-    out_root: object = BASE.joinpath('data', 'outputs').resolve()
-    target: object = out_root.joinpath(name).resolve()
-    target.relative_to(out_root)
+    out_root: Path = BASE.joinpath('data', 'outputs').resolve()
+    try:
+        target: Path = out_root.joinpath(name_str).resolve()
+        target.relative_to(out_root)
+    except (ValueError, OSError):
+        return (jsonify(dict(error='invalid output path')), 404)
+    if target.suffix.lower() == '.jsonl' or target.name.lower() == 'execution_log.jsonl':
+        return (jsonify(dict(error='Audit log files are not served via /output/; use /api/execution-log.')), 404)
     if not target.is_file():
         return (jsonify(dict(error='missing output')), 404)
-    return send_from_directory(out_root, name)
+    return send_from_directory(out_root, name_str)
 
 def _preload_warmup() -> None:
     """Warm up BSC5 catalog, K-vector table, and MobileUNet weights asynchronously on server start."""
@@ -721,23 +901,34 @@ def _preload_warmup() -> None:
     except Exception:
         pass
 
+def _run_startup_sweep(base: Path | None = None) -> list[str]:
+    """Immediately purge expired TTL slots and crash-orphaned ephemeral slots on boot."""
+    target_base = BASE if base is None else base
+    try:
+        return cleanup_expired_uploads(
+            target_base,
+            purge_orphaned_ephemeral=True,
+            record_audit=True,
+            audit_endpoint='BG:startup_sweep',
+        )
+    except Exception as err:
+        _LOGGER.warning('Startup upload sweep failed: %s', err)
+        return []
+
 def _ttl_sweeper_loop() -> None:
-    """Proactively purge expired TTL upload directories in the background even with zero traffic."""
+    """Run startup sweep immediately, then proactively purge expired TTL uploads every interval."""
+    _run_startup_sweep(BASE)
     while True:
         time.sleep(DEFAULT_SWEEP_INTERVAL_S)
         try:
-            purged = cleanup_expired_uploads(BASE)
-            if purged:
-                record_data_deletion(
-                    BASE,
-                    action='TTL_EXPIRED_AUTO_PURGE',
-                    upload_id=None,
-                    deleted_files=purged,
-                    verified_gone=True,
-                    endpoint='BG:ttl_sweeper',
-                )
-        except Exception:
-            pass
+            cleanup_expired_uploads(
+                BASE,
+                purge_orphaned_ephemeral=False,
+                record_audit=True,
+                audit_endpoint='BG:ttl_sweeper',
+            )
+        except Exception as err:
+            _LOGGER.warning('Background TTL sweeper error: %s', err)
 
 if os.environ.get('STAR_TRACKER_PRELOAD', '').strip().lower() in ('1', 'true', 'yes'):
     Thread(target=_preload_warmup, name='star-tracker-preload', daemon=True).start()

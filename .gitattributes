@@ -1,0 +1,28 @@
+# Enforce consistent LF line endings so SHA-256 checksums match identically across Linux, macOS, and Windows.
+CHECKSUMS.sha256 text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+data/catalogs/IAU-CSN.txt text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# Binary model, image, catalog, and portfolio artifacts
+*.pt binary
+*.pth binary
+*.tiff binary
+*.tif binary
+*.npy binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+data/catalogs/BSC5 binary
+*.docx binary
+*.pdf binary
+*.pptx binary
+*.xlsx binary
+*.npz binary

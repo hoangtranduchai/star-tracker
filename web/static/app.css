@@ -558,13 +558,15 @@ body {
   background: var(--status-err-bg);
 }
 
-.status-banner.success {
+.status-banner.success,
+.status-banner.ok {
   color: var(--text-bright);
   border-color: var(--status-ok-border);
   background: var(--status-ok-bg);
 }
 
-.status-banner.success strong:first-child {
+.status-banner.success strong:first-child,
+.status-banner.ok strong:first-child {
   color: var(--status-ok);
 }
 
@@ -1345,6 +1347,7 @@ body {
   color: var(--text-muted);
   white-space: nowrap;
   padding-left: 0.6rem;
+  flex-shrink: 0;
 }
 
 /* Semantic Status & Verdict Pills */
@@ -2575,6 +2578,10 @@ input[type="range"] {
 }
 
 .cmp-upload-label {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -3278,6 +3285,102 @@ input[type="range"] {
 /* =========================================================================
    Responsive Adaptation
    ========================================================================= */
+@media (max-width: 1580px) {
+  .brand-sub,
+  .brand-sep {
+    display: none;
+  }
+  .cmd-header {
+    gap: 0.52rem;
+    padding: 0.42rem 0.78rem;
+  }
+  .scenario-strip {
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
+  .exp-pill {
+    padding: 0.34rem 0.62rem;
+    font-size: 0.75rem;
+    gap: 0.32rem;
+  }
+  .cmd-actions {
+    gap: 0.32rem;
+  }
+  .inline-seg-opt span {
+    padding: 0.23rem 0.48rem;
+    font-size: 0.71rem;
+  }
+  .cmd-theme-btn,
+  .cmd-drawer-btn {
+    padding: 0.34rem 0.62rem;
+    font-size: 0.75rem;
+    gap: 0.32rem;
+  }
+  .cmd-solve-btn {
+    padding: 0.36rem 0.82rem;
+    font-size: 0.78rem;
+  }
+  .telemetry-ribbon {
+    gap: 0.52rem;
+    padding: 0.3rem 0.78rem;
+  }
+  .tele-cell {
+    gap: 0.34rem;
+  }
+  .tele-label {
+    font-size: 0.72rem;
+  }
+  .tele-val {
+    font-size: 0.79rem;
+  }
+  .tele-sub {
+    font-size: 0.7rem;
+  }
+  .tele-credit {
+    font-size: 0.72rem;
+    padding-left: 0.35rem;
+  }
+  #kpi-boresight-sub,
+  #kpi-time-breakdown {
+    display: none;
+  }
+}
+
+@media (max-width: 1380px) {
+  .cmd-header {
+    gap: 0.42rem;
+    padding: 0.38rem 0.62rem;
+  }
+  .exp-pill {
+    padding: 0.3rem 0.54rem;
+    font-size: 0.73rem;
+    gap: 0.26rem;
+  }
+  .cmd-theme-btn,
+  .cmd-drawer-btn {
+    padding: 0.3rem 0.54rem;
+    font-size: 0.73rem;
+  }
+  .cmd-solve-btn {
+    padding: 0.32rem 0.72rem;
+    font-size: 0.76rem;
+  }
+  .telemetry-ribbon {
+    gap: 0.42rem;
+    padding: 0.28rem 0.62rem;
+  }
+  .tele-label {
+    font-size: 0.7rem;
+  }
+  .tele-val {
+    font-size: 0.76rem;
+  }
+  .tele-credit {
+    font-size: 0.7rem;
+    padding-left: 0.25rem;
+  }
+}
+
 @media (max-width: 1280px) {
   .brand-sub,
   .brand-sep,

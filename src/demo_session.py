@@ -410,6 +410,7 @@ class DemoEngine:
         self.radiometry = radiometry_from_specs(self.specs)
         self._stack = {}
         self._cnn_cache = None
+        self._cnn_cache_sig = None
         self.last_angle_build = False
 
     def _normalize_backend(self, raw_be: object) -> str:
@@ -424,18 +425,61 @@ class DemoEngine:
             return 'tetra3'
         return 'classical'
 
+    @staticmethod
+    def _weights_file_sig(path: object) -> tuple[str, int, int] | None:
+        if path is None:
+            return None
+        p = Path(path)
+        if not p.is_file():
+            return None
+        st = p.stat()
+        return (str(p.resolve()), int(st.st_size), int(st.st_mtime_ns))
+
+    def _store_cnn_cache(self, det: object) -> None:
+        if det is None or getattr(det, '_model', None) is None:
+            return
+        self._cnn_cache = det
+        self._cnn_cache_sig = self._weights_file_sig(getattr(det, 'weights_path', None))
+
     def _inject_cnn_cache(self, det: object) -> None:
         if self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
-            det._model = self._cnn_cache._model
-            det._torch = self._cnn_cache._torch
-            det._normalize = self._cnn_cache._normalize
-            det._device = self._cnn_cache._device
-            det.device_name = self._cnn_cache.device_name
+            cur_sig = self._weights_file_sig(getattr(det, 'weights_path', None))
+            if cur_sig is not None and cur_sig == self._cnn_cache_sig:
+                det._model = self._cnn_cache._model
+                det._torch = self._cnn_cache._torch
+                det._normalize = self._cnn_cache._normalize
+                det._device = self._cnn_cache._device
+                det.device_name = self._cnn_cache.device_name
+                det.checkpoint_sha256 = getattr(self._cnn_cache, 'checkpoint_sha256', None)
+                det.checkpoint_status = getattr(self._cnn_cache, 'checkpoint_status', None)
+                return
+            self._cnn_cache = None
+            self._cnn_cache_sig = None
         else:
-            self._cnn_cache = det
+            self._cnn_cache = None
+            self._cnn_cache_sig = None
+
+    def _default_weights_for_engine(self) -> Path:
+        from . import centroid_cnn as _ccnn
+        if self.root.resolve() == ROOT.resolve():
+            return Path(_ccnn._DEFAULT_WEIGHTS)
+        return self.root.joinpath('third_party', 'cnn_star_centroid', 'saved_models', 'MobileUNet_B10_50.pt')
+
+    def _resolve_checkpoint_info(self, det_obj: object, qual_d: dict, *, sim_missing: bool) -> tuple[str, str | None]:
+        if sim_missing:
+            return ('simulated_missing', None)
+        det_st = qual_d.get('checkpoint_status') or getattr(det_obj, 'checkpoint_status', None)
+        det_sha = qual_d.get('checkpoint_sha256') or getattr(det_obj, 'checkpoint_sha256', None)
+        if det_st in ('verified', 'checksum_mismatch', 'corrupted_truncated', 'missing'):
+            return (str(det_st), det_sha)
+        from .centroid_cnn import inspect_checkpoint_status
+        ckpt_p = getattr(det_obj, 'weights_path', None) or self._default_weights_for_engine()
+        info = inspect_checkpoint_status(ckpt_p)
+        return (str(info['status']), info['sha256'])
 
     def _build_pipeline(self, camera: object, catalog: object, kvector: object, cfg: object, *, simulate_missing_weights: bool = False) -> object:
         pipe: object = StarTrackerPipeline(camera, catalog, kvector, cfg)
+        default_w = self._default_weights_for_engine()
         if simulate_missing_weights:
             missing_p = self.root.joinpath('third_party', 'cnn_star_centroid', 'saved_models', '__simulated_missing_checkpoint__.pt')
             if cfg.centroid_backend in ('cnn', 'cnn_raw'):
@@ -456,10 +500,12 @@ class DemoEngine:
                 )
             return pipe
         if cfg.centroid_backend in ('cnn', 'cnn_raw'):
+            if hasattr(pipe.centroid_detector, 'weights_path'):
+                pipe.centroid_detector.weights_path = default_w
             self._inject_cnn_cache(pipe.centroid_detector)
-        elif cfg.centroid_backend == 'auto' and self._cnn_cache is not None and getattr(self._cnn_cache, '_model', None) is not None:
+        elif cfg.centroid_backend == 'auto':
             from .centroid_cnn import CNNCentroidDetector
-            auto_det = CNNCentroidDetector(camera, classical=pipe._base_det, refine_subpixel=True)
+            auto_det = CNNCentroidDetector(camera, classical=pipe._base_det, weights_path=default_w, refine_subpixel=True)
             self._inject_cnn_cache(auto_det)
             pipe._auto_cnn_detector = auto_det
         return pipe
@@ -665,9 +711,9 @@ class DemoEngine:
         result: object = pipe.process_frame(image)
         if not sim_missing:
             if cfg.centroid_backend in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
-                self._cnn_cache = pipe.centroid_detector
+                self._store_cnn_cache(pipe.centroid_detector)
             elif cfg.centroid_backend == 'auto' and getattr(pipe, '_auto_cnn_detector', None) is not None and getattr(pipe._auto_cnn_detector, '_model', None) is not None:
-                self._cnn_cache = pipe._auto_cnn_detector
+                self._store_cnn_cache(pipe._auto_cnn_detector)
         metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
         status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
         fov_rows: object = self._manifest_fov_rows(req.image) if used_manifest_gt else star_rows_from_indices(catalog, truth.cat_idx, uv=truth.uv_mid, mags=truth.vis_mags)
@@ -727,17 +773,16 @@ class DemoEngine:
             executed_be = 'cnn_hybrid'
         else:
             executed_be = str(cfg.centroid_backend)
-        from .centroid_cnn import weights_available as _weights_available
         from .execution_log import infer_execution_summary as _infer_exec_sum
         exec_summary: str = _infer_exec_sum(cfg.centroid_backend, executed_be, fallback_triggered=fallback_flag, auto_router_used=auto_used_flag, auto_router_selected=auto_sel)
-        ckpt_status: str = 'simulated_missing' if sim_missing else ('available' if _weights_available() else 'missing')
+        ckpt_status, ckpt_sha256 = self._resolve_checkpoint_info(det_obj, qual_d, sim_missing=sim_missing)
         dl_bytes: object = result.to_downlink_bytes()
         from .telemetry import pack_telemetry_frame as _pack_tlm
         tlm_bytes: bytes = result.to_telemetry_frame(seq_id=int(req.seed or 0) & 0xFFFF) if hasattr(result, 'to_telemetry_frame') else _pack_tlm(result, seq_id=int(req.seed or 0) & 0xFFFF)
         theta_max_actual: object = float(degrees(kvector.theta_max))
         bore_est_dict: object = None if metrics.get('boresight_est_ra_deg') is None else dict(ra_deg=metrics['boresight_est_ra_deg'], dec_deg=metrics['boresight_est_dec_deg'], ra_hms=metrics['boresight_est_ra_hms'], dec_dms=metrics['boresight_est_dec_dms'], frame='Trục quang học +Z trong hệ quy chiếu J2000')
         bore_gt_dict: object = None if not have_gt else dict(ra_deg=metrics['boresight_gt_ra_deg'], dec_deg=metrics['boresight_gt_dec_deg'], ra_hms=metrics['boresight_gt_ra_hms'], dec_dms=metrics['boresight_gt_dec_dms'])
-        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, requested_backend=cfg.centroid_backend, executed_backend=executed_be, execution_mode_summary=exec_summary, checkpoint_status=ckpt_status, centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', cfg.centroid_backend)), centroid_fallback=fallback_flag, fallback_reason=fallback_err if fallback_flag else None, centroid_error=fallback_err, centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), auto_router_used=auto_used_flag, auto_router_selected=auto_sel, auto_router_reason=qual_d.get('auto_router_reason'), sky_clutter=req.sky_clutter, have_gt=have_gt, gt_source=gt_source, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), telemetry_frame_hex=tlm_bytes.hex(), telemetry_frame_bytes=len(tlm_bytes), telemetry_crc16_hex=tlm_bytes[-2:].hex().upper(), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
+        payload: object = dict(mode=mode, scale=scale, seed=None if req.image is not None else req.seed, source='dataset' if req.image is not None else 'simulator', source_image=None if req.image is None else str(req.image), synthetic_catalog=synthetic, catalog_source=catalog.source, n_catalog=catalog.num_stars, radiometry_assumption=True, glare=req.glare, centroid_backend=cfg.centroid_backend, requested_backend=cfg.centroid_backend, executed_backend=executed_be, execution_mode_summary=exec_summary, checkpoint_status=ckpt_status, checkpoint_sha256=ckpt_sha256, centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', cfg.centroid_backend)), centroid_fallback=fallback_flag, fallback_reason=fallback_err if fallback_flag else None, centroid_error=fallback_err, centroid_n_raw=getattr(det_obj, 'last_n_raw', None), centroid_n_after_gate=getattr(det_obj, 'last_n_after_gate', None), auto_router_used=auto_used_flag, auto_router_selected=auto_sel, auto_router_reason=qual_d.get('auto_router_reason'), sky_clutter=req.sky_clutter, have_gt=have_gt, gt_source=gt_source, success=bool(result.success), status=status_val, reject_code=reject_val, match_stats=_jsonable(match_stats), error=result.error, q_gt=q_gt.tolist() if have_gt else None, q_est=None if q_est is None else q_est.tolist(), q_gt_text=fmt_q(q_gt) if have_gt else 'n/a', q_est_text=fmt_q(q_est), boresight_est=bore_est_dict, boresight_gt=bore_gt_dict, metrics=_jsonable(metrics), timing_ms=result.timing_ms, downlink_hex=dl_bytes.hex(), downlink_bytes=len(dl_bytes), telemetry_frame_hex=tlm_bytes.hex(), telemetry_frame_bytes=len(tlm_bytes), telemetry_crc16_hex=tlm_bytes[-2:].hex().upper(), camera=dict(width=camera.width, height=camera.height, pixel_um=camera.pixel_um, focal_mm=camera.focal_mm, fx_px=float(camera.fx), fov_deg=[float(fov[0]), float(fov[1])], fov_diag_deg=float(fov[2]), ifov_arcsec=float(camera.ifov_arcsec), principal_point=[float(camera.cx), float(camera.cy)], optics='locked' if locked else 'custom', match_tol_arcsec=float(cfg.angular_tol_rad) * ARCSEC_PER_RAD), angle_table=dict(theta_min_deg=THETA_MIN_DEG, theta_max_deg=theta_max_actual, n_pairs=int(kvector.num_pairs), fov_diagonal_deg=float(fov[2]), built_now=bool(self.last_angle_build), note=angle_table_note(float(fov[2]), theta_max_actual, int(kvector.num_pairs), bool(self.last_angle_build))), ingest_note=_ingest_note(req.image), hardware=dict(platform='laptop demo', camera='APS-C 24 MP, 50 mm lens', array=f'{camera.width} x {camera.height}', pixel_um=float(camera.pixel_um), focal_mm=float(camera.focal_mm), fov=f'{fov[0]:.2f} x {fov[1]:.2f} deg'), matched_catalog_ids=catalog.ids[result.ident.cat_idx].tolist() if result.ident is not None and len(result.ident.cat_idx) else [], detected_uv=det_uv_list, stars_in_fov=fov_rows, identified_stars=ident_rows, n_unidentified=max(0, int(metrics['n_detected'] - metrics['n_matched'])), compare=_jsonable(_compare_rows(q_gt if have_gt else None, q_est, metrics, have_gt, cfg, match_stats=match_stats)), sim_method=SIM_METHOD, point_hr=req.point_hr, point_ra_deg=req.ra_deg, point_dec_deg=req.dec_deg, n_iau_hr_names=n_named_hr(), n_iau_names=n_iau_names(), png='data/outputs/demo_result.png' if req.save_png else None, input_png='data/outputs/demo_input.png' if req.save_png else None, output_png='data/outputs/demo_output.png' if req.save_png else None, clean_png='data/outputs/demo_clean.png' if req.save_png else None, input_stats=stats)
         if bool(getattr(req, 'write_result_json', True)):
             out_dir.joinpath('demo_result.json').write_text(json_dumps(payload, indent=2), encoding='utf-8')
         if req.save_raw and req.image is None:
@@ -773,6 +818,7 @@ class DemoEngine:
         is_small: object = locked and scale > 1 or (not locked and camera.width * camera.height < 4000000)
 
         labels = {
+            'auto': 'Auto (CoG → CNN-Hybrid)',
             'classical': 'CoG (Nhóm)',
             'tetra3': 'Ngưỡng kiểu tetra3',
             'cnn': 'CNN-Hybrid (MobileUNet + CoG)',
@@ -794,8 +840,11 @@ class DemoEngine:
             sim_missing_c: bool = bool(getattr(req, 'simulate_missing_weights', False))
             pipe: object = self._build_pipeline(camera, catalog, kvector, cfg, simulate_missing_weights=sim_missing_c)
             result: object = pipe.process_frame(image)
-            if not sim_missing_c and be_norm in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
-                self._cnn_cache = pipe.centroid_detector
+            if not sim_missing_c:
+                if be_norm in ('cnn', 'cnn_raw') and getattr(pipe.centroid_detector, '_model', None) is not None:
+                    self._store_cnn_cache(pipe.centroid_detector)
+                elif be_norm == 'auto' and getattr(pipe, '_auto_cnn_detector', None) is not None and getattr(pipe._auto_cnn_detector, '_model', None) is not None:
+                    self._store_cnn_cache(pipe._auto_cnn_detector)
             metrics: object = evaluate(result, truth, cfg.attitude_error_limit_arcsec, have_gt=have_gt)
             status_val, reject_val, match_stats = _extract_match_verification(result, metrics, cfg)
             ident_rows: object = []
@@ -812,7 +861,28 @@ class DemoEngine:
                 ra_hms=metrics['boresight_est_ra_hms'],
                 dec_dms=metrics['boresight_est_dec_dms'],
             )
-            det_obj = pipe.centroid_detector
+            qual_d: dict = result.quality if isinstance(result.quality, dict) else {}
+            auto_cnn_obj = getattr(pipe, '_auto_cnn_detector', None)
+            if be_norm == 'auto' and auto_cnn_obj is not None and (qual_d.get('auto_router_selected') == 'cnn' or bool(getattr(auto_cnn_obj, 'last_fallback', False))):
+                det_obj: object = auto_cnn_obj
+            else:
+                det_obj = pipe.centroid_detector
+            fallback_flag: bool = bool(qual_d.get('centroid_fallback', getattr(det_obj, 'last_fallback', False)))
+            fallback_err: object = qual_d.get('centroid_error') or getattr(det_obj, 'last_error', None)
+            auto_used_flag: bool = bool(qual_d.get('auto_router_used', False))
+            auto_sel: object = qual_d.get('auto_router_selected')
+            auto_escalated: bool = bool(auto_used_flag and (auto_sel == 'cnn' or fallback_flag))
+            if fallback_flag:
+                executed_be: str = 'classical'
+            elif auto_used_flag:
+                executed_be = 'cnn_hybrid' if auto_sel == 'cnn' else 'classical'
+            elif be_norm == 'cnn':
+                executed_be = 'cnn_hybrid'
+            else:
+                executed_be = str(be_norm)
+            ckpt_status, ckpt_sha256 = self._resolve_checkpoint_info(det_obj, qual_d, sim_missing=sim_missing_c)
+            from .execution_log import infer_execution_summary as _infer_exec_sum
+            exec_summary: str = _infer_exec_sum(be_norm, executed_be, fallback_triggered=fallback_flag, auto_router_used=auto_used_flag, auto_router_selected=auto_sel)
             methods_out[be_norm] = _jsonable(dict(
                 key=be_norm,
                 label=labels.get(be_norm, be_norm),
@@ -836,11 +906,19 @@ class DemoEngine:
                 centroid_rms_5px=metrics.get('centroid_rms_5px'),
                 timing_ms=result.timing_ms,
                 boresight_est=bore_est,
-                centroid_detector=getattr(det_obj, 'last_backend', be_norm),
+                requested_backend=be_norm,
+                executed_backend=executed_be,
+                execution_mode_summary=exec_summary,
+                centroid_detector=qual_d.get('centroid_detector', getattr(det_obj, 'last_backend', be_norm)),
                 centroid_mode=getattr(det_obj, 'last_mode', be_norm),
-                centroid_fallback=bool(getattr(det_obj, 'last_fallback', False)),
-                fallback_reason=getattr(det_obj, 'last_error', None) if bool(getattr(det_obj, 'last_fallback', False)) else None,
-                executed_backend='classical' if bool(getattr(det_obj, 'last_fallback', False)) else ('cnn_hybrid' if be_norm == 'cnn' else be_norm),
+                centroid_fallback=fallback_flag,
+                fallback_reason=fallback_err if fallback_flag else None,
+                checkpoint_status=ckpt_status,
+                checkpoint_sha256=ckpt_sha256,
+                auto_router_used=auto_used_flag,
+                auto_router_selected=auto_sel,
+                auto_router_escalated=auto_escalated,
+                auto_router_reason=qual_d.get('auto_router_reason'),
                 detected_uv=det_uv_list,
                 identified_stars=ident_rows,
                 error=result.error,

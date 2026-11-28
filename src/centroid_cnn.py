@@ -26,18 +26,53 @@ _R_BG = 10
 _YY_BG, _XX_BG = np.ogrid[-_R_BG:_R_BG + 1, -_R_BG:_R_BG + 1]
 _R2_BG = _XX_BG * _XX_BG + _YY_BG * _YY_BG
 _ANNULUS_BG = (_R2_BG >= 16) & (_R2_BG <= _R_BG * _R_BG)
-_DEFAULT_WEIGHTS = Path(__file__).resolve().parent.parent / 'third_party' / 'cnn_star_centroid' / 'saved_models' / 'MobileUNet_B10_50.pt'
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_DEFAULT_WEIGHTS = _REPO_ROOT / 'third_party' / 'cnn_star_centroid' / 'saved_models' / 'MobileUNet_B10_50.pt'
+DEFAULT_WEIGHTS_PATH = _DEFAULT_WEIGHTS
 _VENDOR_DIR = _DEFAULT_WEIGHTS.parent.parent
 _DEFAULT_CHECKPOINT_REL = 'third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt'
 _DEFAULT_CHECKPOINT_SHA256 = 'e02d7723b832d12cf2535a8a9794eaedc822023722f07da3126dcd8473cbe062'
+_MIN_CHECKPOINT_BYTES = 1_000_000
+
+
+def _sanitize_path_display(path: Path | str) -> str:
+    """Format a checkpoint path without leaking absolute OS/user/container directories."""
+    p = Path(path)
+    try:
+        rel = p.resolve().relative_to(_REPO_ROOT.resolve())
+        return rel.as_posix()
+    except Exception:
+        pass
+    parts = p.parts
+    for anchor in ('third_party', 'data', 'config', 'src', 'scripts'):
+        if anchor in parts:
+            idx = parts.index(anchor)
+            return '/'.join(parts[idx:])
+    return p.name or str(p)
+
+
+def _sanitize_error_text(text: str) -> str:
+    """Strip absolute repo/temp/container path prefixes from diagnostic error strings."""
+    import re
+    out = str(text)
+    for root_str in (str(_REPO_ROOT.resolve()), _REPO_ROOT.resolve().as_posix()):
+        if root_str in out:
+            out = out.replace(root_str + '\\', '').replace(root_str + '/', '').replace(root_str, '')
+    # Replace remaining Windows/POSIX absolute paths with relative anchor path or basename
+    def _repl_abs(match: re.Match[str]) -> str:
+        raw = match.group(0)
+        return _sanitize_path_display(raw)
+
+    out = re.sub(r'[A-Za-z]:\\[^\s\'"()]+', _repl_abs, out)
+    out = re.sub(r'(?:^|(?<=[\s:(]))/(?:app|tmp|var|home|Users|opt|root)/[^\s\'"()]+', _repl_abs, out)
+    return out
 
 
 def expected_default_checkpoint_sha256() -> str:
     """Read canonical checkpoint SHA-256 from CHECKSUMS.sha256 (with hardcoded fallback)."""
     try:
         from .repro_bundle import CHECKSUM_FILE, parse_checksums_file
-        repo_root = Path(__file__).resolve().parent.parent
-        cs = parse_checksums_file(repo_root / CHECKSUM_FILE)
+        cs = parse_checksums_file(_REPO_ROOT / CHECKSUM_FILE)
         if _DEFAULT_CHECKPOINT_REL in cs:
             return cs[_DEFAULT_CHECKPOINT_REL]
     except Exception:
@@ -45,19 +80,55 @@ def expected_default_checkpoint_sha256() -> str:
     return _DEFAULT_CHECKPOINT_SHA256
 
 
-def verify_checkpoint_integrity(weights_path: Path, expected_sha256: str | None = None) -> str:
-    """Verify SHA-256 digest of a checkpoint BEFORE calling torch.load(..., weights_only=False)."""
+def inspect_checkpoint_status(path: Path | None = DEFAULT_WEIGHTS_PATH, expected_sha256: str | None = None) -> dict[str, str | None]:
+    """Inspect checkpoint existence, minimum size, and SHA-256 integrity without invoking torch.load.
+
+    Returns ``{"status": ..., "sha256": ..., "error": ...}`` where ``status`` is one of:
+    ``"verified"``, ``"checksum_mismatch"``, ``"corrupted_truncated"``, or ``"missing"``.
+    """
+    p = Path(path) if path is not None else _DEFAULT_WEIGHTS
+    disp = _sanitize_path_display(p)
+    if not p.is_file():
+        return {
+            'status': 'missing',
+            'sha256': None,
+            'error': f'missing public weights: {disp}',
+        }
+    size_b = int(p.stat().st_size)
     from .repro_bundle import sha256_file
-    p = Path(weights_path)
     actual = sha256_file(p)
+    if size_b < _MIN_CHECKPOINT_BYTES:
+        return {
+            'status': 'corrupted_truncated',
+            'sha256': actual,
+            'error': f'CHECKPOINT_TRUNCATED: file too small ({size_b} bytes < {_MIN_CHECKPOINT_BYTES}) ({disp})',
+        }
     exp = expected_sha256
     if exp is None and (p.resolve() == _DEFAULT_WEIGHTS.resolve() or p.name == _DEFAULT_WEIGHTS.name):
         exp = expected_default_checkpoint_sha256()
     if exp is not None and actual.lower() != str(exp).strip().lower():
-        raise ValueError(
-            f'CHECKPOINT_SHA256_MISMATCH: expected {str(exp)[:16]}..., got {actual[:16]}... ({p})'
-        )
-    return actual
+        return {
+            'status': 'checksum_mismatch',
+            'sha256': actual,
+            'error': f'CHECKPOINT_SHA256_MISMATCH: expected {str(exp)[:16]}..., got {actual[:16]}... ({disp})',
+        }
+    return {
+        'status': 'verified',
+        'sha256': actual,
+        'error': None,
+    }
+
+
+def verify_checkpoint_integrity(weights_path: Path, expected_sha256: str | None = None) -> str:
+    """Verify existence, size, and SHA-256 digest of a checkpoint BEFORE calling torch.load(..., weights_only=False)."""
+    info = inspect_checkpoint_status(weights_path, expected_sha256=expected_sha256)
+    status = info['status']
+    if status == 'missing':
+        raise FileNotFoundError(str(info['error']))
+    if status in ('corrupted_truncated', 'checksum_mismatch'):
+        raise ValueError(str(info['error']))
+    assert info['sha256'] is not None
+    return info['sha256']
 
 def peak_dn_for_magnitude(mag: float, radiometry: Radiometry | None=None, t_exp_s: float=0.15, psf_sigma_px: float=1.2) -> float:
     """Expected peak DN for a Gaussian PSF star of visual magnitude ``mag`` (simulator radiometry)."""
@@ -68,7 +139,7 @@ def peak_dn_for_magnitude(mag: float, radiometry: Radiometry | None=None, t_exp_
 
 def weights_available(path: Path | None=None) -> bool:
     p: object = Path(path) if path is not None else _DEFAULT_WEIGHTS
-    return p.is_file() and p.stat().st_size > 1000000
+    return p.is_file() and p.stat().st_size >= _MIN_CHECKPOINT_BYTES
 
 def _pad_to_multiple(img: np.ndarray, multiple: int=32) -> tuple[np.ndarray, tuple[int, int]]:
     h, w = img.shape
@@ -263,6 +334,7 @@ class CNNCentroidDetector:
         self.weights_path = Path(weights_path) if weights_path else _DEFAULT_WEIGHTS
         self.expected_sha256 = expected_sha256
         self.checkpoint_sha256: str | None = None
+        self.checkpoint_status: str | None = None
         self.radius = int(radius)
         self.max_stars = int(max_stars)
         self.min_mag_gate = min_mag_gate
@@ -290,10 +362,14 @@ class CNNCentroidDetector:
     def _ensure_model(self) -> object:
         if self._model is not None:
             return
-        if not weights_available(self.weights_path):
-            raise FileNotFoundError(f'missing public weights: {self.weights_path}')
-        # Verify SHA-256 BEFORE torch.load(..., weights_only=False) to block corrupted/tampered pickles
-        self.checkpoint_sha256 = verify_checkpoint_integrity(self.weights_path, expected_sha256=self.expected_sha256)
+        # Inspect existence, size, and SHA-256 BEFORE calling torch.load(..., weights_only=False)
+        info = inspect_checkpoint_status(self.weights_path, expected_sha256=self.expected_sha256)
+        self.checkpoint_status = info['status']
+        self.checkpoint_sha256 = info['sha256']
+        if info['status'] == 'missing':
+            raise FileNotFoundError(str(info['error']))
+        if info['status'] in ('corrupted_truncated', 'checksum_mismatch'):
+            raise ValueError(str(info['error']))
         import torch
         from torchvision.transforms import Normalize
         self._torch = torch
@@ -328,7 +404,7 @@ class CNNCentroidDetector:
         except Exception as exc:
             self.last_backend = 'classical'
             self.last_fallback = True
-            self.last_error = f'{type(exc).__name__}: {exc}'
+            self.last_error = _sanitize_error_text(f'{type(exc).__name__}: {exc}')
             _LOGGER.warning('CNN centroid backend unavailable (%s); falling back explicitly to classical CoG.', self.last_error)
             return self.classical.detect(image, mask=mask)
 

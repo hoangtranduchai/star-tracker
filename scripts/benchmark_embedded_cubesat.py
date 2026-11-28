@@ -30,7 +30,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.camera import CameraModel
-from src.centroid_cnn import CNNCentroidDetector, _AUTHOR_MEAN, _AUTHOR_STD, _DEFAULT_WEIGHTS, _pad_to_multiple, _to_author_intensity
+from src.centroid_cnn import CNNCentroidDetector, _AUTHOR_MEAN, _AUTHOR_STD, _DEFAULT_WEIGHTS, _pad_to_multiple, _to_author_intensity, verify_checkpoint_integrity
 from src.demo_session import DemoEngine, theta_max_deg_for_fov
 from src.metrics import evaluate
 from src.pipeline import PipelineConfig, StarTrackerPipeline
@@ -98,6 +98,7 @@ def benchmark_storage_and_onnx(sample_img: np.ndarray) -> dict[str, Any]:
             sys.path.insert(0, vendor_dir)
 
         torch.set_num_threads(1)
+        verify_checkpoint_integrity(_DEFAULT_WEIGHTS)
         model = torch.load(_DEFAULT_WEIGHTS, map_location='cpu', weights_only=False)
         model.eval()
 
@@ -244,7 +245,8 @@ def benchmark_storage_and_onnx(sample_img: np.ndarray) -> dict[str, Any]:
 def benchmark_saa_proton_shower(engine: DemoEngine, cam: CameraModel, cat: Any, kv: Any, cnn_tmpl: CNNCentroidDetector) -> list[dict[str, Any]]:
     """Run SAA high-energy proton track & hot-pixel shower stress sweep (0..100 tracks/frame)."""
     sim = SkySimulator(cam, cat)
-    base_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    raw_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    base_cfg = raw_cfg['fast'] if 'fast' in raw_cfg else raw_cfg
     levels = [0, 10, 25, 50, 100]
     seeds = [200 + i for i in range(10)]
     backends = ('classical', 'tetra3', 'cnn', 'auto')
@@ -392,7 +394,8 @@ def benchmark_local_memory(cam: CameraModel, cat: Any, kv: Any, sample_img: np.n
     import psutil
 
     proc = psutil.Process(os.getpid())
-    base_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    raw_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    base_cfg = raw_cfg['fast'] if 'fast' in raw_cfg else raw_cfg
     out: dict[str, Any] = {}
     for be in ('classical', 'tetra3', 'cnn', 'auto'):
         c = dict(base_cfg)
@@ -441,7 +444,8 @@ def main() -> None:
     sim = SkySimulator(cam, cat, seed=42)
     q_gt = SkySimulator.generate_random_quaternion(42)
     sample_img, _ = sim.render(q_gt, omega_deg_s=(0.0, 0.06, 0.0), t_exp_s=0.15, add_noise=True)
-    base_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    raw_cfg = json.loads((ROOT / 'config' / 'pipeline_default.json').read_text(encoding='utf-8'))
+    base_cfg = raw_cfg['fast'] if 'fast' in raw_cfg else raw_cfg
     pipe_ok = StarTrackerPipeline(cam, cat, kv, PipelineConfig.from_dict(base_cfg))
     res_solved = pipe_ok.process_frame(sample_img)
     res_lost = pipe_ok.process_frame(np.zeros_like(sample_img))

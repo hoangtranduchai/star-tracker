@@ -406,8 +406,8 @@
     });
     if (on && statusEl) {
       statusEl.className = "status-banner";
-      statusEl.innerHTML = `<span class="busy-dot"></span><strong>Đang xử lý:</strong> ${msg}`;
-      statusEl.title = msg;
+      statusEl.innerHTML = `<span class="busy-dot"></span><strong>Đang xử lý:</strong> ${escapeHtml(msg)}`;
+      statusEl.title = String(msg || "");
     }
   }
 
@@ -720,8 +720,8 @@
           const magStr = Number.isFinite(best.mag) ? (best.mag >= 0 ? `+${best.mag.toFixed(2)}` : best.mag.toFixed(2)) : "—";
           const codePart = best.hasIau ? ` · ${best.code}` : "";
           sensorStarTooltip.innerHTML =
-            `<strong>${best.displayName}</strong>` +
-            `<span class="tt-mono">${codePart} · V ${magStr} · (${best.u.toFixed(1)}, ${best.v.toFixed(1)})</span>`;
+            `<strong>${escapeHtml(best.displayName)}</strong>` +
+            `<span class="tt-mono">${escapeHtml(codePart)} · V ${magStr} · (${best.u.toFixed(1)}, ${best.v.toFixed(1)})</span>`;
         } else {
           sensorStarTooltip.innerHTML =
             `<strong>Tâm sáng phát hiện</strong>` +
@@ -1244,9 +1244,9 @@
       const hasName = Boolean(r.iau_name);
       tr.title = "Nhấp để định vị ngôi sao này trên không gian 3D & khung ảnh cảm biến";
       tr.innerHTML = `
-        <td><strong>${r.id_scheme || "HR"} ${r.id}</strong></td>
+        <td><strong>${escapeHtml(r.id_scheme || "HR")} ${escapeHtml(r.id)}</strong></td>
         <td><span class="count-pill">V ${fmt(r.mag, 2)}</span></td>
-        <td class="${hasName ? "named" : ""}">${hasName ? '<span class="star-dot"></span>' + name : "—"}</td>
+        <td class="${hasName ? "named" : ""}">${hasName ? '<span class="star-dot"></span>' + escapeHtml(name) : "—"}</td>
         <td>${fmt(r.u_px, 1)}</td>
         <td>${fmt(r.v_px, 1)}</td>
       `;
@@ -1347,8 +1347,12 @@
         kpiAttErrVal.textContent = `${attErr.toFixed(3)}″`;
         const lim = Number(metrics.limit_arcsec);
         const gate = Number.isFinite(lim) ? lim : 10.0;
+        const gateTxt = Number.isInteger(gate) ? String(gate) : gate.toFixed(1).replace(/\.0$/, "");
         const pass = attErr < gate;
-        if (kpiAttErrBadge) kpiAttErrBadge.textContent = pass ? `< ${gate}″` : `≥ ${gate}″`;
+        if (kpiAttErrBadge) {
+          kpiAttErrBadge.textContent = pass ? `< ${gateTxt}″` : `≥ ${gateTxt}″`;
+          kpiAttErrBadge.title = `Ngưỡng sai số đạt chuẩn: ${gate.toFixed(2)}″`;
+        }
         if (kpiAttErrSub) {
           kpiAttErrSub.textContent = hasPrecRec ? `P ${precTxt} · R ${recTxt}` : "So với nhãn chuẩn";
         }
@@ -1366,10 +1370,12 @@
 
     const t = payload.timing_ms || {};
     if (kpiTimeVal) {
+      const timeTip = `Tâm sao ${fmt(t.centroiding_ms, 2)} ms · Khớp ${fmt(t.identification_ms, 2)} ms · Wahba ${fmt(t.attitude_ms, 2)} ms`;
       kpiTimeVal.textContent = `${fmt(t.total_pipeline_ms, 1)} ms`;
+      kpiTimeVal.title = timeTip;
       if (kpiTimeBreakdown) {
         kpiTimeBreakdown.textContent = `Tâm ${fmt(t.centroiding_ms, 1)} · Khớp ${fmt(t.identification_ms, 1)} ms`;
-        kpiTimeBreakdown.title = `Tâm sao ${fmt(t.centroiding_ms, 2)} ms · Khớp ${fmt(t.identification_ms, 2)} ms · Wahba ${fmt(t.attitude_ms, 2)} ms`;
+        kpiTimeBreakdown.title = timeTip;
       }
     }
 
@@ -1385,12 +1391,15 @@
     const boresight = payload.boresight_est || payload.boresight_gt;
     if (kpiBoresightVal) {
       if (boresight) {
+        const sexa = `${boresight.ra_hms || ""} ${boresight.dec_dms || ""}`.trim();
         kpiBoresightVal.textContent = `RA ${fmt(boresight.ra_deg, 2)}° · Dec ${fmt(boresight.dec_deg, 2)}°`;
+        kpiBoresightVal.title = sexa ? `ICRS J2000: ${sexa}` : "ICRS J2000";
         if (kpiBoresightSub) {
-          kpiBoresightSub.textContent = `${boresight.ra_hms || ""} ${boresight.dec_dms || ""}`.trim();
+          kpiBoresightSub.textContent = sexa;
         }
       } else {
         kpiBoresightVal.textContent = "RA -- · Dec --";
+        kpiBoresightVal.title = "Chưa khóa hướng";
         if (kpiBoresightSub) kpiBoresightSub.textContent = "Chưa khóa";
       }
     }
@@ -1431,10 +1440,10 @@
       for (const row of payload.compare || []) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${row.param}</strong></td>
-          <td>${fmtCompareCell(row, "gt")}</td>
-          <td>${fmtCompareCell(row, "est")}</td>
-          <td><span class="${deltaPillClass(row)}">${fmtCompareCell(row, "delta")}</span></td>
+          <td><strong>${escapeHtml(row.param)}</strong></td>
+          <td>${escapeHtml(fmtCompareCell(row, "gt"))}</td>
+          <td>${escapeHtml(fmtCompareCell(row, "est"))}</td>
+          <td><span class="${deltaPillClass(row)}">${escapeHtml(fmtCompareCell(row, "delta"))}</span></td>
         `;
         compareBody.appendChild(tr);
       }
@@ -1463,19 +1472,19 @@
         storageLine = `<dt>Kiểm soát tệp tải lên</dt><dd><code>${escapeHtml(sc.storage_rel_dir || "")}</code> · ${delState}</dd>`;
       }
       metaDl.innerHTML = `
-        <dt>Trạng thái</dt><dd>${status}${rejectCode ? ` (${rejectCode})` : ""}</dd>
+        <dt>Trạng thái</dt><dd>${escapeHtml(status)}${rejectCode ? ` (${escapeHtml(rejectCode)})` : ""}</dd>
         <dt>Mode thực thi</dt><dd><code>${execSummary}</code>${fbSuffix}</dd>
         ${storageLine}
-        <dt>Cặp sao hợp lệ</dt><dd>${nValid} hợp lệ / ${nRejected} loại nhiễu (sơ bộ ${initTxt}, tối thiểu ${minReq})</dd>
+        <dt>Cặp sao hợp lệ</dt><dd>${nValid} hợp lệ / ${nRejected} loại nhiễu (sơ bộ ${escapeHtml(initTxt)}, tối thiểu ${minReq})</dd>
         <dt>Phần dư khớp góc</dt><dd>RMS ${rmsTxt} · Cực đại ${maxTxt}</dd>
         ${prLine}
-        <dt>Nguồn dữ liệu</dt><dd>${payload.source === "simulator" ? "Mô phỏng quang học bầu trời sao" : payload.source_image}</dd>
+        <dt>Nguồn dữ liệu</dt><dd>${payload.source === "simulator" ? "Mô phỏng quang học bầu trời sao" : escapeHtml(payload.source_image || "Ảnh tải lên")}</dd>
         <dt>Hệ quang học</dt><dd>f = ${fmt(cam.focal_mm, 3)} mm · điểm ảnh ${fmt(cam.pixel_um, 3)} µm · ${cam.width}×${cam.height} px · ${fmt(cam.ifov_arcsec, 2)}″/px · FOV ${fovSpan}</dd>
-        <dt>Chỉ mục tra góc</dt><dd>${(payload.angle_table && payload.angle_table.note) || "—"}</dd>
-        <dt>Danh mục sao</dt><dd>${payload.catalog_source} (${payload.n_catalog} sao J2000, V ≤ 6.0)</dd>
-        <dt>Gói tin 16-byte</dt><dd><code>${payload.downlink_hex}</code> (${payload.downlink_bytes} byte float32)</dd>
-        <dt>Quaternion chuẩn</dt><dd>${payload.q_gt_text}</dd>
-        <dt>Quaternion ước lượng</dt><dd>${payload.q_est_text}</dd>
+        <dt>Chỉ mục tra góc</dt><dd>${escapeHtml((payload.angle_table && payload.angle_table.note) || "—")}</dd>
+        <dt>Danh mục sao</dt><dd>${escapeHtml(payload.catalog_source || "")} (${payload.n_catalog} sao J2000, V ≤ 6.0)</dd>
+        <dt>Gói tin 16-byte</dt><dd><code>${escapeHtml(payload.downlink_hex || "")}</code> (${payload.downlink_bytes} byte float32)</dd>
+        <dt>Quaternion chuẩn</dt><dd>${escapeHtml(payload.q_gt_text || "")}</dd>
+        <dt>Quaternion ước lượng</dt><dd>${escapeHtml(payload.q_est_text || "")}</dd>
       `;
     }
 
@@ -1502,16 +1511,22 @@
       imgOut.hidden = false;
       imgOut.src = outUrl;
     }
-    if (imgOutLarge) imgOutLarge.src = outUrl;
-    if (imgHud) imgHud.src = hudUrl;
+    if (imgOutLarge) {
+      imgOutLarge.hidden = false;
+      imgOutLarge.src = outUrl;
+    }
+    if (imgHud) {
+      imgHud.hidden = false;
+      imgHud.src = hudUrl;
+    }
     if (slotIn) slotIn.classList.add("hidden");
     if (slotOut) slotOut.classList.add("hidden");
 
     const st = payload.input_stats || {};
     const sha = st.sha256_12 || "--";
     const dimTxt = st.width && st.height ? `${st.width}×${st.height} px` : "";
-    const usedCent = String(payload.centroid_detector || payload.centroid_backend || "classical");
-    const centTag = usedCent.includes("cnn") ? "CNN" : "CoG";
+    const usedCent = String(payload.executed_backend || payload.centroid_detector || payload.centroid_backend || "classical").toLowerCase();
+    const centTag = usedCent.includes("cnn") ? "CNN" : usedCent.includes("tetra3") ? "tetra3" : "CoG";
 
     if (sensorLiveDot) {
       sensorLiveDot.className = `sensor-dot ${status === "SOLVED" ? "is-solved" : "is-lost"}`;
@@ -1591,7 +1606,7 @@
         const rcTag = rejectCode ? ` (${rejectCode})` : "";
         statusEl.className = "status-banner err";
         statusEl.innerHTML =
-          `<strong>Chưa khóa hướng${rcTag}:</strong> ${why} (hợp lệ ${nValid}/${minReq} sao)${centBit}.`;
+          `<strong>Chưa khóa hướng${escapeHtml(rcTag)}:</strong> ${escapeHtml(why)} (hợp lệ ${nValid}/${minReq} sao)${escapeHtml(centBit)}.`;
         statusEl.title = statusEl.textContent || "";
       }
     }
@@ -1794,7 +1809,7 @@
     } catch (err) {
       if (statusEl) {
         statusEl.className = "status-banner err";
-        statusEl.innerHTML = `<strong>Không thể thực thi:</strong> ${err.message || err}`;
+        statusEl.innerHTML = `<strong>Không thể thực thi:</strong> ${escapeHtml(err.message || err)}`;
       }
       if (kpiStatusBadge) {
         kpiStatusBadge.textContent = "ERROR";
@@ -2035,7 +2050,7 @@
       } catch (err) {
         if (statusEl) {
           statusEl.className = "status-banner err";
-          statusEl.innerHTML = `<strong>Không thể xử lý tệp tải lên:</strong> ${err.message || err}`;
+          statusEl.innerHTML = `<strong>Không thể xử lý tệp tải lên:</strong> ${escapeHtml(err.message || err)}`;
         }
         if (kpiStatusBadge) {
           kpiStatusBadge.textContent = "ERROR";
@@ -2237,7 +2252,7 @@
       });
       cmpStarTooltip.innerHTML =
         `<strong>(${top.u.toFixed(1)}, ${top.v.toFixed(1)}) px</strong>` +
-        `<span class="tt-mono"> · ${byMethod.join(" | ")}</span>`;
+        `<span class="tt-mono"> · ${escapeHtml(byMethod.join(" | "))}</span>`;
       cmpStarTooltip.hidden = false;
       const tw = cmpStarTooltip.offsetWidth || 220;
       const th = cmpStarTooltip.offsetHeight || 28;
@@ -2410,13 +2425,25 @@
       } else {
         cmpVerdictBanner.className = "cmp-verdict-banner";
         cmpVerdictBanner.innerHTML =
-          `Kết quả trên cùng khung ảnh: CoG = <strong>${mCog.status || "—"}</strong>, ` +
-          `tetra3 = <strong>${mT3.status || "—"}</strong>, CNN-Hybrid = <strong>${mCnn.status || "—"}</strong>.`;
+          `Kết quả trên cùng khung ảnh: CoG = <strong>${escapeHtml(mCog.status || "—")}</strong>, ` +
+          `tetra3 = <strong>${escapeHtml(mT3.status || "—")}</strong>, CNN-Hybrid = <strong>${escapeHtml(mCnn.status || "—")}</strong>.`;
       }
-      if (mCnn.centroid_fallback) {
+      const fallbackEntries = keys
+        .map((k) => ({ key: k, m: methods[k] || {} }))
+        .filter((x) => Boolean(x.m.centroid_fallback));
+      if (fallbackEntries.length > 0) {
+        const firstFb = fallbackEntries[0];
         cmpVerdictBanner.innerHTML +=
           `<br /><span style="color:var(--status-warn);font-weight:700">[Cảnh báo FALLBACK → CoG]</span> ` +
-          `Nhánh CNN không khả dụng và đã tự động chuyển về CoG: ${escapeHtml(mCnn.fallback_reason || "không tìm thấy trọng số MobileUNet")}.`;
+          `Nhánh <code>${escapeHtml(firstFb.key)}</code> không khả dụng và đã tự động chuyển về CoG: ${escapeHtml(firstFb.m.fallback_reason || "không tìm thấy trọng số MobileUNet")}.`;
+        updateFallbackAlertBar({
+          requested_backend: firstFb.key,
+          executed_backend: firstFb.m.executed_backend || firstFb.m.centroid_detector || "classical",
+          centroid_fallback: true,
+          fallback_reason: firstFb.m.fallback_reason || "Trọng số CNN không sẵn sàng; pipeline tự động chuyển về tách tâm cổ điển CoG."
+        });
+      } else {
+        updateFallbackAlertBar({ centroid_fallback: false });
       }
     }
 
@@ -2442,7 +2469,7 @@
               return `<span class="cmp-st-main">SOLVED</span>`;
             }
             const code = String(m.reject_code || "REJECTED");
-            return `<span class="cmp-st-main">LOST</span><span class="cmp-st-code">${code}</span>`;
+            return `<span class="cmp-st-main">LOST</span><span class="cmp-st-code">${escapeHtml(code)}</span>`;
           }),
           cls: keys.map((k) => ((methods[k] || {}).status === "SOLVED" ? "cmp-cell-best" : "cmp-cell-lost"))
         },
@@ -2558,7 +2585,7 @@
     setBusy(true, msg);
     if (cmpVerdictBanner) {
       cmpVerdictBanner.className = "cmp-verdict-banner";
-      cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${msg}`;
+      cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${escapeHtml(msg)}`;
     }
     try {
       const data = await fetchJson(
@@ -2573,16 +2600,16 @@
       renderComparePayload(data);
       if (statusEl) {
         statusEl.className = "status-banner ok";
-        statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên cùng khung ảnh (${data.source_image || `Seed ${data.seed}`}).`;
+        statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên cùng khung ảnh (${escapeHtml(data.source_image || `Seed ${data.seed}`)}).`;
       }
     } catch (err) {
       if (cmpVerdictBanner) {
         cmpVerdictBanner.className = "cmp-verdict-banner";
-        cmpVerdictBanner.innerHTML = `<strong>Không thể chạy so sánh:</strong> ${err.message || err}`;
+        cmpVerdictBanner.innerHTML = `<strong>Không thể chạy so sánh:</strong> ${escapeHtml(err.message || err)}`;
       }
       if (statusEl) {
         statusEl.className = "status-banner err";
-        statusEl.innerHTML = `<strong>Lỗi so sánh:</strong> ${err.message || err}`;
+        statusEl.innerHTML = `<strong>Lỗi so sánh:</strong> ${escapeHtml(err.message || err)}`;
       }
     } finally {
       compareLoading = false;
@@ -2669,7 +2696,7 @@
       setBusy(true, msg);
       if (cmpVerdictBanner) {
         cmpVerdictBanner.className = "cmp-verdict-banner";
-        cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${msg}`;
+        cmpVerdictBanner.innerHTML = `<span class="busy-dot"></span> ${escapeHtml(msg)}`;
       }
       try {
         const data = await fetchJson("/api/compare-upload", { method: "POST", body: fd }, 180000);
@@ -2683,7 +2710,7 @@
           const scNote = data.storage_control
             ? (data.storage_control.deleted_immediately
                 ? " · Đã xóa ngay tệp tạm (0s)"
-                : ` · Lưu tạm ${data.storage_control.storage_rel_dir} (TTL 15p)`)
+                : ` · Lưu tạm ${escapeHtml(data.storage_control.storage_rel_dir)} (TTL 15p)`)
             : "";
           statusEl.className = "status-banner ok";
           statusEl.innerHTML = `<strong>Đã đối chiếu 3 phương pháp</strong> trên ảnh tải lên (${escapeHtml(cmpUploadFile.files[0].name)})${scNote}.`;
@@ -2691,7 +2718,7 @@
       } catch (err) {
         if (cmpVerdictBanner) {
           cmpVerdictBanner.className = "cmp-verdict-banner";
-          cmpVerdictBanner.innerHTML = `<strong>Lỗi tải ảnh so sánh:</strong> ${err.message || err}`;
+          cmpVerdictBanner.innerHTML = `<strong>Lỗi tải ảnh so sánh:</strong> ${escapeHtml(err.message || err)}`;
         }
       } finally {
         compareLoading = false;
@@ -2803,7 +2830,7 @@
         const rRows = baseFrames.map((bf, i) => {
           const fname = bf.frame_id || `Frame ${i + 1}`;
           return (
-            `<tr><td><strong>${fname}</strong></td>` +
+            `<tr><td><strong>${escapeHtml(fname)}</strong></td>` +
             beOrder.map((be) => fmtRealCell((byBe[be] || [])[i])).join("") +
             `</tr>`
           );
@@ -2989,10 +3016,107 @@
     }
   }
 
+  function clearDeletedUploadPreviews(deletedIds) {
+    const idList = Array.isArray(deletedIds) ? deletedIds.filter(Boolean).map(String) : null;
+    const isDeletedUrl = (url) => {
+      const s = String(url || "");
+      if (!s.includes("/api/uploads/")) return false;
+      if (!idList) return true;
+      return idList.some((uid) => s.includes(`/api/uploads/${uid}/`) || s.includes(`/api/uploads/${encodeURIComponent(uid)}/`));
+    };
+
+    if (isDeletedUrl(lastCleanUrl)) lastCleanUrl = "";
+    if (isDeletedUrl(lastInUrl)) lastInUrl = "";
+    if (isDeletedUrl(lastOutUrl)) lastOutUrl = "";
+
+    const resetSensorMain =
+      (compare3dImg && isDeletedUrl(compare3dImg.getAttribute("src") || compare3dImg.src)) ||
+      (lastSensorPayload &&
+        lastSensorPayload.storage_control &&
+        (!idList || idList.includes(String(lastSensorPayload.storage_control.upload_id || ""))));
+    if (resetSensorMain) {
+      if (compare3dImg) {
+        compare3dImg.removeAttribute("src");
+        compare3dImg.hidden = true;
+      }
+      usingCleanImage = false;
+      lastSensorPayload = null;
+      sensorOverlayPoints = [];
+      hoveredSensorStar = null;
+      if (slotCompare3d) {
+        slotCompare3d.classList.remove("hidden");
+        const pEl = slotCompare3d.querySelector("p");
+        if (pEl) {
+          pEl.textContent = "Ảnh tải lên trước đó đã được xóa khỏi máy chủ. Chọn kịch bản hoặc tải ảnh mới để tiếp tục.";
+        }
+      }
+      if (capCompare3d) capCompare3d.textContent = "Ảnh tải lên đã bị xóa · Chưa nạp khung ảnh";
+      if (sensorLiveDot) sensorLiveDot.className = "sensor-dot";
+      drawSensorOverlay();
+    }
+
+    if (pipSensorImg && isDeletedUrl(pipSensorImg.getAttribute("src") || pipSensorImg.src)) {
+      pipSensorImg.removeAttribute("src");
+      if (pipSensorCard) pipSensorCard.hidden = true;
+    }
+
+    if (imgIn && isDeletedUrl(imgIn.getAttribute("src") || imgIn.src)) {
+      imgIn.removeAttribute("src");
+      imgIn.hidden = true;
+      if (slotIn) {
+        slotIn.classList.remove("hidden");
+        const pIn = slotIn.querySelector("p");
+        if (pIn) pIn.textContent = "Ảnh tải lên đã bị xóa khỏi máy chủ.";
+      }
+      if (capIn) capIn.textContent = "Ảnh tải lên đã bị xóa";
+    }
+
+    if (imgOut && isDeletedUrl(imgOut.getAttribute("src") || imgOut.src)) {
+      imgOut.removeAttribute("src");
+      imgOut.hidden = true;
+      if (slotOut) {
+        slotOut.classList.remove("hidden");
+        const pOut = slotOut.querySelector("p");
+        if (pOut) pOut.textContent = "Ảnh nhận diện đã bị xóa khỏi máy chủ.";
+      }
+      if (capOut) capOut.textContent = "Ảnh tải lên đã bị xóa";
+    }
+
+    if (imgOutLarge && isDeletedUrl(imgOutLarge.getAttribute("src") || imgOutLarge.src)) {
+      imgOutLarge.removeAttribute("src");
+      imgOutLarge.hidden = true;
+    }
+
+    if (imgHud && isDeletedUrl(imgHud.getAttribute("src") || imgHud.src)) {
+      imgHud.removeAttribute("src");
+      imgHud.hidden = true;
+    }
+
+    if (cmpCleanImg && isDeletedUrl(cmpCleanImg.getAttribute("src") || cmpCleanImg.src)) {
+      cmpCleanImg.removeAttribute("src");
+      cmpCleanImg.hidden = true;
+      lastComparePayload = null;
+      cmpOverlayPoints = [];
+      if (cmpPlaceholder) {
+        cmpPlaceholder.classList.remove("hidden");
+        const pCmp = cmpPlaceholder.querySelector("p");
+        if (pCmp) pCmp.textContent = "Ảnh tải lên cho đối chiếu đã được xóa khỏi máy chủ.";
+      }
+      if (cmpFrameMeta) cmpFrameMeta.textContent = "Ảnh tải lên đã bị xóa";
+      drawCompareOverlay();
+    }
+
+    if (modalImg && isDeletedUrl(modalImg.getAttribute("src") || modalImg.src)) {
+      modalImg.removeAttribute("src");
+      closeLightbox();
+    }
+  }
+
   async function deleteSingleUpload(uploadId) {
     if (!uploadId) return;
     try {
       const res = await fetchApiJson(`/api/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE" }, 20000);
+      clearDeletedUploadPreviews([uploadId]);
       if (uploadDeleteStatus) {
         uploadDeleteStatus.hidden = false;
         uploadDeleteStatus.classList.remove("is-warn");
@@ -3022,16 +3146,19 @@
     try {
       const res = await fetchApiJson("/api/uploads", { method: "DELETE" }, 20000);
       const nDel = res.n_deleted_sessions ?? res.deleted_count ?? 0;
+      clearDeletedUploadPreviews(
+        Array.isArray(res.deleted_upload_ids) && res.deleted_upload_ids.length ? res.deleted_upload_ids : null
+      );
       if (uploadDeleteStatus) {
         uploadDeleteStatus.hidden = false;
         uploadDeleteStatus.classList.remove("is-warn");
         uploadDeleteStatus.innerHTML =
-          `<strong>Đã xóa toàn bộ ảnh tạm (${nDel} phiên):</strong> ` +
-          `Xác minh thư mục <code>data/user_uploads/</code>: <strong>${res.verified_empty ? "TRỐNG HOÀN TOÀN" : "Đang kiểm tra"}</strong>.`;
+          `<strong>Đã xóa sạch toàn bộ ảnh tạm của phiên hiện tại trong <code>data/user_uploads/</code> (${nDel} phiên):</strong> ` +
+          `Xác minh phiên hiện tại: <strong>${res.verified_empty ? "0 TỆP CÒN LẠI" : "Đang kiểm tra"}</strong>.`;
       }
       if (statusEl) {
         statusEl.className = "status-banner success";
-        statusEl.innerHTML = `<strong>Đã dọn sạch toàn bộ ảnh người dùng tạm thời:</strong> ${nDel} phiên đã xóa, thư mục lưu tạm trống hoàn toàn.`;
+        statusEl.innerHTML = `<strong>Đã xóa sạch toàn bộ ảnh tạm của phiên hiện tại trong <code>data/user_uploads/</code></strong> (${nDel} phiên).`;
       }
       await loadActiveUploads();
       await loadExecutionLog();
@@ -3168,6 +3295,7 @@
 
   if (btnTestFallback) {
     btnTestFallback.addEventListener("click", async () => {
+      setCentroidBackend("cnn");
       setBusy(true, "Đang chạy thử nghiệm giả lập thiếu checkpoint MobileUNet để xác minh cảnh báo Fallback → CoG...");
       try {
         const data = await fetchJson(
