@@ -1,6 +1,6 @@
 # Hướng dẫn Tái lập Độc lập từ Bản tải sạch (Clean Clone) — DUT.StarTracker (Chặng 2)
 
-Kho mã nguồn này đã đóng gói **đầy đủ 100% gói tái lập độc lập** ngay trên nhánh `main` (tổng dung lượng gói tài nguyên ~`37,6 MB`, mỗi tệp `< 19 MB`, không cần tải thủ công ngoài kho):
+Kho mã nguồn này đã đóng gói **đầy đủ 100% gói tái lập độc lập** ngay trên nhánh `main` (tổng dung lượng gói tài nguyên **`36,03 MiB`** / `~37,78 MB`, mỗi tệp `< 19 MB`, không cần tải thủ công ngoài kho):
 - **Checkpoint CNN:** `third_party/cnn_star_centroid/saved_models/MobileUNet_B10_50.pt` (trọng số công khai của Hongrui Zhao et al., `arXiv:2404.19108`, không huấn luyện lại).
 - **6 ảnh bầu trời thật có hiệu chuẩn:** `ESA tetra3 Alt40 & Alt60` (16-bit), `Zhao MT9V022 nightsky_june16_2021.npy & verification_img.npy` (8-bit + hiệu chuẩn méo Heikkila), `UW LOST mount_st_helens_1.png`, và `NTNU 0006.png` (ca kiểm âm tính góc siêu rộng `77,5°`).
 - **Hồ sơ hiệu chuẩn & Danh mục sao:** `data/real_calibrated/manifest_real_calibrated.json`, `data/uploads/real_sky/metadata.yaml`, `config/camera_specs.json`, `config/pipeline_default.json`, `data/catalogs/BSC5`, `data/catalogs/IAU-CSN.txt`.
@@ -61,16 +61,17 @@ python scripts/benchmark_embedded_cubesat.py
 python scripts/reconcile_logs.py
 ```
 
-*(Ghi chú: Bộ 540 khung mô phỏng `hd1024` / `hd1024_glare` dung lượng ~373 MB không đóng gói vào Git để giữ repo gọn nhẹ; khi chạy không có `--real-only` trên bản tải sạch, script tự động bỏ qua nhẹ nhàng mà không crash và lưu kết quả riêng tại `data/outputs/benchmark_3way_clean_clone.json`. Có thể sinh mới khung mô phỏng bất kỳ lúc nào bằng `python scripts/generate_sim_dataset.py`.)*
+*(Ghi chú: Bộ 540 khung mô phỏng `hd1024` / `hd1024_glare` dung lượng ~373 MB không đóng gói vào Git để giữ repo gọn nhẹ; khi chạy không có `--real-only` trên bản tải sạch, script tự động bỏ qua nhẹ nhàng mà không crash và lưu kết quả riêng tại `data/outputs/benchmark_3way_clean_clone.json`. Có thể tái sinh 500 khung sạch `hd1024` bằng `python scripts/benchmark_centroid_cnn_hd1024.py`, 40 khung lóa `hd1024_glare` bằng `python scripts/benchmark_centroid_cnn_glare.py`, hoặc sinh bộ khung `fast`/`full` bằng `python scripts/generate_sim_dataset.py`.)*
 
 ## 5. Chính sách kiểm soát dữ liệu ảnh tải lên & Quyền xóa (Web UI / API)
 
 - **Ảnh mẫu hệ thống (chỉ đọc):** `data/uploads/` — tách biệt hoàn toàn khỏi tệp người dùng tải lên.
 - **Nơi lưu ảnh người dùng tải lên & ảnh xem trước:** `data/user_uploads/<upload_id>/` (mỗi lượt tải nhận một mã UUID4 16 ký tự duy nhất $\rightarrow$ **tuyệt đối không ghi đè** tệp trùng tên, ảnh mẫu hay các tệp `data/outputs/demo_*.png` dùng chung).
+- **Cô lập phiên trình duyệt & rollback khi lỗi:** Mỗi trình duyệt truy cập Web nhận cookie phiên ẩn danh `st_sid` (`HttpOnly`, `SameSite=Lax`) để cô lập danh sách, ảnh xem trước và quyền xóa `ttl` giữa các người dùng cùng truy cập. Nếu yêu cầu tải lên gặp lỗi xử lý (`HTTP 400/409`) ở cả hai chế độ, thư mục tạm lập tức được xóa hoàn tác (`ERROR_ROLLBACK_DELETE`, 0 tệp mồ côi).
 - **Thời gian lưu (2 chế độ do người dùng chọn ngay khi tải ảnh):**
   1. **`ephemeral` *(mặc định an toàn — 0 giây lưu đĩa)*:** Ảnh gốc, tệp `sidecar.json` và các ảnh xem trước chỉ tồn tại tạm trong thư mục UUID lúc xử lý; ảnh xem trước trả trực tiếp dạng inline `data:image/png;base64,...` và toàn bộ thư mục tạm bị **xóa vĩnh viễn ngay trong khối `finally:`** trước khi trả kết quả HTTP (`verified_gone_on_disk: true`, 0 byte sót lại trên đĩa).
-  2. **`ttl` *(lưu tạm tối đa 15 phút / `900s`, cấu hình qua `STAR_TRACKER_UPLOAD_TTL_S`)*:** Ảnh gốc, sidecar và ảnh xem trước được cách ly hoàn toàn trong `data/user_uploads/<upload_id>/` (phục vụ qua `GET /api/uploads/<upload_id>/preview/<filename>`), tự động dọn sạch khi hết hạn; cho phép người dùng thực thi **quyền xóa ngay lập tức** (cả ảnh gốc, sidecar lẫn ảnh xem trước — URL preview trả `404` ngay lập tức):
-     - `GET /api/uploads` — liệt kê các tệp tải lên tạm và thời gian tự xóa còn lại.
+  2. **`ttl` *(lưu tạm tối đa 15 phút / `900s`, cấu hình qua `STAR_TRACKER_UPLOAD_TTL_S`)*:** Ảnh gốc, sidecar và ảnh xem trước (`demo_clean.png`, `demo_input.png`, `demo_output.png`, `demo_result.png`, `demo_compare_clean.png`) được cách ly hoàn toàn trong `data/user_uploads/<upload_id>/` (phục vụ qua `GET /api/uploads/<upload_id>/preview/<filename>`), có luồng nền tự động quét dọn mỗi `60s` (`TTL_EXPIRED_AUTO_PURGE`) ngay cả khi không có lưu lượng mới; cho phép người dùng thực thi **quyền xóa ngay lập tức** (URL preview trả `404` ngay lập tức):
+     - `GET /api/uploads` — liệt kê các tệp tải lên tạm thuộc phiên hiện tại và thời gian tự xóa còn lại.
      - `DELETE /api/uploads/<upload_id>` — xóa vĩnh viễn ảnh, `sidecar.json` & ảnh xem trước của phiên đó (`verified_gone: true`).
-     - `DELETE /api/uploads` — xóa toàn bộ tệp người dùng đã tải lên.
-- **Nhật ký chế độ thực thi & Fallback CoG:** Mọi lượt chạy (kể cả khi `Auto-Router` hoặc `CNN` gặp lỗi checkpoint và fallback về CoG) cùng mọi thao tác xóa dữ liệu đều ghi vào `data/outputs/execution_log.jsonl` và tra cứu trực tiếp qua `GET /api/execution-log` (ghi rõ `requested_backend`, `executed_backend`, `fallback_triggered`, `fallback_reason`).
+     - `DELETE /api/uploads` — xóa toàn bộ tệp tạm của phiên hiện tại.
+- **Nhật ký chế độ thực thi & Fallback CoG (ghi nguyên tử `os.replace`):** Mọi lượt chạy (kể cả khi `Auto-Router` hoặc `CNN` gặp lỗi checkpoint/sai SHA-256 và fallback về CoG) cùng mọi thao tác xóa dữ liệu đều ghi vào `data/outputs/execution_log.jsonl` và tra cứu trực tiếp qua `GET /api/execution-log` (ghi rõ `requested_backend`, `executed_backend`, `fallback_triggered`, `fallback_reason`, `checkpoint_status`).

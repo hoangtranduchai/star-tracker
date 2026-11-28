@@ -3,21 +3,24 @@ from json import loads as json_loads
 from math import isfinite
 import os
 from pathlib import Path
+import secrets
 import sys
 from threading import Event, Lock, Thread, Timer
+import time
 from webbrowser import open as open_browser
-from flask import Flask, Response, jsonify, render_template, request, send_from_directory
+from flask import Flask, Response, jsonify, make_response, render_template, request, send_from_directory
 import matplotlib
 BASE = Path(__file__).resolve().parent
 if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 matplotlib.use('Agg')
+from src.centroid_cnn import weights_available as _weights_available
 from src.demo_session import DemoEngine, RunRequest, SIM_METHOD
 from src.execution_log import read_execution_log, record_data_deletion, record_pipeline_run
 from src.quaternion import format_dec_both, format_dec_stellarium, format_ra_both, format_ra_hms, parse_dec_deg, parse_ra_deg, split_radec_text
 from src.repro_bundle import verify_repro_bundle
 from src.starnames import describe_index, n_iau_names, n_named_hr
-from src.upload_store import cleanup_expired_uploads, delete_all_uploads, delete_upload, encode_png_data_uri, list_uploads, normalize_retention_mode, resolve_upload_preview, save_uploaded_files, storage_policy_summary
+from src.upload_store import DEFAULT_SWEEP_INTERVAL_S, SESSION_COOKIE_NAME, cleanup_expired_uploads, delete_all_uploads, delete_upload, encode_png_data_uri, list_uploads, normalize_retention_mode, normalize_session_id, resolve_upload_preview, save_uploaded_files, storage_policy_summary
 app = Flask(__name__, template_folder=str(BASE.joinpath('web', 'templates')), static_folder=str(BASE.joinpath('web', 'static')))
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0, TEMPLATES_AUTO_RELOAD=True, MAX_CONTENT_LENGTH=80 * 1024 * 1024)
 app.jinja_env.auto_reload = True
@@ -146,10 +149,29 @@ def _no_cache(resp: object) -> object:
     resp.headers['Pragma'] = 'no-cache'
     return resp
 
+def _caller_session_id() -> str | None:
+    return normalize_session_id(request.cookies.get(SESSION_COOKIE_NAME))
+
+def _checkpoint_status_now(simulate_missing: bool) -> str:
+    if simulate_missing:
+        return 'simulated_missing'
+    return 'available' if _weights_available() else 'missing'
+
 @app.get('/')
 def index() -> object:
     ds_frames: object = ENGINE.list_dataset_frames()
-    return render_template('index.html', hardware=ENGINE.specs, sim_method=SIM_METHOD, frames=ds_frames, n_frames=len(ds_frames), n_iau_names=n_iau_names(), n_named_hr=n_named_hr())
+    resp = make_response(render_template('index.html', hardware=ENGINE.specs, sim_method=SIM_METHOD, frames=ds_frames, n_frames=len(ds_frames), n_iau_names=n_iau_names(), n_named_hr=n_named_hr()))
+    if _caller_session_id() is None:
+        is_https = bool(request.is_secure or request.headers.get('X-Forwarded-Proto', '').strip().lower() == 'https')
+        resp.set_cookie(
+            SESSION_COOKIE_NAME,
+            secrets.token_hex(16),
+            httponly=True,
+            samesite='Lax',
+            secure=is_https,
+            path='/',
+        )
+    return resp
 
 @app.get('/favicon.ico')
 def favicon() -> object:
@@ -321,6 +343,7 @@ def api_compare() -> object:
         finally:
             LOCK.release()
         src_nm = Path(str(resolved_img)).name if resolved_img else f'seed={req.seed}'
+        ckpt_st_cmp = _checkpoint_status_now(sim_missing)
         for bk, m_obj in (comp_payload.get('methods') or {}).items():
             record_pipeline_run(
                 BASE,
@@ -336,7 +359,7 @@ def api_compare() -> object:
                 n_valid_pairs=int(m_obj.get('n_valid_pairs') or 0),
                 n_detected=int(m_obj.get('n_detected') or 0),
                 latency_ms=(m_obj.get('timing_ms') or {}).get('total_pipeline_ms'),
-                checkpoint_status='simulated_missing' if sim_missing else 'available',
+                checkpoint_status=ckpt_st_cmp,
             )
         return jsonify(comp_payload)
     except EngineBusy as busy_err:
@@ -360,7 +383,12 @@ def api_compare_upload() -> object:
         if Path(sc_safe).suffix.lower() != '.json':
             return (jsonify(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).')), 400)
     form_get: object = request.form.get
+    mode_val: str = str(form_get('mode') or 'fast')
+    if mode_val not in ('fast', 'full'):
+        return (jsonify(dict(error='mode must be fast or full')), 400)
+    sim_missing_up: bool = _bool_flag(form_get('simulate_missing_weights'))
     ret_mode: str = normalize_retention_mode(form_get('retention_mode'))
+    caller_sid: str | None = _caller_session_id()
     saved_slot = save_uploaded_files(
         BASE,
         uploaded,
@@ -369,6 +397,7 @@ def api_compare_upload() -> object:
         safe_sidecar_name=sc_safe,
         retention_mode=ret_mode,
         endpoint='/api/compare-upload',
+        owner_sid=caller_sid,
     )
     upload_id: str = saved_slot['upload_id']
     slot_dir: Path = saved_slot['slot_dir']
@@ -377,9 +406,10 @@ def api_compare_upload() -> object:
     meta: dict = saved_slot['meta']
     deleted_now = False
     verified_gone = False
+    succeeded = False
     try:
         req: object = RunRequest(
-            mode=str(form_get('mode') or 'fast'),
+            mode=mode_val,
             seed=int(float(form_get('seed') or 42)),
             catalog=str(form_get('catalog') or 'bsc5'),
             omega=float(form_get('omega') or 0.06),
@@ -389,7 +419,7 @@ def api_compare_upload() -> object:
             sky_clutter=str(form_get('sky_clutter') or 'none'),
             false_stars=int(float(form_get('false_stars') or 0)),
             solver=str(form_get('solver') or 'svd'),
-            simulate_missing_weights=_bool_flag(form_get('simulate_missing_weights')),
+            simulate_missing_weights=sim_missing_up,
             image=saved_img,
             sidecar=saved_sidecar,
             out_dir=slot_dir,
@@ -408,17 +438,19 @@ def api_compare_upload() -> object:
             comp_payload['clean_url'] = encode_png_data_uri(slot_dir / 'demo_compare_clean.png')
         else:
             comp_payload['clean_url'] = f'/api/uploads/{upload_id}/preview/demo_compare_clean.png'
+        succeeded = True
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
     except Exception as err:
         return (jsonify(dict(error=str(err))), 400)
     finally:
-        if ret_mode == 'ephemeral':
-            d_res = delete_upload(BASE, upload_id)
+        if ret_mode == 'ephemeral' or not succeeded:
+            d_res = delete_upload(BASE, upload_id, ignore_owner=True)
             deleted_now = bool(d_res.get('deleted'))
             verified_gone = bool(d_res.get('verified_gone'))
             if deleted_now:
-                record_data_deletion(BASE, action='EPHEMERAL_AUTO_DELETE', upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/compare-upload')
+                del_action = 'EPHEMERAL_AUTO_DELETE' if ret_mode == 'ephemeral' else 'ERROR_ROLLBACK_DELETE'
+                record_data_deletion(BASE, action=del_action, upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/compare-upload')
 
     comp_payload['source'] = 'upload'
     comp_payload['source_image'] = safe_name
@@ -431,12 +463,14 @@ def api_compare_upload() -> object:
         overwrite_protected=True,
         previews_isolated=True,
         previews_deleted_with_slot=True,
+        session_scoped=caller_sid is not None,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
         expires_at_utc=meta['expires_at_utc'],
         delete_endpoint=f'/api/uploads/{upload_id}',
     )
+    ckpt_st_up = _checkpoint_status_now(sim_missing_up)
     for bk, m_obj in (comp_payload.get('methods') or {}).items():
         record_pipeline_run(
             BASE,
@@ -452,6 +486,7 @@ def api_compare_upload() -> object:
             n_valid_pairs=int(m_obj.get('n_valid_pairs') or 0),
             n_detected=int(m_obj.get('n_detected') or 0),
             latency_ms=(m_obj.get('timing_ms') or {}).get('total_pipeline_ms'),
+            checkpoint_status=ckpt_st_up,
             upload_id=upload_id,
             retention_mode=ret_mode,
             deleted_immediately=deleted_now,
@@ -502,7 +537,14 @@ def api_run_upload() -> object:
         if Path(sc_safe).suffix.lower() != '.json':
             return (jsonify(dict(error='Nhãn phải là file .json (q_gt, stars_in_fov).')), 400)
     form_get: object = request.form.get
+    mode_val: str = str(form_get('mode') or 'fast')
+    be_val: str = str(form_get('centroid_backend') or 'auto').strip().lower()
+    if mode_val not in ('fast', 'full'):
+        return (jsonify(dict(error='mode must be fast or full')), 400)
+    if be_val not in _VALID_BACKENDS:
+        return (jsonify(dict(error='centroid_backend must be auto, classical, tetra3, or cnn')), 400)
     ret_mode: str = normalize_retention_mode(form_get('retention_mode'))
+    caller_sid: str | None = _caller_session_id()
     saved_slot = save_uploaded_files(
         BASE,
         uploaded,
@@ -511,6 +553,7 @@ def api_run_upload() -> object:
         safe_sidecar_name=sc_safe,
         retention_mode=ret_mode,
         endpoint='/api/run-upload',
+        owner_sid=caller_sid,
     )
     upload_id: str = saved_slot['upload_id']
     slot_dir: Path = saved_slot['slot_dir']
@@ -519,9 +562,10 @@ def api_run_upload() -> object:
     meta: dict = saved_slot['meta']
     deleted_now = False
     verified_gone = False
+    succeeded = False
     try:
         req: object = RunRequest(
-            mode=str(form_get('mode') or 'fast'),
+            mode=mode_val,
             seed=int(float(form_get('seed') or 42)),
             catalog=str(form_get('catalog') or 'bsc5'),
             omega=float(form_get('omega') or 0.06),
@@ -531,7 +575,7 @@ def api_run_upload() -> object:
             sky_clutter=str(form_get('sky_clutter') or 'none'),
             false_stars=int(float(form_get('false_stars') or 0)),
             solver=str(form_get('solver') or 'svd'),
-            centroid_backend=str(form_get('centroid_backend') or 'auto'),
+            centroid_backend=be_val,
             simulate_missing_weights=_bool_flag(form_get('simulate_missing_weights')),
             image=saved_img,
             sidecar=saved_sidecar,
@@ -564,17 +608,19 @@ def api_run_upload() -> object:
                 output_png=f'data/user_uploads/{upload_id}/demo_output.png',
                 clean_png=f'data/user_uploads/{upload_id}/demo_clean.png',
             )
+        succeeded = True
     except EngineBusy as busy_err:
         return (jsonify(dict(error=str(busy_err), busy=True)), 409)
     except Exception as err:
         return (jsonify(dict(error=str(err))), 400)
     finally:
-        if ret_mode == 'ephemeral':
-            d_res = delete_upload(BASE, upload_id)
+        if ret_mode == 'ephemeral' or not succeeded:
+            d_res = delete_upload(BASE, upload_id, ignore_owner=True)
             deleted_now = bool(d_res.get('deleted'))
             verified_gone = bool(d_res.get('verified_gone'))
             if deleted_now:
-                record_data_deletion(BASE, action='EPHEMERAL_AUTO_DELETE', upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/run-upload')
+                del_action = 'EPHEMERAL_AUTO_DELETE' if ret_mode == 'ephemeral' else 'ERROR_ROLLBACK_DELETE'
+                record_data_deletion(BASE, action=del_action, upload_id=upload_id, deleted_files=d_res.get('deleted_files') or [], verified_gone=verified_gone, endpoint='/api/run-upload')
 
     res_dict['source'] = 'upload'
     res_dict['source_image'] = safe_name
@@ -587,6 +633,7 @@ def api_run_upload() -> object:
         overwrite_protected=True,
         previews_isolated=True,
         previews_deleted_with_slot=True,
+        session_scoped=caller_sid is not None,
         deleted_immediately=deleted_now,
         verified_gone_on_disk=verified_gone,
         ttl_seconds=meta['ttl_seconds'],
@@ -598,18 +645,19 @@ def api_run_upload() -> object:
 
 @app.get('/api/uploads/<upload_id>/preview/<filename>')
 def api_upload_preview(upload_id: str, filename: str) -> object:
-    target = resolve_upload_preview(BASE, upload_id, filename)
+    target = resolve_upload_preview(BASE, upload_id, filename, owner_sid=_caller_session_id())
     if target is None:
         return (jsonify(dict(error='Ảnh xem trước không tồn tại hoặc đã bị xóa/hết hạn TTL.')), 404)
     return send_from_directory(target.parent, target.name)
 
 @app.get('/api/uploads')
 def api_list_uploads() -> object:
-    return jsonify(dict(policy=storage_policy_summary(BASE), uploads=list_uploads(BASE)))
+    sid = _caller_session_id()
+    return jsonify(dict(policy=storage_policy_summary(BASE, owner_sid=sid), uploads=list_uploads(BASE, owner_sid=sid)))
 
 @app.delete('/api/uploads/<upload_id>')
 def api_delete_upload(upload_id: str) -> object:
-    res = delete_upload(BASE, upload_id)
+    res = delete_upload(BASE, upload_id, owner_sid=_caller_session_id())
     if res.get('deleted'):
         record_data_deletion(
             BASE,
@@ -620,12 +668,12 @@ def api_delete_upload(upload_id: str) -> object:
             endpoint=f'DELETE /api/uploads/{upload_id}',
         )
         return jsonify(res)
-    status_code = 404 if res.get('verified_gone') else 400
+    status_code = 404 if (res.get('verified_gone') or res.get('not_found_or_denied')) else 400
     return (jsonify(res), status_code)
 
 @app.delete('/api/uploads')
 def api_delete_all_uploads() -> object:
-    res = delete_all_uploads(BASE)
+    res = delete_all_uploads(BASE, owner_sid=_caller_session_id())
     record_data_deletion(
         BASE,
         action='USER_DELETE_ALL',
@@ -647,7 +695,7 @@ def api_execution_log() -> object:
 @app.get('/api/repro-status')
 def api_repro_status() -> object:
     bundle_root = BASE if BASE.joinpath('CHECKSUMS.sha256').is_file() else Path(__file__).resolve().parent
-    return jsonify(dict(bundle=verify_repro_bundle(bundle_root), storage_policy=storage_policy_summary(BASE)))
+    return jsonify(dict(bundle=verify_repro_bundle(bundle_root), storage_policy=storage_policy_summary(BASE, owner_sid=_caller_session_id())))
 
 @app.get('/output/<path:name>')
 def output_file(name: object) -> object:
@@ -673,8 +721,29 @@ def _preload_warmup() -> None:
     except Exception:
         pass
 
+def _ttl_sweeper_loop() -> None:
+    """Proactively purge expired TTL upload directories in the background even with zero traffic."""
+    while True:
+        time.sleep(DEFAULT_SWEEP_INTERVAL_S)
+        try:
+            purged = cleanup_expired_uploads(BASE)
+            if purged:
+                record_data_deletion(
+                    BASE,
+                    action='TTL_EXPIRED_AUTO_PURGE',
+                    upload_id=None,
+                    deleted_files=purged,
+                    verified_gone=True,
+                    endpoint='BG:ttl_sweeper',
+                )
+        except Exception:
+            pass
+
 if os.environ.get('STAR_TRACKER_PRELOAD', '').strip().lower() in ('1', 'true', 'yes'):
     Thread(target=_preload_warmup, name='star-tracker-preload', daemon=True).start()
+
+if 'PYTEST_CURRENT_TEST' not in os.environ and os.environ.get('STAR_TRACKER_DISABLE_SWEEPER', '').strip().lower() not in ('1', 'true', 'yes'):
+    Thread(target=_ttl_sweeper_loop, name='star-tracker-ttl-sweeper', daemon=True).start()
 
 def main() -> object:
     raw_port: object = os.environ.get('STAR_TRACKER_PORT', '').strip()

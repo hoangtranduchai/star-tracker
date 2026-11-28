@@ -59,7 +59,7 @@ def add_stage2_slides() -> int:
     tb_f1 = s1.shapes.add_textbox(Inches(0.60), Inches(6.35), Inches(12.13), Inches(0.40))
     base._set_single_text(
         tb_f1,
-        'Điểm chốt Chặng 2: (1) Xác thực SHA-256 ngay trước torch.load (chặn tệp sửa đổi)  |  (2) Ảnh gốc + sidecar + preview cách ly 100% theo UUID4  |  (3) 141 pytest PASS (0 lỗi).',
+        'Điểm chốt Chặng 2: (1) Xác thực SHA-256 trước torch.load  |  (2) Ảnh gốc + sidecar + 4 preview cách ly UUID4 & phiên st_sid  |  (3) 144 pytest PASS (0 lỗi).',
         size=10.0,
         color=base.P_NAVY,
         bold=True,
@@ -150,9 +150,9 @@ def add_stage2_slides() -> int:
         'CHÍNH SÁCH DỮ LIỆU KHỚP 100% MÃ NGUỒN & HỒ SƠ', base.P_BADGE_BG, base.P_NAVY,
         'Cách ly hoàn toàn data/user_uploads/<UUID4>/ khỏi data/uploads/',
         [
-            '• Mặc định ephemeral (0s): preview trả inline base64; finally xóa 100% ảnh gốc + sidecar + preview.',
-            '• Tùy chọn ttl (15 phút): preview qua /api/uploads/<id>/preview/<name>; DELETE lập tức trả 404.',
-            '• Đã đồng bộ P184 Hồ sơ DOCX, README, REPRODUCIBILITY & 0 byte NULL trên Link minh chứng.',
+            '• Mặc định ephemeral (0s): preview inline base64; finally xóa 100% ảnh + sidecar + preview.',
+            '• Tùy chọn ttl (15 phút, tự dọn nền 60s): cô lập phiên st_sid, rollback lỗi 400/409, DELETE trả 404.',
+            '• Đồng bộ 100% P184 Hồ sơ DOCX, Hồ sơ gốc DOCX/MD, README, REPRODUCIBILITY & 0 byte NULL.',
         ],
         head_size=10.8, body_size=9.0,
     )

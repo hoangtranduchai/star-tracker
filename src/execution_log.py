@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 import uuid
@@ -61,7 +62,17 @@ def append_audit_event(base: Path, event: dict[str, Any]) -> dict[str, Any]:
         existing.append(line)
         if len(existing) > MAX_LOG_ENTRIES:
             existing = existing[-MAX_LOG_ENTRIES:]
-        lp.write_text('\n'.join(existing) + '\n', encoding='utf-8')
+        payload_txt = '\n'.join(existing) + '\n'
+        tmp_p = lp.with_name(f'.{lp.name}.{uuid.uuid4().hex[:8]}.tmp')
+        try:
+            tmp_p.write_text(payload_txt, encoding='utf-8')
+            os.replace(str(tmp_p), str(lp))
+        finally:
+            if tmp_p.exists():
+                try:
+                    tmp_p.unlink()
+                except OSError:
+                    pass
     return rec
 
 

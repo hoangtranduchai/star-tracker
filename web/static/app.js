@@ -2979,8 +2979,8 @@
         const pol = data.policy || {};
         specsStorageSummary.innerHTML =
           `<strong>Nơi lưu ảnh người dùng:</strong> <code>${escapeHtml(pol.storage_dir || "data/user_uploads/<upload_id>/")}</code> ` +
-          `(chống ghi đè UUID4, tách biệt khỏi ảnh mẫu đọc-chỉ <code>data/uploads/</code>) · ` +
-          `Đang lưu tạm trên đĩa: <strong>${n} phiên</strong> · Mặc định xóa ngay (0s) hoặc TTL ${Math.round((pol.ttl_seconds || 900) / 60)} phút.`;
+          `(chống ghi đè UUID4 · cô lập phiên <code>st_sid</code> · tách biệt ảnh mẫu đọc-chỉ <code>data/uploads/</code>) · ` +
+          `Đang lưu tạm (phiên này): <strong>${n} phiên</strong> · Mặc định xóa ngay (0s) hoặc TTL ${Math.round((pol.ttl_seconds || 900) / 60)} phút (tự dọn nền mỗi ${pol.background_ttl_sweeper_interval_s || 60}s).`;
       }
       renderUploadListInto(uploadManagerList, uploads);
       renderUploadListInto(specsUploadsList, uploads);

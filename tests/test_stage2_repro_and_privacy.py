@@ -33,9 +33,10 @@ def test_repro_bundle_checksums_all_verified(star_tracker_root: Path) -> None:
     assert res['checkpoint_sha256'] and len(res['checkpoint_sha256']) == 64
 
 
-def test_api_repro_status_and_fallback_alert(star_tracker_root: Path) -> None:
+def test_api_repro_status_and_fallback_alert(star_tracker_root: Path, tmp_path: Path, monkeypatch) -> None:
     import app as web_app
 
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
     client = web_app.app.test_client()
 
     r_repro = client.get('/api/repro-status')
@@ -44,6 +45,8 @@ def test_api_repro_status_and_fallback_alert(star_tracker_root: Path) -> None:
     assert j_repro['bundle']['ok'] is True
     assert j_repro['bundle']['n_verified'] == 13
     assert j_repro['storage_policy']['default_retention_mode'] == 'ephemeral'
+    assert j_repro['storage_policy']['session_isolation'] is True
+    assert j_repro['storage_policy']['error_rollback_cleanup'] is True
 
     # Deliberately trigger real CNN -> CoG fallback via simulate_missing_weights=True
     r_fb = client.post(
@@ -204,9 +207,10 @@ def test_upload_ttl_collision_isolation_and_right_to_delete(star_tracker_root: P
     assert r_clr.get_json()['verified_empty'] is True
 
 
-def test_auto_router_explicit_fallback_when_cnn_checkpoint_missing(star_tracker_root: Path) -> None:
+def test_auto_router_explicit_fallback_when_cnn_checkpoint_missing(star_tracker_root: Path, tmp_path: Path, monkeypatch) -> None:
     import app as web_app
 
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
     zhao_p = star_tracker_root / 'data' / 'real_calibrated' / 'zhao_mt9v022' / 'nightsky_june16_2021.npy'
     assert zhao_p.is_file()
     client = web_app.app.test_client()
@@ -291,3 +295,121 @@ def test_cli_accepts_custom_optics_flags_on_real_calibrated_frame(star_tracker_r
     assert rc == 0, out
     assert 'Status      : SOLVED' in out
     assert 'att err' in out
+
+
+def test_ttl_upload_error_rolls_back_with_zero_orphan_files(tmp_path: Path, monkeypatch) -> None:
+    """Failed HTTP 400 upload in TTL mode must immediately delete its slot and leave 0 orphan files."""
+    import app as web_app
+    from src.upload_store import user_uploads_root
+
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client = web_app.app.test_client()
+
+    # Upload 128x128 image in TTL mode WITHOUT focal_mm/pixel_um -> triggers ValueError (HTTP 400)
+    r = client.post(
+        '/api/run-upload',
+        data={
+            'image': (io.BytesIO(_make_png_bytes(77)), 'orphan_check.png'),
+            'retention_mode': 'ttl',
+            'centroid_backend': 'classical',
+        },
+        content_type='multipart/form-data',
+    )
+    assert r.status_code == 400
+    root = user_uploads_root(tmp_path)
+    remaining = [p for p in root.iterdir() if p.is_dir()] if root.is_dir() else []
+    assert remaining == [], f'Found orphan TTL slot after HTTP 400 error: {remaining}'
+
+    # Confirm ERROR_ROLLBACK_DELETE was recorded in execution_log.jsonl
+    entries = client.get('/api/execution-log?limit=10').get_json()['entries']
+    assert any(
+        e.get('event_type') == 'DATA_DELETION'
+        and e.get('action') == 'ERROR_ROLLBACK_DELETE'
+        and e.get('verified_gone') is True
+        for e in entries
+    )
+
+
+def test_browser_session_isolation_prevents_cross_user_ttl_access_and_delete(tmp_path: Path, monkeypatch) -> None:
+    """Browser B must NOT list, preview, or delete Browser A's TTL uploads."""
+    import app as web_app
+    from src.upload_store import user_uploads_root
+
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client_a = web_app.app.test_client()
+    client_b = web_app.app.test_client()
+
+    # Each browser receives its own HttpOnly st_sid cookie on GET /
+    assert client_a.get('/').status_code == 200
+    assert client_b.get('/').status_code == 200
+
+    # Browser A uploads in TTL mode
+    r_a = client_a.post(
+        '/api/run-upload',
+        data={
+            'image': (io.BytesIO(_make_png_bytes(31)), 'private_sky_a.png'),
+            'focal_mm': '50',
+            'pixel_um': '14.88',
+            'retention_mode': 'ttl',
+            'centroid_backend': 'classical',
+        },
+        content_type='multipart/form-data',
+    )
+    assert r_a.status_code == 200
+    j_a = r_a.get_json()
+    uid_a = j_a['storage_control']['upload_id']
+    assert j_a['storage_control']['session_scoped'] is True
+    prev_url_a = j_a['clean_url']
+
+    # Browser A sees its upload & can fetch its preview
+    assert len(client_a.get('/api/uploads').get_json()['uploads']) == 1
+    assert client_a.get(prev_url_a).status_code == 200
+
+    # Browser B sees 0 uploads, gets 404 on A's preview & single delete, and DELETE /api/uploads does not harm A
+    assert client_b.get('/api/uploads').get_json()['uploads'] == []
+    assert client_b.get(prev_url_a).status_code == 404
+    assert client_b.delete(f'/api/uploads/{uid_a}').status_code == 404
+    assert client_b.delete('/api/uploads').get_json()['n_deleted_sessions'] == 0
+    assert (user_uploads_root(tmp_path) / uid_a).is_dir()
+
+    # Browser A deletes its own upload -> 200 verified_gone & preview 404
+    r_del = client_a.delete(f'/api/uploads/{uid_a}')
+    assert r_del.status_code == 200 and r_del.get_json()['verified_gone'] is True
+    assert client_a.get(prev_url_a).status_code == 404
+    assert not (user_uploads_root(tmp_path) / uid_a).exists()
+
+
+def test_compare_and_compare_upload_log_checkpoint_status_and_atomic_jsonl(tmp_path: Path, monkeypatch) -> None:
+    """/api/compare and /api/compare-upload must log truthful checkpoint_status with zero leftover temp files."""
+    import app as web_app
+
+    monkeypatch.setattr(web_app, 'BASE', tmp_path)
+    client = web_app.app.test_client()
+
+    r_cmp = client.post('/api/compare', json={'seed': 42, 'mode': 'fast', 'backends': ['classical']})
+    assert r_cmp.status_code == 200
+
+    r_up = client.post(
+        '/api/compare-upload',
+        data={
+            'image': (io.BytesIO(_make_png_bytes(55)), 'cmp_check.png'),
+            'focal_mm': '50',
+            'pixel_um': '14.88',
+            'retention_mode': 'ephemeral',
+        },
+        content_type='multipart/form-data',
+    )
+    assert r_up.status_code == 200
+
+    entries = client.get('/api/execution-log?limit=20').get_json()['entries']
+    cmp_rows = [
+        e for e in entries
+        if e.get('event_type') == 'PIPELINE_RUN' and e.get('endpoint') in ('/api/compare', '/api/compare-upload')
+    ]
+    assert len(cmp_rows) >= 2
+    for row in cmp_rows:
+        assert row.get('checkpoint_status') in ('available', 'missing', 'simulated_missing')
+
+    # Verify atomic write left zero .tmp files next to execution_log.jsonl
+    out_dir = tmp_path / 'data' / 'outputs'
+    assert not list(out_dir.glob('*.tmp'))

@@ -259,8 +259,9 @@ def sections(
     s11 = (
         'Rủi ro & kiểm soát: (1) Khớp sai hoặc hình học thẳng hàng → đã chặn bằng `_refine_inliers`, SVD `s_min >= 1e-6` và `LOW_FOV_CONSISTENCY` (0% False Lock trên 100 ca đối kháng & 540 khung sim); '
         '(2) Ảnh thiếu sao sáng BSC5 (Alt40) hoặc méo ống kính rộng chưa hiệu chuẩn (NTNU 0006.png) → hệ thống trả LOST an toàn; '
-        '(3) CNN lệch miền 12-bit trên ảnh mô phỏng (8.191 FP ở thr2 / 1.118 FP ở E2E) → mặc định luôn dùng CoG cho ảnh sạch. '
-        '(4) Phạm vi: toàn bộ số liệu đo trên PC Laptop (RTX 5070 / CPU) — KHÔNG chứng minh khả năng chịu bức xạ hay sẵn sàng phần cứng vệ tinh/ADCS.'
+        '(3) CNN lệch miền 12-bit trên ảnh mô phỏng → mặc định Auto-Router chạy CoG trước, xác thực SHA-256 trước `torch.load` và báo tường minh khi xảy ra Fallback CNN → CoG trong nhật ký nguyên tử `data/outputs/execution_log.jsonl` + dải cảnh báo Web UI; '
+        '(4) Kiểm soát dữ liệu ảnh tải lên (`src/upload_store.py`): giao diện không có tài khoản người dùng; ảnh tải lên, nhãn JSON sidecar và 4 ảnh xem trước được cách ly vào thư mục UUID4 riêng `data/user_uploads/<upload_id>/` gắn cookie phiên `st_sid` (`HttpOnly`, `SameSite=Lax`, 0% ghi đè tệp trùng tên hay ảnh mẫu `data/uploads/`, rollback xóa sạch khi lỗi HTTP 400/409), chế độ mặc định `ephemeral` xóa vĩnh viễn 0 giây trong khối `finally:` (preview trả inline base64), chế độ tùy chọn `ttl` lưu tối đa 15 phút (900s, luồng nền tự dọn mỗi 60s) và hỗ trợ xóa tức thì qua `DELETE /api/uploads[/<id>]` (ghi dấu `DATA_DELETION`); '
+        '(5) Phạm vi: toàn bộ số liệu đo trên PC Laptop (RTX 5070 / CPU / ARM64 TRL 3–4) — KHÔNG chứng minh khả năng chịu bức xạ hay sẵn sàng phần cứng vệ tinh/ADCS.'
     )
     s12 = (
         'Phân định rõ phạm vi: hiện tại đã hoàn thành kiểm thử chốt chặn False Lock, đánh giá E2E trên 540 khung mô phỏng và 6 khung ảnh thật hiệu chuẩn/stress trên PC. '
